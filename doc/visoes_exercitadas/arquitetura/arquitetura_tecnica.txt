@@ -1,0 +1,307 @@
+🏗️ Arquitetura de Solução — Sistema de Leilão Eletrônico
+
+Documento Técnico Consolidado (com diferenciais)
+
+📌 Sumário
+
+Visão Geral
+
+Visão Funcional
+
+Requisitos Técnicos
+
+Arquitetura Lógica
+
+Arquitetura Física / Infraestrutura
+
+Comunicação Frontend ↔ Backend (SSE vs WebSocket)
+
+Fluxos Críticos
+
+Considerações de Alta Disponibilidade
+
+Segurança e Compliance
+
+Diferenciais Avançados (incorporados)
+
+Roadmap Evolutivo
+
+1. 🎯 Visão Geral
+
+O sistema tem como objetivo permitir leilões eletrônicos em tempo real, suportando:
+
+Lances simultâneos
+
+Atualização instantânea dos preços
+
+Fluxo seguro, auditável e confiável
+
+Escalabilidade horizontal para múltiplos leilões ativos
+
+O foco do MVP é garantir experiência fluida, baixa latência e consistência absoluta dos lances.
+
+2. 🧩 Visão Funcional
+Funcionalidades principais (MVP)
+Para Compradores
+
+Visualizar itens disponíveis
+
+Acompanhar evolução dos lances em tempo real
+
+Dar lances conforme regras do leilão
+
+Visualizar histórico do item
+
+Receber notificação de lance vencedor
+
+Para Vendedores
+
+Criar e configurar leilões
+
+Definir regras de incremento
+
+Iniciar/encerrar leilões
+
+Visualizar resultados
+
+Administração
+
+Gerenciamento de usuários
+
+Auditoria
+
+Relatórios básicos
+
+3. 🧱 Requisitos Técnicos
+Requisitos funcionais chave
+
+Atualização em tempo real de preços
+
+Garantia de ordem dos lances
+
+Registro imutável de lances
+
+Baixa latência e alto throughput
+
+Requisitos não funcionais
+
+Suporte a cluster
+
+Escalabilidade horizontal
+
+Consistência transacional
+
+Observabilidade
+
+HA (alta disponibilidade)
+
+4. 🗂️ Arquitetura Lógica
+Frontend (Angular 18)
+     ↓ (HTTP REST + WebSocket/SSE)
+Backend Leilões (Spring Boot)
+     ↓
+Event Hub / Message Broker (opcional futuro)
+     ↓
+Serviços de Apoio (Autenticação, Pagamentos, Catálogo)
+     ↓
+Banco de Dados (PostgreSQL / Aurora / CockroachDB)
+
+Comunicação real-time
+
+MVP: WebSocket (preferido)
+
+Alternativa: SSE (viável para espectadores)
+
+5. ☁️ Arquitetura Física / Infraestrutura
+Componentes principais
+
+Kubernetes (Elastic Kubernetes Service / OpenShift / AKS, etc.)
+
+Load Balancer L4/L7
+
+Auto-scaling horizontal
+
+Mensagem em broker opcional (Kafka / Redis Streams) para escalar leilões massivos
+
+Topologia (sem BFF, comunicação direta)
+[Angular SPA]
+       |
+    API Gateway (opcional)
+       |
+   [Backend Leilões]
+       |
+  PostgreSQL Cluster
+
+6. 🔄 Comunicação Front-end ↔ Back-end
+Comparativo SSE vs WebSocket no contexto do projeto
+Critério	SSE	WebSocket
+Full duplex	❌	✔️
+Envio → servidor	❌	✔️
+Escalabilidade em cluster	Média	Alta
+Suporte em Load Balancer	Bom	Requer sticky session
+Ideal para	Espectadores	Leilões com lance bidirecional
+
+📌 Decisão Arquitetural:
+WebSocket é obrigatório para compradores que dão lance.
+SSE pode ser usado para visitantes e clientes apenas assistindo.
+
+7. 🔁 Fluxos Críticos
+Fluxo 1 — Acompanhamento do Leilão
+
+Usuário abre a página
+
+Front abre canal WebSocket (ou SSE)
+
+Backend envia atualizações de preço
+
+Página renderiza incremento em tempo real
+
+Fluxo 2 — Envio de Lance (bidirecional)
+
+Cliente envia lance pelo WebSocket
+
+Backend valida + persiste transacionalmente
+
+Backend envia broadcast para todos os conectados
+
+UI atualiza instantaneamente
+
+8. 🧬 Considerações de Alta Disponibilidade
+Para WebSockets:
+
+Necessário sticky-session ou session affinity
+
+Alternativa avançada:
+
+Usar Redis Pub/Sub ou Kafka para sincronizar nós
+
+WebSocket distribuído → qualquer nó pode enviar atualizações
+
+Failover:
+
+Reconexão automática
+
+Reenvio idempotente do lance
+
+9. 🔐 Segurança e Compliance
+
+JWT para autenticação
+
+Controle forte de permissões
+
+Auditoria completa de todos os lances
+
+Logs com hash encadeado (opcional)
+
+TLS obrigatório
+
+Rate limiting por IP/usuário
+
+10. ⭐ Diferenciais Avançados (incorporados ao documento)
+
+Estas funcionalidades não fazem parte do MVP, mas podem elevar a solução a nível enterprise.
+
+10.1. Experiência avançada do usuário
+
+“Spectator Mode” com UI dinâmica
+
+Indicadores de intensidade do leilão
+
+Assistente inteligente de estratégias
+
+Alertas inteligentes de momento ideal para entrada
+
+10.2. Segurança e antifraude
+
+Monitoramento em tempo real de padrões suspeitos
+
+Prova de lance criptografada (hash)
+
+Auditoria imutável com encadeamento de hashes
+
+Detectores de multi-contas
+
+10.3. Inteligência e análises
+
+Painel BI em tempo real
+
+Previsão de preço final usando ML leve
+
+Curva de comportamento dos lances
+
+Análise comparativa de performance por categoria
+
+10.4. Extensibilidade e APIs
+
+API pública para marketplaces
+
+Webhooks para integração com terceiros
+
+Plugins de estratégias automáticas
+
+Conectores ERP
+
+10.5. Operação e governança
+
+Métricas avançadas (Grafana/Kibana)
+
+Degradação progressiva controlada
+
+Failover inteligente de sessões WebSocket
+
+Prioridade de processamento por SLA
+
+10.6. Diferenciais B2B
+
+Leilões privados
+
+Construção de perfis avançados de usuário (não sensíveis)
+
+MFA obrigatório
+
+10.7. Funcionalidades inteligentes futuras
+
+Chat IA durante o leilão
+
+Robô de insights
+
+Sistema de risco comportamental (não pessoal)
+
+11. 🛣️ Roadmap Evolutivo (alto nível)
+MVP
+
+CRUD de leilões e itens
+
+Fluxo de lance
+
+WebSocket básico
+
+Seleção de produto
+
+Persistência transacional
+
+Eventos em tempo real
+
+V1
+
+Auditoria avançada
+
+Dashboard operacional
+
+SSE para espectadores
+
+Estabilidade e otimização de cluster
+
+V2
+
+Inteligência artificial
+
+Modo espectador avançado
+
+Webhooks e API pública
+
+Painéis BI
+
+Mecanismo antifraude
+
+Failover inteligente de WebSocket
