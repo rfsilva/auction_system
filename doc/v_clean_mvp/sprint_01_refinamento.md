@@ -51,6 +51,9 @@ Criar fundações do sistema para suportar o MVP, incluindo setup de projetos, a
   3. Implementar login com JWT (access + refresh token) - 3 SP  
   4. Implementar roles básicas (VISITANTE, PARTICIPANTE, VENDEDOR, ADMIN) - 2 SP  
   5. Testes unitários e integração inicial - 2 SP  
+  6. Frontend: Configurar Angular Material
+  7. Frontend: Implementar tela de login com JWT e integrar com backend
+  8. Frontend: Implementar cadastro de usuários, respeitando as roles do backend
 - **Story Points:** 11 SP
 
 ### História 5: Implementar prova de conceito SSE/WebSocket
