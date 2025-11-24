@@ -15,20 +15,22 @@ Criar fundações do sistema para suportar o MVP, incluindo setup de projetos, a
 - **Tipo:** Enabler
 - **Descrição:** Configurar projeto backend em arquitetura modular, pronto para evoluir em microsserviços futuros.
 - **Tasks / Sub-tasks:**
-  1. Criar estrutura de pastas modular (core, modules, shared) - 2 SP  
-  2. Configurar build tool (Maven/Gradle) - 1 SP  
-  3. Configurar base de dependências (Spring Boot, JWT, WebSocket, JPA/Hibernate) - 2 SP  
-  4. Criar README inicial e documentação mínima do projeto - 1 SP  
+  1. Criar a pasta backend
+  2. Criar estrutura de pastas modular (core, modules, shared) - 2 SP  
+  3. Configurar build tool (Maven/Gradle) - 1 SP  
+  4. Configurar base de dependências (Spring Boot, JWT, WebSocket, JPA/Hibernate) - 2 SP  
+  5. Criar README inicial e documentação mínima do projeto - 1 SP  
 - **Story Points:** 6 SP
 
 ### História 2: Setup do projeto frontend Angular
 - **Tipo:** Enabler
 - **Descrição:** Criar projeto Angular 18 standalone, pronto para consumo do backend.
 - **Tasks / Sub-tasks:**
-  1. Criar projeto Angular com `standalone components` - 1 SP  
-  2. Configurar `HttpClient` com `withFetch()` - 1 SP  
-  3. Criar layout base e roteamento inicial - 2 SP  
-  4. Configurar CI/CD básico para frontend - 2 SP  
+  1. Criar a pasta frontend
+  2. Criar projeto Angular com `standalone components` - 1 SP  
+  3. Configurar `HttpClient` com `withFetch()` - 1 SP  
+  4. Criar layout base e roteamento inicial - 2 SP  
+  5. Configurar CI/CD básico para frontend - 2 SP  
 - **Story Points:** 6 SP
 
 ### História 3: Setup do banco de dados
