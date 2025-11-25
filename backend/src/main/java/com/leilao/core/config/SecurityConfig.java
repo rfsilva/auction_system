@@ -63,20 +63,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos
+                // Endpoints públicos (considerando context-path /api)
                 .requestMatchers("/auth/**", "/public/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll() // Para testes
-                // WebSocket endpoints
+                // WebSocket e SSE endpoints (fora do context-path)
                 .requestMatchers("/ws/**", "/sse/**").permitAll()
+                // Realtime endpoints (dentro do context-path /api)
+                .requestMatchers("/realtime/**").permitAll()
                 // Todos os outros endpoints requerem autenticação
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny()) // Substituir o método deprecated
+                .frameOptions(frameOptions -> frameOptions.deny())
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
             );
 
