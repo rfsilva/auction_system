@@ -16,7 +16,7 @@ spring:
   # Configuração JPA/Hibernate para desenvolvimento
   jpa:
     hibernate:
-      ddl-auto: validate # Flyway gerencia o schema
+      ddl-auto: none # Deixar Flyway gerenciar completamente
     show-sql: true
     properties:
       hibernate:
@@ -35,6 +35,14 @@ spring:
     clean-disabled: false # Permitir clean em desenvolvimento
     schemas: public
     default-schema: public
+    # Configurações adicionais para debug
+    baseline-version: 0
+    baseline-description: "Initial baseline"
+    out-of-order: false
+    ignore-missing-migrations: false
+    ignore-ignored-migrations: false
+    ignore-pending-migrations: false
+    ignore-future-migrations: false
   
   # Configuração Redis para desenvolvimento
   data:
@@ -127,6 +135,8 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.flywaydb: DEBUG
+    org.flywaydb.core: DEBUG
+    org.flywaydb.core.internal: DEBUG
     # Reduzir logs de email para evitar spam
     org.springframework.mail: WARN
     org.springframework.boot.actuate.mail: WARN

@@ -13,6 +13,10 @@ spring:
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
   
+  # Desabilitar Flyway para testes (usar apenas Hibernate)
+  flyway:
+    enabled: false
+  
   # Configuração H2 Console (para debug de testes)
   h2:
     console:

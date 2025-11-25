@@ -1,0 +1,42 @@
+<div class="main-layout">
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-brand">
+        <a routerLink="/" class="brand-link">
+          <h1>🔨 Leilão Online</h1>
+        </a>
+      </div>
+      
+      <div class="nav-menu">
+        <a routerLink="/" class="nav-link">Home</a>
+        <a routerLink="/auctions" class="nav-link">Leilões</a>
+        
+        @if (authService.isAuthenticated()) {
+          <a routerLink="/profile" class="nav-link">Perfil</a>
+          <button (click)="logout()" class="btn btn-outline">Sair</button>
+        } @else {
+          <a routerLink="/auth/login" class="nav-link">Login</a>
+          <a routerLink="/auth/register" class="btn btn-primary">Cadastrar</a>
+        }
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2024 Sistema de Leilão Eletrônico. Todos os direitos reservados.</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link">Termos de Uso</a>
+        <a href="#" class="footer-link">Privacidade</a>
+        <a href="#" class="footer-link">Suporte</a>
+      </div>
+    </div>
+  </footer>
+</div>
