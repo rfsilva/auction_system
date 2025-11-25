@@ -24,8 +24,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Registra o endpoint WebSocket com fallback SockJS
+        // Como o context-path é /api, o endpoint ficará em /api/ws
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
+                
+        // Também registrar sem SockJS para conexões WebSocket nativas
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*");
     }
 }

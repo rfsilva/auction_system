@@ -1,37 +1,17 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  name: string;
-  email: string;
-  password: string;
-  phone?: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  data: {
-    token: string;
-    refreshToken: string;
-    user: User;
-  };
-  message?: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { 
+  User, 
+  UserRole, 
+  UserStatus, 
+  LoginRequest, 
+  RegisterRequest, 
+  AuthResponse, 
+  RefreshTokenRequest 
+} from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -74,12 +54,28 @@ export class AuthService {
             this.setTokens(response.data.token, response.data.refreshToken);
             this.setUser(response.data.user);
           }
+        }),
+        catchError(error => {
+          console.error('Erro no login:', error);
+          throw error;
         })
       );
   }
 
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, userData);
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, userData)
+      .pipe(
+        tap(response => {
+          if (response.success) {
+            this.setTokens(response.data.token, response.data.refreshToken);
+            this.setUser(response.data.user);
+          }
+        }),
+        catchError(error => {
+          console.error('Erro no registro:', error);
+          throw error;
+        })
+      );
   }
 
   logout(): Observable<any> {
@@ -87,20 +83,40 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.clearAuth();
+        }),
+        catchError(error => {
+          // Mesmo com erro, limpar dados locais
+          this.clearAuth();
+          throw error;
         })
       );
   }
 
   refreshToken(): Observable<AuthResponse> {
     const refreshToken = this.getRefreshToken();
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/refresh`, { refreshToken })
+    if (!refreshToken) {
+      throw new Error('Refresh token não encontrado');
+    }
+
+    const request: RefreshTokenRequest = { refreshToken };
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/refresh`, request)
       .pipe(
         tap(response => {
           if (response.success) {
             this.setTokens(response.data.token, response.data.refreshToken);
+            this.setUser(response.data.user);
           }
+        }),
+        catchError(error => {
+          console.error('Erro ao renovar token:', error);
+          this.clearAuth();
+          throw error;
         })
       );
+  }
+
+  checkEmailExists(email: string): Observable<{ success: boolean; data: boolean }> {
+    return this.http.get<{ success: boolean; data: boolean }>(`${this.API_URL}/auth/check-email?email=${email}`);
   }
 
   getToken(): string | null {
@@ -133,9 +149,66 @@ export class AuthService {
   private checkAuthStatus(): void {
     const token = this.getToken();
     if (token) {
-      // TODO: Validar token com o backend
+      // TODO: Validar token com o backend ou decodificar JWT
       this.isAuthenticatedSignal.set(true);
       this.isAuthenticatedSubject.next(true);
+      
+      // TODO: Recuperar dados do usuário do token ou fazer chamada para o backend
     }
+  }
+
+  // Métodos para verificar roles
+  hasRole(role: UserRole): boolean {
+    const user = this.currentUser();
+    return user?.roles?.includes(role) || false;
+  }
+
+  hasAnyRole(roles: UserRole[]): boolean {
+    const user = this.currentUser();
+    return roles.some(role => user?.roles?.includes(role)) || false;
+  }
+
+  canBid(): boolean {
+    return this.hasRole(UserRole.BUYER) && this.isAccountActive();
+  }
+
+  canSell(): boolean {
+    return this.hasRole(UserRole.SELLER) && this.isAccountActive();
+  }
+
+  isAdmin(): boolean {
+    return this.hasRole(UserRole.ADMIN);
+  }
+
+  isAccountActive(): boolean {
+    const user = this.currentUser();
+    return user?.status === UserStatus.ACTIVE;
+  }
+
+  isEmailVerified(): boolean {
+    const user = this.currentUser();
+    return user?.emailVerificado || false;
+  }
+
+  // Métodos utilitários
+  getRoleDisplayName(role: UserRole): string {
+    const roleNames: Record<UserRole, string> = {
+      [UserRole.VISITOR]: 'Visitante',
+      [UserRole.PARTICIPANT]: 'Participante',
+      [UserRole.BUYER]: 'Comprador',
+      [UserRole.SELLER]: 'Vendedor',
+      [UserRole.ADMIN]: 'Administrador'
+    };
+    return roleNames[role] || role;
+  }
+
+  getStatusDisplayName(status: UserStatus): string {
+    const statusNames: Record<UserStatus, string> = {
+      [UserStatus.PENDING_VERIFICATION]: 'Aguardando Verificação',
+      [UserStatus.ACTIVE]: 'Ativo',
+      [UserStatus.INACTIVE]: 'Inativo',
+      [UserStatus.SUSPENDED]: 'Suspenso'
+    };
+    return statusNames[status] || status;
   }
 }

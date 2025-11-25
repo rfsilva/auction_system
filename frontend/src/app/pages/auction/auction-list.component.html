@@ -1,0 +1,75 @@
+<div class="auction-list-container">
+  <div class="page-header">
+    <h1>Leilões Ativos</h1>
+    <p>Participe dos leilões em tempo real</p>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Categoria:</label>
+      <select class="form-control">
+        <option value="">Todas as categorias</option>
+        <option value="electronics">Eletrônicos</option>
+        <option value="vehicles">Veículos</option>
+        <option value="art">Arte</option>
+        <option value="collectibles">Colecionáveis</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Status:</label>
+      <select class="form-control">
+        <option value="active">Ativos</option>
+        <option value="upcoming">Próximos</option>
+        <option value="ended">Finalizados</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="auction-grid">
+    @for (auction of mockAuctions; track auction.id) {
+      <div class="auction-card">
+        <div class="auction-image">
+          <div class="placeholder-image">📷</div>
+          <div class="auction-status" [class]="auction.status">
+            {{ getStatusText(auction.status) }}
+          </div>
+        </div>
+        <div class="auction-content">
+          <h3 class="auction-title">{{ auction.title }}</h3>
+          <p class="auction-description">{{ auction.description }}</p>
+          
+          <div class="auction-info">
+            <div class="price-info">
+              <span class="current-price">R$ {{ auction.currentPrice | number:'1.2-2' }}</span>
+              <span class="bid-count">{{ auction.bidCount }} lances</span>
+            </div>
+            <div class="time-info">
+              <span class="time-left">{{ auction.timeLeft }}</span>
+            </div>
+          </div>
+
+          <div class="auction-actions">
+            <button class="btn btn-primary" [disabled]="auction.status !== 'active'">
+              @if (auction.status === 'active') {
+                Dar Lance
+              } @else if (auction.status === 'upcoming') {
+                Em Breve
+              } @else {
+                Finalizado
+              }
+            </button>
+            <button class="btn btn-outline">Ver Detalhes</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (mockAuctions.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🔨</div>
+      <h3>Nenhum leilão encontrado</h3>
+      <p>Não há leilões ativos no momento. Volte em breve!</p>
+    </div>
+  }
+</div>
