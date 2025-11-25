@@ -10,6 +10,10 @@ Criar fundações do sistema para suportar o MVP, incluindo setup de projetos, a
 ---
 
 ## Histórias Detalhadas
+- **Regras Gerais** 
+  1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
+  2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
+  3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
 
 ### História 1: Setup do projeto backend (modularizado)
 - **Tipo:** Enabler
@@ -63,7 +67,7 @@ Criar fundações do sistema para suportar o MVP, incluindo setup de projetos, a
   1. Criar endpoint SSE para broadcast de eventos - 2 SP  
   2. Criar endpoint WebSocket (simples) para testes - 3 SP  
   3. Criar cliente Angular para receber eventos de teste - 2 SP  
-  4. Testar latência e concorrência com mock de eventos - 2 SP  
+  4. Testar latência e concorrência com mock de eventos - 2 SP  5
 - **Story Points:** 9 SP
 
 ### História 6: Configuração CI/CD inicial

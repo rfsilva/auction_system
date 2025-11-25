@@ -10,6 +10,10 @@ Implementar funcionalidades básicas de catálogo, produtos e leilões estático
 ---
 
 ## Histórias Detalhadas
+- **Regras Gerais** 
+  1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
+  2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
+  3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
 
 ### História 1: CRUD de Produtos
 - **Tipo:** Funcional
