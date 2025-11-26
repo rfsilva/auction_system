@@ -6,86 +6,65 @@ REM Script de Limpeza Docker - Windows
 REM Sistema de Leilão Eletrônico
 REM =====================================================
 
-echo === Limpeza Docker - Sistema de Leilao ===
+echo === Limpeza de Containers Docker ===
 echo.
 
-REM Verificar se Docker está instalado
-where docker >nul 2>nul
-if %errorlevel% neq 0 (
-    echo ERRO: Docker nao encontrado no PATH
-    echo Por favor, instale o Docker Desktop
-    pause
-    exit /b 1
+REM Função para parar containers
+echo Parando containers relacionados ao leilao...
+
+REM Lista de containers que podem estar rodando
+set CONTAINERS=leilao-mysql leilao-mysql-dev leilao-postgres leilao-redis leilao-redis-dev leilao-phpmyadmin leilao-phpmyadmin-dev leilao-pgadmin leilao-redis-commander leilao-redis-commander-dev auction_postgres auction_mysql
+
+for %%c in (%CONTAINERS%) do (
+    for /f %%i in ('docker ps -q -f name^=%%c 2^>nul') do (
+        if not "%%i"=="" (
+            echo Parando container: %%c
+            docker stop %%c >nul 2>nul
+        )
+    )
 )
 
-echo Parando containers do leilao...
-
-REM Parar containers específicos
-docker stop leilao-postgres 2>nul
-docker stop leilao-redis 2>nul
-docker stop leilao-pgadmin 2>nul
-docker stop leilao-redis-commander 2>nul
-
-echo Containers parados!
-
 echo.
-echo Removendo containers...
+echo Removendo containers parados...
 
 REM Remover containers
-docker rm leilao-postgres 2>nul
-docker rm leilao-redis 2>nul
-docker rm leilao-pgadmin 2>nul
-docker rm leilao-redis-commander 2>nul
-
-echo Containers removidos!
-
-echo.
-echo Removendo redes conflitantes...
-
-REM Remover redes que podem estar conflitando
-docker network rm backend_leilao-network 2>nul
-docker network rm leilao-network 2>nul
-docker network rm backend_default 2>nul
-
-echo Redes removidas!
-
-echo.
-echo Deseja remover volumes tambem? (CUIDADO: dados serao perdidos!)
-set /p choice="Digite Y para sim ou N para nao: "
-
-if /i "%choice%"=="Y" (
-    echo Removendo volumes...
-    docker volume rm backend_postgres_data 2>nul
-    docker volume rm backend_redis_data 2>nul
-    docker volume rm backend_pgadmin_data 2>nul
-    echo Volumes removidos!
-) else (
-    echo Volumes mantidos.
+for %%c in (%CONTAINERS%) do (
+    for /f %%i in ('docker ps -aq -f name^=%%c 2^>nul') do (
+        if not "%%i"=="" (
+            echo Removendo container: %%c
+            docker rm %%c >nul 2>nul
+        )
+    )
 )
 
 echo.
-echo Executando limpeza geral do Docker...
-
-REM Limpeza geral
-docker container prune -f
-docker network prune -f
+echo Limpando volumes orfaos...
+docker volume prune -f >nul 2>nul
 
 echo.
-echo Deseja remover imagens nao utilizadas?
-set /p choice="Digite Y para sim ou N para nao: "
-
-if /i "%choice%"=="Y" (
-    docker image prune -f
-    echo Imagens removidas!
-)
+echo Limpando networks orfaos...
+docker network prune -f >nul 2>nul
 
 echo.
-echo Verificando redes Docker existentes:
-docker network ls
+echo === Status Atual ===
+echo.
+echo Containers rodando:
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | findstr /i "leilao auction" 2>nul
+if %errorlevel% neq 0 echo Nenhum container relacionado rodando
 
 echo.
-echo === Limpeza concluida! ===
+echo Volumes existentes:
+docker volume ls | findstr /i "leilao auction mysql postgres redis" 2>nul
+if %errorlevel% neq 0 echo Nenhum volume relacionado encontrado
+
+echo.
+echo Networks existentes:
+docker network ls | findstr /i "leilao auction" 2>nul
+if %errorlevel% neq 0 echo Nenhuma network relacionada encontrada
+
+echo.
+echo Limpeza concluida!
 echo Agora voce pode executar:
-echo docker-compose -f docker-compose.dev.yml up -d
+echo docker-compose -f docker-compose.dev.yml up mysql redis
 echo.
 pause

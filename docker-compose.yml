@@ -1,26 +1,28 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: auction_postgres
+  mysql:
+    image: mysql:8.0
+    container_name: auction_mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: auction
-      POSTGRES_USER: auction
-      POSTGRES_PASSWORD: auction
+      MYSQL_DATABASE: auction
+      MYSQL_USER: auction
+      MYSQL_PASSWORD: auction
+      MYSQL_ROOT_PASSWORD: auction_root
       TZ: UTC
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s
 
 volumes:
-  pgdata:
+  mysqldata:
     driver: local

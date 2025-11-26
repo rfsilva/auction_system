@@ -4,7 +4,7 @@ spring:
     url: ${DATABASE_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 10
@@ -21,11 +21,10 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
         jdbc:
           time_zone: America/Sao_Paulo
-        default_schema: public
         connection:
           provider_disables_autocommit: true
         cache:
@@ -41,8 +40,6 @@ spring:
     baseline-on-migrate: false
     validate-on-migrate: true
     clean-disabled: true # NUNCA permitir clean em produção
-    schemas: public
-    default-schema: public
     out-of-order: false
     ignore-missing-migrations: false
   

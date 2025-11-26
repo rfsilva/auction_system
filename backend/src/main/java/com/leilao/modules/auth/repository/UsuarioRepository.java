@@ -10,13 +10,12 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Repositório para operações com usuários
  */
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
+public interface UsuarioRepository extends JpaRepository<Usuario, String> {
 
     /**
      * Busca usuário por email
@@ -69,7 +68,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     /**
      * Query nativa para buscar usuários com roles específicas
-     * Atualizada para usar tb_usuario e tb_usuario_role
+     * Atualizada para MySQL
      */
     @Query(value = """
         SELECT DISTINCT u.* FROM tb_usuario u 
@@ -80,7 +79,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     /**
      * Query nativa para estatísticas de usuários por status
-     * Atualizada para usar tb_usuario
+     * Atualizada para MySQL
      */
     @Query(value = """
         SELECT status, COUNT(*) as total 

@@ -5,14 +5,13 @@ import com.leilao.shared.enums.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * DTO para dados do usuário
  */
 public class UserDto {
 
-    private UUID id;
+    private String id;
     private String name;
     private String email;
     private String phone;
@@ -25,7 +24,7 @@ public class UserDto {
     // Constructors
     public UserDto() {}
 
-    public UserDto(UUID id, String name, String email, UserStatus status, Set<UserRole> roles) {
+    public UserDto(String id, String name, String email, UserStatus status, Set<UserRole> roles) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -34,11 +33,11 @@ public class UserDto {
     }
 
     // Getters and Setters
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

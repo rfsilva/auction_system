@@ -5,10 +5,13 @@ import com.leilao.modules.auth.service.AuthService;
 import com.leilao.shared.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
+@Validated
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -75,7 +79,11 @@ public class AuthController {
      * Endpoint para verificar se email existe
      */
     @GetMapping("/check-email")
-    public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Boolean>> checkEmail(
+            @RequestParam 
+            @NotBlank(message = "Email é obrigatório") 
+            @Email(message = "Email deve ter formato válido") 
+            String email) {
         try {
             boolean exists = authService.checkEmailExists(email);
             return ResponseEntity.ok(ApiResponse.success(exists));

@@ -14,115 +14,91 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== Limpeza Docker - Sistema de Leilão ===${NC}"
+echo -e "${BLUE}=== Limpeza de Containers Docker ===${NC}"
 echo ""
 
-# Função para parar containers relacionados
+# Função para parar containers relacionados ao leilão
 stop_containers() {
-    echo -e "${YELLOW}Parando containers do leilão...${NC}"
+    echo -e "${YELLOW}Parando containers relacionados ao leilão...${NC}"
     
-    # Parar containers específicos se estiverem rodando
-    containers=("leilao-postgres" "leilao-redis" "leilao-pgadmin" "leilao-redis-commander")
+    # Lista de containers que podem estar rodando
+    CONTAINERS=(
+        "leilao-mysql"
+        "leilao-mysql-dev"
+        "leilao-postgres"
+        "leilao-redis"
+        "leilao-redis-dev"
+        "leilao-phpmyadmin"
+        "leilao-phpmyadmin-dev"
+        "leilao-pgadmin"
+        "leilao-redis-commander"
+        "leilao-redis-commander-dev"
+        "auction_postgres"
+        "auction_mysql"
+    )
     
-    for container in "${containers[@]}"; do
+    for container in "${CONTAINERS[@]}"; do
         if docker ps -q -f name="$container" | grep -q .; then
-            echo "Parando container: $container"
+            echo -e "Parando container: ${YELLOW}$container${NC}"
             docker stop "$container" 2>/dev/null || true
         fi
     done
-    
-    echo -e "${GREEN}✅ Containers parados${NC}"
 }
 
 # Função para remover containers
 remove_containers() {
-    echo -e "${YELLOW}Removendo containers do leilão...${NC}"
+    echo -e "${YELLOW}Removendo containers parados...${NC}"
     
-    containers=("leilao-postgres" "leilao-redis" "leilao-pgladmin" "leilao-redis-commander")
+    # Lista de containers que podem existir
+    CONTAINERS=(
+        "leilao-mysql"
+        "leilao-mysql-dev"
+        "leilao-postgres"
+        "leilao-redis"
+        "leilao-redis-dev"
+        "leilao-phpmyadmin"
+        "leilao-phpmyadmin-dev"
+        "leilao-pgadmin"
+        "leilao-redis-commander"
+        "leilao-redis-commander-dev"
+        "auction_postgres"
+        "auction_mysql"
+    )
     
-    for container in "${containers[@]}"; do
-        if docker ps -a -q -f name="$container" | grep -q .; then
-            echo "Removendo container: $container"
+    for container in "${CONTAINERS[@]}"; do
+        if docker ps -aq -f name="$container" | grep -q .; then
+            echo -e "Removendo container: ${YELLOW}$container${NC}"
             docker rm "$container" 2>/dev/null || true
         fi
     done
-    
-    echo -e "${GREEN}✅ Containers removidos${NC}"
 }
 
-# Função para remover redes
-remove_networks() {
-    echo -e "${YELLOW}Removendo redes conflitantes...${NC}"
-    
-    # Listar redes que podem estar conflitando
-    networks=("backend_leilao-network" "leilao-network" "backend_default")
-    
-    for network in "${networks[@]}"; do
-        if docker network ls -q -f name="$network" | grep -q .; then
-            echo "Removendo rede: $network"
-            docker network rm "$network" 2>/dev/null || true
-        fi
-    done
-    
-    echo -e "${GREEN}✅ Redes removidas${NC}"
+# Função para limpar volumes órfãos
+cleanup_volumes() {
+    echo -e "${YELLOW}Limpando volumes órfãos...${NC}"
+    docker volume prune -f 2>/dev/null || true
 }
 
-# Função para limpar volumes (opcional)
-remove_volumes() {
-    echo -e "${YELLOW}Removendo volumes (CUIDADO: dados serão perdidos!)...${NC}"
-    read -p "Tem certeza que deseja remover os volumes? (y/N): " -n 1 -r
-    echo
-    
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        volumes=("backend_postgres_data" "backend_redis_data" "backend_pgadmin_data")
-        
-        for volume in "${volumes[@]}"; do
-            if docker volume ls -q -f name="$volume" | grep -q .; then
-                echo "Removendo volume: $volume"
-                docker volume rm "$volume" 2>/dev/null || true
-            fi
-        done
-        
-        echo -e "${GREEN}✅ Volumes removidos${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Volumes mantidos${NC}"
-    fi
+# Função para limpar networks órfãs
+cleanup_networks() {
+    echo -e "${YELLOW}Limpando networks órfãs...${NC}"
+    docker network prune -f 2>/dev/null || true
 }
 
-# Função para limpeza geral do Docker
-docker_prune() {
-    echo -e "${YELLOW}Executando limpeza geral do Docker...${NC}"
+# Função para mostrar status atual
+show_status() {
+    echo -e "${BLUE}=== Status Atual ===${NC}"
     
-    # Remover containers parados
-    docker container prune -f
-    
-    # Remover redes não utilizadas
-    docker network prune -f
-    
-    # Remover imagens não utilizadas (opcional)
-    read -p "Remover imagens não utilizadas? (y/N): " -n 1 -r
-    echo
-    
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        docker image prune -f
-    fi
-    
-    echo -e "${GREEN}✅ Limpeza geral concluída${NC}"
-}
-
-# Função para verificar conflitos de rede
-check_network_conflicts() {
-    echo -e "${YELLOW}Verificando conflitos de rede...${NC}"
-    
-    # Listar todas as redes Docker
-    echo "Redes Docker existentes:"
-    docker network ls
+    echo -e "${YELLOW}Containers rodando:${NC}"
+    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep -E "(leilao|auction)" || echo "Nenhum container relacionado rodando"
     
     echo ""
-    echo "Verificando subnets em uso:"
-    docker network ls -q | xargs docker network inspect | grep -E '"Subnet"|"Gateway"' | head -20
+    echo -e "${YELLOW}Volumes existentes:${NC}"
+    docker volume ls | grep -E "(leilao|auction|mysql|postgres|redis)" || echo "Nenhum volume relacionado encontrado"
     
-    echo -e "${GREEN}✅ Verificação concluída${NC}"
+    echo ""
+    echo -e "${YELLOW}Networks existentes:${NC}"
+    docker network ls | grep -E "(leilao|auction)" || echo "Nenhuma network relacionada encontrada"
 }
 
 # Função principal
@@ -131,41 +107,41 @@ main() {
     echo ""
     
     stop_containers
+    echo ""
+    
     remove_containers
-    remove_networks
-    
     echo ""
-    echo -e "${YELLOW}Deseja remover volumes também?${NC}"
-    remove_volumes
     
+    cleanup_volumes
     echo ""
-    echo -e "${YELLOW}Deseja executar limpeza geral do Docker?${NC}"
-    docker_prune
     
+    cleanup_networks
     echo ""
-    check_network_conflicts
     
+    show_status
     echo ""
-    echo -e "${GREEN}🎉 Limpeza concluída!${NC}"
-    echo -e "${YELLOW}Agora você pode executar: docker-compose -f docker-compose.dev.yml up -d${NC}"
+    
+    echo -e "${GREEN}✅ Limpeza concluída!${NC}"
+    echo -e "${YELLOW}Agora você pode executar:${NC}"
+    echo "docker-compose -f docker-compose.dev.yml up mysql redis"
 }
 
 # Função de ajuda
 show_help() {
-    echo "Uso: $0 [opção]"
+    echo "Uso: $0 [opções]"
     echo ""
     echo "Opções:"
     echo "  -h, --help          Mostra esta ajuda"
-    echo "  --stop-only         Apenas para os containers"
-    echo "  --remove-containers Remove containers"
-    echo "  --remove-networks   Remove redes"
-    echo "  --remove-volumes    Remove volumes"
-    echo "  --check-networks    Verifica conflitos de rede"
-    echo "  --full-cleanup      Limpeza completa"
+    echo "  --status            Mostra apenas o status atual"
+    echo "  --stop              Para apenas os containers"
+    echo "  --remove            Remove apenas os containers parados"
+    echo "  --volumes           Limpa apenas volumes órfãos"
+    echo "  --networks          Limpa apenas networks órfãs"
     echo ""
     echo "Exemplo:"
-    echo "  $0                  # Limpeza interativa"
-    echo "  $0 --full-cleanup   # Limpeza completa automática"
+    echo "  $0                  # Limpeza completa"
+    echo "  $0 --status         # Apenas status"
+    echo "  $0 --stop           # Apenas parar containers"
 }
 
 # Processar argumentos da linha de comando
@@ -174,27 +150,25 @@ case "${1:-}" in
         show_help
         exit 0
         ;;
-    --stop-only)
-        stop_containers
+    --status)
+        show_status
+        exit 0
         ;;
-    --remove-containers)
+    --stop)
         stop_containers
+        exit 0
+        ;;
+    --remove)
         remove_containers
+        exit 0
         ;;
-    --remove-networks)
-        remove_networks
+    --volumes)
+        cleanup_volumes
+        exit 0
         ;;
-    --remove-volumes)
-        remove_volumes
-        ;;
-    --check-networks)
-        check_network_conflicts
-        ;;
-    --full-cleanup)
-        stop_containers
-        remove_containers
-        remove_networks
-        docker_prune
+    --networks)
+        cleanup_networks
+        exit 0
         ;;
     "")
         main

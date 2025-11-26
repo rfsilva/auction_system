@@ -1,89 +1,30 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: leilao-postgres
+  mysql:
+    image: mysql:8.0
+    container_name: leilao-mysql-dev
     environment:
-      POSTGRES_DB: leilao_db
-      POSTGRES_USER: leilao_user
-      POSTGRES_PASSWORD: leilao_pass
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      MYSQL_DATABASE: leilao_db
+      MYSQL_USER: leilao_user
+      MYSQL_PASSWORD: leilao_pass
+      MYSQL_ROOT_PASSWORD: leilao_root
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
-    networks:
-      - leilao-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U leilao_user -d leilao_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - mysql_dev_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: leilao-redis
+    container_name: leilao-redis-dev
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    networks:
-      - leilao-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # pgAdmin (opcional - para administração do banco)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: leilao-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@leilao.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "8081:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - leilao-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # Redis Commander (opcional - para administração do Redis)
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: leilao-redis-commander
-    environment:
-      REDIS_HOSTS: local:redis:6379
-    ports:
-      - "8082:8081"
-    networks:
-      - leilao-network
-    depends_on:
-      redis:
-        condition: service_healthy
+      - redis_dev_data:/data
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  pgadmin_data:
-    driver: local
-
-networks:
-  leilao-network:
-    driver: bridge
+  mysql_dev_data:
+  redis_dev_data:
