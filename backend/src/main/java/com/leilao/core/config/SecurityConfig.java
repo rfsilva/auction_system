@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**", "/public/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll() // Para testes
+                .requestMatchers("/catalogo/**", "/h2-console/**").permitAll() // Para testes
                 // WebSocket e SSE endpoints (fora do context-path)
                 .requestMatchers("/ws/**", "/sse/**").permitAll()
                 // Realtime endpoints (dentro do context-path /api)

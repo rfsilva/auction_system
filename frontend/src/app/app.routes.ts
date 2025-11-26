@@ -31,6 +31,32 @@ export const routes: Routes = [
       {
         path: 'realtime-test',
         loadComponent: () => import('./pages/realtime-test/realtime-test.component').then(m => m.RealtimeTestComponent)
+      },
+      // Rotas do catálogo público
+      {
+        path: 'catalogo',
+        loadComponent: () => import('./pages/catalogo/catalogo.component').then(m => m.CatalogoComponent)
+      },
+      // Rotas de produtos para vendedores
+      {
+        path: 'produtos/novo',
+        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'produtos/meus-produtos',
+        loadComponent: () => import('./pages/produto/produto-list.component').then(m => m.ProdutoListComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'produtos/:id/editar',
+        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'produtos/:id',
+        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
+        canActivate: [authGuard]
       }
     ]
   },
