@@ -8,7 +8,7 @@ import { UserRole, UserStatus } from '../../core/models/user.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.scss'
+  styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent {
   constructor(public authService: AuthService) {}

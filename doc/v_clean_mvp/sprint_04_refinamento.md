@@ -15,8 +15,7 @@ Completar funcionalidades críticas de pós-arremate: pagamentos reais, contesta
   2. Backend: Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
   3. Backend: Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
   4. Backend: Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-  5. Frontend: aplicar I18N pra manter a aplicação disponível nos idiomas: Português, Inglês, Espanhol, Italiano, Francês e Alemão
-  6. Backend: pra integrar com o I18N do front, gerar as mensagens de retorno no idioma de acordo com o solicitado pelo front
+  5. Frontend: Sempre que um novo componente for criado, respeitar a separação entre TS, HTML e CSS
 
 ### História 1: Pagamentos Reais via Gateway
 - **Tipo:** Funcional

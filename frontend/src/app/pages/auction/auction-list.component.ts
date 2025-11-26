@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './auction-list.component.html',
-  styleUrl: './auction-list.component.scss'
+  styleUrls: ['./auction-list.component.scss']
 })
 export class AuctionListComponent {
   mockAuctions = [
