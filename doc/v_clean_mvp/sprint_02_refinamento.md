@@ -24,11 +24,12 @@ Implementar funcionalidades básicas de catálogo, produtos e leilões estático
 - **Tasks / Sub-tasks:**
   1. Criar entidade Produto e persistência no DB - 2 SP  
   2. Implementar API REST CRUD para produtos - 3 SP  
-  3. Frontend: criar formulário de cadastro e edição - 2 SP  
-  4. Frontend: criar listagem de produtos (catálogo) - 2 SP  
-	4.1 A tela de catálogo precisa ser implementada com as melhores recomendações de UX. E o filtro deve aparecer suprimido (sanfona), e só exibido com o usuário clicando em expandir
-  5. Testes unitários e integração backend - 2 SP  
-  6. Testes end-to-end no frontend - 2 SP  
+  3. Implementar API REST CRUD específica para o catálogo de produtos (exibição público geral) - pública  - 2 SP
+  4. Frontend: criar formulário de cadastro e edição - 2 SP  
+  5. Frontend: criar listagem de produtos (catálogo) - 2 SP  
+	5.1 A tela de catálogo precisa ser implementada com as melhores recomendações de UX. E o filtro deve aparecer suprimido (sanfona), e só exibido com o usuário clicando em expandir
+  6. Testes unitários e integração backend - 2 SP  
+  7. Testes end-to-end no frontend - 2 SP  
 - **Story Points:** 13 SP
 
 ### História 2: CRUD de Lotes
