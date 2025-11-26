@@ -11,9 +11,12 @@ Garantir monitoramento do sistema, métricas de operação, relatórios gerencia
 
 ## Histórias Detalhadas
 - **Regras Gerais** 
-  1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
-  2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
-  3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
+  1. Backend: Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
+  2. Backend: Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
+  3. Backend: Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
+  4. Backend: Sempre que possível, aplicar Lombok para eliminar verbosidade de código
+  5. Frontend: aplicar I18N pra manter a aplicação disponível nos idiomas: Português, Inglês, Espanhol, Italiano, Francês e Alemão
+  6. Backend: pra integrar com o I18N do front, gerar as mensagens de retorno no idioma de acordo com o solicitado pelo front
 
 ### História 1: Monitoramento e Health Checks
 - **Tipo:** Enabler

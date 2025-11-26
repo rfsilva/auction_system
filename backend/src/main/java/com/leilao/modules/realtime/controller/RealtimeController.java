@@ -1,7 +1,6 @@
 package com.leilao.modules.realtime.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +23,8 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/realtime")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class RealtimeController {
-
-    private static final Logger logger = LoggerFactory.getLogger(RealtimeController.class);
     
     private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
@@ -43,21 +41,21 @@ public class RealtimeController {
         
         emitter.onCompletion(() -> {
             emitters.remove(emitter);
-            logger.debug("SSE emitter removido - completion");
+            log.debug("SSE emitter removido - completion");
         });
         
         emitter.onTimeout(() -> {
             emitters.remove(emitter);
-            logger.debug("SSE emitter removido - timeout");
+            log.debug("SSE emitter removido - timeout");
         });
         
         emitter.onError((ex) -> {
             emitters.remove(emitter);
-            logger.error("SSE emitter erro: {}", ex.getMessage());
+            log.error("SSE emitter erro: {}", ex.getMessage());
         });
         
         emitters.add(emitter);
-        logger.info("Novo cliente SSE conectado. Total: {}", emitters.size());
+        log.info("Novo cliente SSE conectado. Total: {}", emitters.size());
         
         // Enviar evento de conexão
         try {
@@ -71,7 +69,7 @@ public class RealtimeController {
                     .name("connected")
                     .data(connectionData));
         } catch (IOException e) {
-            logger.error("Erro ao enviar evento de conexão: {}", e.getMessage());
+            log.error("Erro ao enviar evento de conexão: {}", e.getMessage());
             emitter.completeWithError(e);
         }
         
@@ -83,7 +81,7 @@ public class RealtimeController {
      */
     @PostMapping("/broadcast")
     public ResponseEntity<Map<String, Object>> broadcastEvent(@RequestParam String message) {
-        logger.info("Broadcast solicitado: {}", message);
+        log.info("Broadcast solicitado: {}", message);
         
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("message", message);
@@ -111,7 +109,7 @@ public class RealtimeController {
      */
     @PostMapping("/start-simulation")
     public ResponseEntity<Map<String, Object>> startSimulation() {
-        logger.info("Iniciando simulação de eventos");
+        log.info("Iniciando simulação de eventos");
         
         executor.scheduleAtFixedRate(() -> {
             Map<String, Object> simulationData = new HashMap<>();
@@ -169,7 +167,7 @@ public class RealtimeController {
                 response.put("clientTimestamp", clientTime);
                 response.put("latency", serverTime - clientTime);
             } catch (Exception e) {
-                logger.warn("Erro ao calcular latência: {}", e.getMessage());
+                log.warn("Erro ao calcular latência: {}", e.getMessage());
             }
         }
         
@@ -189,13 +187,13 @@ public class RealtimeController {
                         .data(data));
                 return false; // Manter emitter
             } catch (IOException e) {
-                logger.warn("Erro ao enviar evento SSE, removendo emitter: {}", e.getMessage());
+                log.warn("Erro ao enviar evento SSE, removendo emitter: {}", e.getMessage());
                 return true; // Remove emitter com erro
             }
         });
         
         successCount = emitters.size();
-        logger.debug("Evento '{}' enviado para {} clientes SSE", eventName, successCount);
+        log.debug("Evento '{}' enviado para {} clientes SSE", eventName, successCount);
         
         return successCount;
     }
@@ -207,12 +205,12 @@ public class RealtimeController {
         if (messagingTemplate != null) {
             try {
                 messagingTemplate.convertAndSend(destination, data);
-                logger.debug("Evento enviado via WebSocket para: {}", destination);
+                log.debug("Evento enviado via WebSocket para: {}", destination);
             } catch (Exception e) {
-                logger.warn("Erro ao enviar evento via WebSocket: {}", e.getMessage());
+                log.warn("Erro ao enviar evento via WebSocket: {}", e.getMessage());
             }
         } else {
-            logger.debug("WebSocket não disponível, pulando broadcast para: {}", destination);
+            log.debug("WebSocket não disponível, pulando broadcast para: {}", destination);
         }
     }
 }

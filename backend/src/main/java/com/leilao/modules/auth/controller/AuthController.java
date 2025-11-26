@@ -7,9 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
 @Validated
+@RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
     /**
      * Endpoint para login
@@ -34,11 +32,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         try {
-            logger.info("Tentativa de login para email: {}", request.getEmail());
+            log.info("Tentativa de login para email: {}", request.getEmail());
             AuthResponse response = authService.login(request);
             return ResponseEntity.ok(ApiResponse.success("Login realizado com sucesso", response));
         } catch (Exception e) {
-            logger.error("Erro no login para email {}: {}", request.getEmail(), e.getMessage());
+            log.error("Erro no login para email {}: {}", request.getEmail(), e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Falha no login", e.getMessage()));
         }
@@ -50,11 +48,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            logger.info("Tentativa de registro para email: {}", request.getEmail());
+            log.info("Tentativa de registro para email: {}", request.getEmail());
             AuthResponse response = authService.register(request);
             return ResponseEntity.ok(ApiResponse.success("Usuário registrado com sucesso", response));
         } catch (Exception e) {
-            logger.error("Erro no registro para email {}: {}", request.getEmail(), e.getMessage());
+            log.error("Erro no registro para email {}: {}", request.getEmail(), e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Falha no registro", e.getMessage()));
         }
@@ -69,7 +67,7 @@ public class AuthController {
             AuthResponse response = authService.refreshToken(request);
             return ResponseEntity.ok(ApiResponse.success("Token renovado com sucesso", response));
         } catch (Exception e) {
-            logger.error("Erro ao renovar token: {}", e.getMessage());
+            log.error("Erro ao renovar token: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Falha ao renovar token", e.getMessage()));
         }
@@ -88,7 +86,7 @@ public class AuthController {
             boolean exists = authService.checkEmailExists(email);
             return ResponseEntity.ok(ApiResponse.success(exists));
         } catch (Exception e) {
-            logger.error("Erro ao verificar email {}: {}", email, e.getMessage());
+            log.error("Erro ao verificar email {}: {}", email, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Erro ao verificar email", e.getMessage()));
         }
@@ -109,10 +107,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
         try {
             // TODO: Implementar invalidação de token (blacklist)
-            logger.info("Logout realizado");
+            log.info("Logout realizado");
             return ResponseEntity.ok(ApiResponse.success("Logout realizado com sucesso"));
         } catch (Exception e) {
-            logger.error("Erro no logout: {}", e.getMessage());
+            log.error("Erro no logout: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Erro no logout", e.getMessage()));
         }

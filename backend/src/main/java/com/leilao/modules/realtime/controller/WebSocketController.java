@@ -3,9 +3,8 @@ package com.leilao.modules.realtime.controller;
 import com.leilao.modules.realtime.dto.BidMessage;
 import com.leilao.modules.realtime.dto.PingMessage;
 import com.leilao.modules.realtime.dto.WebSocketMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -19,12 +18,11 @@ import java.util.Map;
  * Controller WebSocket para comunicação bidirecional (bidders)
  */
 @Controller
+@RequiredArgsConstructor
+@Slf4j
 public class WebSocketController {
-
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
     
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * Endpoint WebSocket para receber mensagens de teste
@@ -32,7 +30,7 @@ public class WebSocketController {
     @MessageMapping("/test")
     @SendTo("/topic/test")
     public Map<String, Object> handleTestMessage(WebSocketMessage message) {
-        logger.info("Mensagem de teste recebida: {}", message);
+        log.info("Mensagem de teste recebida: {}", message);
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "test-response");
@@ -57,7 +55,7 @@ public class WebSocketController {
     @MessageMapping("/bid")
     @SendTo("/topic/bids")
     public Map<String, Object> handleBid(BidMessage bidMessage) {
-        logger.info("Lance recebido: {}", bidMessage);
+        log.info("Lance recebido: {}", bidMessage);
         
         try {
             // Validações básicas
@@ -86,7 +84,7 @@ public class WebSocketController {
             return response;
             
         } catch (Exception e) {
-            logger.error("Erro ao processar lance: {}", e.getMessage());
+            log.error("Erro ao processar lance: {}", e.getMessage());
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "bid-error");
@@ -106,7 +104,7 @@ public class WebSocketController {
     @MessageMapping("/ping")
     @SendTo("/topic/pong")
     public Map<String, Object> handlePing(PingMessage pingMessage) {
-        logger.debug("Ping recebido: {}", pingMessage);
+        log.debug("Ping recebido: {}", pingMessage);
         
         try {
             Map<String, Object> response = new HashMap<>();
@@ -128,7 +126,7 @@ public class WebSocketController {
             return response;
             
         } catch (Exception e) {
-            logger.error("Erro ao processar ping: {}", e.getMessage());
+            log.error("Erro ao processar ping: {}", e.getMessage());
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "pong-error");
@@ -147,7 +145,7 @@ public class WebSocketController {
     @MessageMapping("/simulation")
     @SendTo("/topic/simulation")
     public Map<String, Object> handleSimulation(WebSocketMessage simulationMessage) {
-        logger.debug("Dados de simulação recebidos: {}", simulationMessage);
+        log.debug("Dados de simulação recebidos: {}", simulationMessage);
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "simulation-response");
@@ -171,7 +169,7 @@ public class WebSocketController {
     @MessageMapping("/message")
     @SendTo("/topic/messages")
     public Map<String, Object> handleMessage(WebSocketMessage message) {
-        logger.info("Mensagem genérica recebida: {}", message);
+        log.info("Mensagem genérica recebida: {}", message);
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "message-response");
@@ -196,7 +194,7 @@ public class WebSocketController {
     @MessageMapping("/generic")
     @SendTo("/topic/generic")
     public Map<String, Object> handleGeneric(Map<String, Object> data) {
-        logger.info("Dados genéricos recebidos: {}", data);
+        log.info("Dados genéricos recebidos: {}", data);
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "generic-response");

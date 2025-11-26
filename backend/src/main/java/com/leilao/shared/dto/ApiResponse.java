@@ -1,11 +1,16 @@
 package com.leilao.shared.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 /**
  * Classe padrão para respostas da API
  */
+@Data
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     
@@ -15,17 +20,14 @@ public class ApiResponse<T> {
     private String error;
     private LocalDateTime timestamp;
     
-    public ApiResponse() {
-        this.timestamp = LocalDateTime.now();
-    }
-    
     public ApiResponse(boolean success, String message, T data) {
-        this();
         this.success = success;
         this.message = message;
         this.data = data;
+        this.timestamp = LocalDateTime.now();
     }
     
+    // Métodos estáticos de conveniência
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(true, "Success", data);
     }
@@ -38,6 +40,7 @@ public class ApiResponse<T> {
         ApiResponse<T> response = new ApiResponse<>();
         response.success = false;
         response.error = error;
+        response.timestamp = LocalDateTime.now();
         return response;
     }
     
@@ -46,47 +49,12 @@ public class ApiResponse<T> {
         response.success = false;
         response.message = message;
         response.error = error;
+        response.timestamp = LocalDateTime.now();
         return response;
     }
     
-    // Getters and Setters
-    public boolean isSuccess() {
-        return success;
-    }
-    
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-    
-    public String getMessage() {
-        return message;
-    }
-    
-    public void setMessage(String message) {
-        this.message = message;
-    }
-    
-    public T getData() {
-        return data;
-    }
-    
-    public void setData(T data) {
-        this.data = data;
-    }
-    
-    public String getError() {
-        return error;
-    }
-    
-    public void setError(String error) {
-        this.error = error;
-    }
-    
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-    
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    // Inicializar timestamp no construtor padrão
+    {
+        this.timestamp = LocalDateTime.now();
     }
 }

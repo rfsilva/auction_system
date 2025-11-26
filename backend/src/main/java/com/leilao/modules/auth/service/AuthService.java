@@ -6,9 +6,8 @@ import com.leilao.modules.auth.repository.UsuarioRepository;
 import com.leilao.shared.enums.UserRole;
 import com.leilao.shared.enums.UserStatus;
 import com.leilao.shared.exception.BusinessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,36 +19,31 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Service para operações de autenticação e autorização
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 30;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * Realiza o login do usuário
      */
     public AuthResponse login(LoginRequest request) {
         try {
-            logger.info("Tentativa de login para email: {}", request.getEmail());
+            log.info("Tentativa de login para email: {}", request.getEmail());
 
             // Buscar usuário
             Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
@@ -83,7 +77,7 @@ public class AuthService {
             // Converter para DTO
             UserDto userDto = convertToDto(usuario);
 
-            logger.info("Login realizado com sucesso para usuário: {}", usuario.getId());
+            log.info("Login realizado com sucesso para usuário: {}", usuario.getId());
             return new AuthResponse(token, refreshToken, userDto);
 
         } catch (AuthenticationException e) {
@@ -96,7 +90,7 @@ public class AuthService {
      * Registra um novo usuário
      */
     public AuthResponse register(RegisterRequest request) {
-        logger.info("Tentativa de registro para email: {}", request.getEmail());
+        log.info("Tentativa de registro para email: {}", request.getEmail());
 
         // Verificar se email já existe
         if (usuarioRepository.existsByEmail(request.getEmail())) {
@@ -122,7 +116,7 @@ public class AuthService {
         // Converter para DTO
         UserDto userDto = convertToDto(usuario);
 
-        logger.info("Usuário registrado com sucesso: {}", usuario.getId());
+        log.info("Usuário registrado com sucesso: {}", usuario.getId());
         return new AuthResponse(token, refreshToken, userDto);
     }
 
@@ -167,7 +161,7 @@ public class AuthService {
 
             if (tentativas >= MAX_LOGIN_ATTEMPTS) {
                 usuario.setBloqueadoAte(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
-                logger.warn("Usuário {} bloqueado por {} tentativas de login", email, tentativas);
+                log.warn("Usuário {} bloqueado por {} tentativas de login", email, tentativas);
             }
 
             usuarioRepository.save(usuario);
@@ -177,9 +171,9 @@ public class AuthService {
     /**
      * Converte Usuario para UserDto
      */
-    private UserDto convertToDto(Usuario usuario) {
+    public UserDto convertToDto(Usuario usuario) {
         UserDto dto = new UserDto();
-        dto.setId(usuario.getId());
+        dto.setId(UUID.fromString(usuario.getId()));
         dto.setName(usuario.getNome());
         dto.setEmail(usuario.getEmail());
         dto.setPhone(usuario.getTelefone());

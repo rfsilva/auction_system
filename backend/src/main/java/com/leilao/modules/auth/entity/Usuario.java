@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -26,12 +26,18 @@ import java.util.stream.Collectors;
  */
 @Entity
 @Table(name = "tb_usuario")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"senhaHash"}) // Excluir senha do toString por segurança
 public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id", columnDefinition = "CHAR(36)")
+    @EqualsAndHashCode.Include
     private String id;
 
     @NotBlank(message = "Nome é obrigatório")
@@ -86,9 +92,7 @@ public class Usuario implements UserDetails {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Constructors
-    public Usuario() {}
-
+    // Construtores adicionais
     public Usuario(String nome, String email, String senhaHash) {
         this.nome = nome;
         this.email = email;
@@ -100,117 +104,13 @@ public class Usuario implements UserDetails {
         this.telefone = telefone;
     }
 
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenhaHash() {
-        return senhaHash;
-    }
-
-    public void setSenhaHash(String senhaHash) {
-        this.senhaHash = senhaHash;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public UserStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
-
+    // Override do getter de roles para garantir valor padrão
     public Set<UserRole> getRoles() {
         return roles != null ? roles : Set.of(UserRole.VISITOR);
     }
 
     public void setRoles(Set<UserRole> roles) {
         this.roles = roles != null ? roles : Set.of(UserRole.VISITOR);
-    }
-
-    public Boolean getEmailVerificado() {
-        return emailVerificado;
-    }
-
-    public void setEmailVerificado(Boolean emailVerificado) {
-        this.emailVerificado = emailVerificado;
-    }
-
-    public Boolean getTelefoneVerificado() {
-        return telefoneVerificado;
-    }
-
-    public void setTelefoneVerificado(Boolean telefoneVerificado) {
-        this.telefoneVerificado = telefoneVerificado;
-    }
-
-    public LocalDateTime getUltimoLogin() {
-        return ultimoLogin;
-    }
-
-    public void setUltimoLogin(LocalDateTime ultimoLogin) {
-        this.ultimoLogin = ultimoLogin;
-    }
-
-    public Integer getTentativasLogin() {
-        return tentativasLogin;
-    }
-
-    public void setTentativasLogin(Integer tentativasLogin) {
-        this.tentativasLogin = tentativasLogin;
-    }
-
-    public LocalDateTime getBloqueadoAte() {
-        return bloqueadoAte;
-    }
-
-    public void setBloqueadoAte(LocalDateTime bloqueadoAte) {
-        this.bloqueadoAte = bloqueadoAte;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     // UserDetails implementation
@@ -304,29 +204,5 @@ public class Usuario implements UserDetails {
     public void resetTentativasLogin() {
         this.tentativasLogin = 0;
         this.bloqueadoAte = null;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Usuario)) return false;
-        Usuario usuario = (Usuario) o;
-        return id != null && id.equals(usuario.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "Usuario{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", email='" + email + '\'' +
-                ", status=" + status +
-                ", roles=" + getRoles() +
-                '}';
     }
 }

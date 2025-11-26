@@ -1,8 +1,7 @@
 package com.leilao.shared.service;
 
 import com.leilao.core.config.EmailConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,9 +11,8 @@ import org.springframework.stereotype.Service;
  * Serviço de email com suporte a mock para desenvolvimento
  */
 @Service
+@Slf4j
 public class EmailService {
-
-    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
     private final boolean emailEnabled;
@@ -28,7 +26,7 @@ public class EmailService {
         this.emailEnabled = emailEnabled;
         this.emailMock = emailMock;
         
-        logger.info("EmailService inicializado - Enabled: {}, Mock: {}", emailEnabled, emailMock);
+        log.info("EmailService inicializado - Enabled: {}, Mock: {}", emailEnabled, emailMock);
     }
 
     /**
@@ -37,12 +35,12 @@ public class EmailService {
     public void sendSimpleEmail(String to, String subject, String text) {
         try {
             if (!emailEnabled) {
-                logger.info("Email desabilitado - Não enviando para: {}", to);
+                log.info("Email desabilitado - Não enviando para: {}", to);
                 return;
             }
 
             if (emailMock) {
-                logger.info("MOCK EMAIL - Para: {}, Assunto: {}, Texto: {}", to, subject, text);
+                log.info("MOCK EMAIL - Para: {}, Assunto: {}, Texto: {}", to, subject, text);
                 return;
             }
 
@@ -53,13 +51,13 @@ public class EmailService {
             message.setFrom("noreply@leilao.com");
 
             mailSender.send(message);
-            logger.info("Email enviado com sucesso para: {}", to);
+            log.info("Email enviado com sucesso para: {}", to);
 
         } catch (Exception e) {
-            logger.error("Erro ao enviar email para {}: {}", to, e.getMessage());
+            log.error("Erro ao enviar email para {}: {}", to, e.getMessage());
             // Em desenvolvimento, não falhar por causa de email
             if (emailMock || !emailEnabled) {
-                logger.warn("Ignorando erro de email em modo mock/desabilitado");
+                log.warn("Ignorando erro de email em modo mock/desabilitado");
             } else {
                 throw new RuntimeException("Falha ao enviar email", e);
             }
@@ -127,7 +125,7 @@ public class EmailService {
     public boolean testConnection() {
         try {
             if (!emailEnabled || emailMock) {
-                logger.info("Teste de conexão de email - Mock/Desabilitado: sempre OK");
+                log.info("Teste de conexão de email - Mock/Desabilitado: sempre OK");
                 return true;
             }
 
@@ -143,11 +141,11 @@ public class EmailService {
                 // Não enviar realmente, apenas testar a configuração
             }
             
-            logger.info("Teste de conexão de email: OK");
+            log.info("Teste de conexão de email: OK");
             return true;
 
         } catch (Exception e) {
-            logger.error("Teste de conexão de email falhou: {}", e.getMessage());
+            log.error("Teste de conexão de email falhou: {}", e.getMessage());
             return false;
         }
     }

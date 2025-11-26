@@ -1,6 +1,7 @@
 package com.leilao.core.config;
 
 import com.leilao.shared.service.EmailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,13 +12,10 @@ import org.springframework.stereotype.Component;
  */
 @Component("mail")
 @ConditionalOnProperty(name = "management.health.mail.enabled", havingValue = "true", matchIfMissing = false)
+@RequiredArgsConstructor
 public class CustomMailHealthIndicator implements HealthIndicator {
 
     private final EmailService emailService;
-
-    public CustomMailHealthIndicator(EmailService emailService) {
-        this.emailService = emailService;
-    }
 
     @Override
     public Health health() {
