@@ -15,7 +15,8 @@ Completar funcionalidades críticas de pós-arremate: pagamentos reais, contesta
   2. Backend: Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
   3. Backend: Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
   4. Backend: Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-  5. Frontend: Sempre que um novo componente for criado, respeitar a separação entre TS, HTML e CSS
+  5. Backend: Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
+  6. Frontend: Sempre que um novo componente for criado, não gerar HTML e CSS inline: separe os arquivos
 
 ### História 1: Pagamentos Reais via Gateway
 - **Tipo:** Funcional

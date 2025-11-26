@@ -15,7 +15,8 @@ Implementar funcionalidades básicas de catálogo, produtos e leilões estático
   2. Backend: Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
   3. Backend: Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
   4. Backend: Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-  5. Frontend: Sempre que um novo componente for criado, respeitar a separação entre TS, HTML e CSS
+  5. Backend: Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
+  6. Frontend: Sempre que um novo componente for criado, não gerar HTML e CSS inline: separe os arquivos
 
 ### História 1: CRUD de Produtos
 - **Tipo:** Funcional
@@ -25,6 +26,7 @@ Implementar funcionalidades básicas de catálogo, produtos e leilões estático
   2. Implementar API REST CRUD para produtos - 3 SP  
   3. Frontend: criar formulário de cadastro e edição - 2 SP  
   4. Frontend: criar listagem de produtos (catálogo) - 2 SP  
+	4.1 A tela de catálogo precisa ser implementada com as melhores recomendações de UX. E o filtro deve aparecer suprimido (sanfona), e só exibido com o usuário clicando em expandir
   5. Testes unitários e integração backend - 2 SP  
   6. Testes end-to-end no frontend - 2 SP  
 - **Story Points:** 13 SP
