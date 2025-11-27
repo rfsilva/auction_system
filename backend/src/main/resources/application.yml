@@ -1,0 +1,113 @@
+spring:
+  application:
+    name: leilao-backend
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # Configuração JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: none # Deixar Flyway gerenciar
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: America/Sao_Paulo
+  
+  # Configuração Flyway
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  
+  # Configuração Jackson
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: America/Sao_Paulo
+    default-property-inclusion: non_null
+  
+  # Configuração de upload de arquivos
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Configurações da aplicação
+app:
+  name: Sistema de Leilão Eletrônico
+  version: 1.0.0
+  
+  # Configurações JWT
+  jwt:
+    secret: ${JWT_SECRET:leilao-secret-key-change-in-production}
+    access-token-expiration: 900000 # 15 minutos
+    refresh-token-expiration: 604800000 # 7 dias
+  
+  # Configurações de CORS
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+    allowed-headers: "*"
+    allow-credentials: true
+  
+  # Configurações de Rate Limiting
+  rate-limit:
+    enabled: true
+    requests-per-minute: 60
+    burst-capacity: 100
+  
+  # Configurações de Email (padrão)
+  email:
+    enabled: ${EMAIL_ENABLED:false}  # Desabilitado por padrão
+    mock: ${EMAIL_MOCK:true}         # Mock habilitado por padrão
+
+# Configurações do Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    # Configurações de health checks
+    mail:
+      enabled: false  # Desabilitado por padrão para evitar erros
+    redis:
+      enabled: true
+    db:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+# Configurações de logging
+logging:
+  level:
+    com.leilao: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # Logs do Flyway
+    org.flywaydb: INFO
+    # Reduzir logs de email por padrão
+    org.springframework.mail: WARN
+    org.springframework.boot.actuate.mail: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configurações do servidor
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always

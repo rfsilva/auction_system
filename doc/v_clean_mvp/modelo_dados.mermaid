@@ -1,0 +1,181 @@
+erDiagram
+    USUARIO {
+        UUID id PK
+        string nome
+        string email
+        string senhaHash
+        string telefone
+        enum status
+        string roles
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    VENDEDOR {
+        UUID sellerId PK
+        UUID usuarioId FK
+        string companyName
+        string taxId
+        UUID contractId FK
+        decimal feeRate
+        string documents
+    }
+
+    COMPRADOR {
+        UUID buyerId PK
+        UUID usuarioId FK
+        enum kycStatus
+        string preferences
+    }
+
+    PRODUTO {
+        UUID productId PK
+        UUID sellerId FK
+        string title
+        string description
+        array images
+        decimal weight
+        string dimensions
+        decimal initialPrice
+        decimal currentPrice
+        datetime endDateTime
+        enum status
+        boolean moderated
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    LOTE {
+        UUID loteId PK
+        UUID sellerId FK
+        string title
+        datetime loteEndDateTime
+        enum status
+        array products FK
+    }
+
+    LANCE {
+        UUID bidId PK
+        UUID productId FK
+        UUID userId FK
+        decimal value
+        string currency
+        datetime timestamp
+        string ip
+        string userAgent
+        integer sequenceNumber
+        boolean proxyBid
+    }
+
+    ARREMATE {
+        UUID saleId PK
+        UUID productId FK
+        UUID winningBidId FK
+        UUID buyerId FK
+        decimal finalPrice
+        decimal feeAmount
+        decimal freightEstimate
+        enum statusPayment
+        datetime createdAt
+    }
+
+    DOCUMENTO {
+        UUID docId PK
+        UUID entityId FK
+        string entityType
+        string type
+        string storageUrl
+        string hash
+        datetime createdAt
+        datetime expiresAt
+    }
+
+    AUDITLOG {
+        UUID eventId PK
+        string entityType
+        UUID entityId
+        string action
+        UUID performedBy FK
+        datetime timestamp
+        string metadata
+    }
+
+    DISPUTA {
+        UUID disputeId PK
+        UUID saleId FK
+        UUID buyerId FK
+        UUID sellerId FK
+        string reason
+        enum status
+        datetime createdAt
+        datetime resolvedAt
+        string evidence[]
+    }
+
+    FAVORITO {
+        UUID favoriteId PK
+        UUID userId FK
+        UUID productId FK
+        datetime createdAt
+    }
+
+    NOTIFICACAO {
+        UUID notificationId PK
+        UUID userId FK
+        string type
+        string message
+        enum status
+        datetime createdAt
+        datetime sentAt
+    }
+
+    CONTRATO {
+        UUID contractId PK
+        UUID sellerId FK
+        decimal feeRate
+        string terms
+        datetime createdAt
+        datetime validFrom
+        datetime validTo
+        boolean active
+    }
+
+    PRE_AUTORIZACAO {
+        UUID preAuthId PK
+        UUID buyerId FK
+        UUID productId FK
+        decimal amount
+        enum status
+        datetime createdAt
+        datetime expiresAt
+    }
+
+    HISTORICO_PRODUTO {
+        UUID historyId PK
+        UUID productId FK
+        string action
+        UUID performedBy FK
+        datetime timestamp
+        string metadata
+    }
+
+    USUARIO ||--o{ VENDEDOR : "pode ser"
+    USUARIO ||--o{ COMPRADOR : "pode ser"
+    VENDEDOR ||--o{ PRODUTO : "cadastra"
+    VENDEDOR ||--o{ LOTE : "cria"
+    VENDEDOR ||--o{ CONTRATO : "tem"
+    PRODUTO ||--o{ LANCE : "recebe"
+    COMPRADOR ||--o{ LANCE : "faz"
+    PRODUTO ||--o{ ARREMATE : "gera"
+    LANCE ||--o{ ARREMATE : "vencedor"
+    ARREMATE ||--o{ DOCUMENTO : "gera"
+    LOTE ||--o{ PRODUTO : "contém"
+    USUARIO ||--o{ AUDITLOG : "registra ação"
+    ARREMATE ||--o{ DISPUTA : "pode gerar"
+    USUARIO ||--o{ FAVORITO : "marca"
+    PRODUTO ||--o{ FAVORITO : "é marcado"
+    USUARIO ||--o{ NOTIFICACAO : "recebe"
+    PRODUTO ||--o{ PRE_AUTORIZACAO : "pode ter"
+    COMPRADOR ||--o{ PRE_AUTORIZACAO : "é associado"
+    PRODUTO ||--o{ HISTORICO_PRODUTO : "registra alterações"
+    USUARIO ||--o{ HISTORICO_PRODUTO : "registra alterações"

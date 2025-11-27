@@ -1,0 +1,55 @@
+<div class="main-layout">
+  <!-- Header -->
+  <header class="header">
+    <nav class="navbar">
+      <div class="nav-brand">
+        <a routerLink="/" class="brand-link">
+          <h1>🔨 Leilão Online</h1>
+        </a>
+      </div>
+      
+      <div class="nav-menu">
+        <a routerLink="/" class="nav-link">Home</a>
+        <a routerLink="/catalogo" class="nav-link">Catálogo</a>
+        <a routerLink="/auctions" class="nav-link">Leilões</a>
+        
+        @if (authService.isAuthenticated()) {
+          @if (authService.canSell()) {
+            <div class="nav-dropdown">
+              <button class="nav-link dropdown-toggle">Meus Produtos</button>
+              <div class="dropdown-menu">
+                <a routerLink="/produtos/meus-produtos" class="dropdown-item">Listar Produtos</a>
+                <a routerLink="/produtos/novo" class="dropdown-item">Novo Produto</a>
+              </div>
+            </div>
+          }
+          <a routerLink="/profile" class="nav-link">Perfil</a>
+          <button (click)="logout()" class="btn btn-outline">Sair</button>
+        } @else {
+          <a routerLink="/auth/login" class="nav-link">Login</a>
+          <a routerLink="/auth/register" class="btn btn-primary">Cadastrar</a>
+        }
+        
+        <a routerLink="/realtime-test" class="nav-link debug-link">🚀 Teste</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2024 Sistema de Leilão Eletrônico. Todos os direitos reservados.</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link">Termos de Uso</a>
+        <a href="#" class="footer-link">Privacidade</a>
+        <a href="#" class="footer-link">Suporte</a>
+        <a routerLink="/realtime-test" class="footer-link">Teste Realtime</a>
+      </div>
+    </div>
+  </footer>
+</div>

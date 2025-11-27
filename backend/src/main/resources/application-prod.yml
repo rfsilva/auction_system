@@ -1,0 +1,175 @@
+spring:
+  # Configuração do banco de dados para produção
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+  
+  # Configuração JPA/Hibernate para produção
+  jpa:
+    hibernate:
+      ddl-auto: validate # Nunca alterar schema em produção
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        jdbc:
+          time_zone: America/Sao_Paulo
+        connection:
+          provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+  
+  # Configuração Flyway para produção
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    clean-disabled: true # NUNCA permitir clean em produção
+    out-of-order: false
+    ignore-missing-migrations: false
+  
+  # Configuração Redis para produção
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: 0
+      timeout: 5000ms
+      ssl: ${REDIS_SSL:false}
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+  
+  # Configuração de email para produção
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: ${MAIL_HOST}
+
+# Configurações específicas para produção
+app:
+  # URLs base para produção
+  frontend-url: ${FRONTEND_URL}
+  backend-url: ${BACKEND_URL}
+  
+  # JWT com configurações de produção
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiration: 900000 # 15 minutos
+    refresh-token-expiration: 604800000 # 7 dias
+  
+  # CORS restritivo para produção
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+    allowed-headers: Authorization,Content-Type,X-Requested-With
+    allow-credentials: true
+  
+  # Configurações de storage para produção (S3)
+  storage:
+    type: s3
+    s3:
+      bucket-name: ${S3_BUCKET_NAME}
+      region: ${AWS_REGION:us-east-1}
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+      endpoint: ${S3_ENDPOINT:}
+  
+  # Configurações de pagamento para produção
+  payment:
+    provider: ${PAYMENT_PROVIDER:stripe}
+    stripe:
+      public-key: ${STRIPE_PUBLIC_KEY}
+      secret-key: ${STRIPE_SECRET_KEY}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  
+  # Configurações de banco para produção
+  database:
+    show-sql: false
+    generate-ddl: false
+    auto-create-schema: false
+
+# Configurações de segurança para produção
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: strict
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# Logging otimizado para produção
+logging:
+  level:
+    com.leilao: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.springframework.security: WARN
+    org.flywaydb: INFO
+  file:
+    name: /var/log/leilao/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configurações do Actuator para produção
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true

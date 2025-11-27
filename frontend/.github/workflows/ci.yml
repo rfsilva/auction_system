@@ -1,0 +1,82 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'frontend/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'frontend/**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: frontend/leilao-frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend/leilao-frontend
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: frontend/leilao-frontend
+      run: npm run lint
+    
+    - name: Run tests
+      working-directory: frontend/leilao-frontend
+      run: npm run test -- --watch=false --browsers=ChromeHeadless
+    
+    - name: Build application
+      working-directory: frontend/leilao-frontend
+      run: npm run build --prod
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: frontend/leilao-frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend/leilao-frontend
+      run: npm ci
+    
+    - name: Build for production
+      working-directory: frontend/leilao-frontend
+      run: npm run build --prod
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/leilao-frontend/dist/
+        retention-days: 30
+    
+    # Deploy para ambiente de desenvolvimento
+    # Descomente e configure conforme sua infraestrutura
+    # - name: Deploy to development
+    #   run: |
+    #     echo "Deploy to development server"
+    #     # Adicionar comandos de deploy aqui

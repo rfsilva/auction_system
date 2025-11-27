@@ -1,0 +1,451 @@
+✅ 1. Funcionalidades Críticas Potenciais que Ainda Não Foram Mapeadas
+1.1 Auditoria e Registro Forense dos Lances (Anti-fraude) — CRÍTICO
+
+Leilões precisam de:
+
+Registro imutável dos lances (com timestamp confiável — NTP / clock sync).
+
+Hash de integridade (ex: SHA-256 ou blockchain privado).
+
+Identificação do IP / user-agent / assinatura do lance.
+
+Trilha de auditoria completa para disputas legais.
+
+É quase obrigatório para evitar questionamentos.
+
+1.2 Mecanismos Anti-sniping (estouro do tempo) — CRÍTICO
+
+Plataformas sérias oferecem:
+
+Extensão automática do tempo quando um lance é dado nos últimos X segundos.
+Exemplo: último lance veio a 5 segundos do fim? Estende +15s.
+
+Evita lances de "último segundo" que frustam vendedores e compradores.
+
+1.3 Mecanismo de Rate-limit específico para Lances — CRÍTICO
+
+Porque:
+
+Bots podem tentar forçar o valor mínimo progressivamente.
+
+Competidores podem tentar derrubar o serviço com spam de lances.
+
+Regra comum:
+
+1 lance por 500 ms / usuário
+
+1 lance por 100 ms / conexão
+
+Throttling adaptativo em casos suspeitos
+
+1.4 Modo “Replay” de Leilão (Histórico em Linha do Tempo)
+
+Para revisar disputas e resolver litígios:
+
+Linha do tempo dos lances
+
+Quem deu o lance
+
+Hora exata
+
+Valor
+
+Eventos (ex.: extensões automáticas)
+
+Muito utilizado na área jurídica e em grandes plataformas.
+
+1.5 Sistema de Disputa / Chargeback / Contestação de Arremate — CRÍTICO
+
+Em leilões, disputas são comuns.
+Funcionalidades úteis:
+
+Registrar contestação com evidências.
+
+SLA para resposta.
+
+Workflow de aprovação/negação.
+
+Histórico do caso.
+
+1.6 Verificação Avançada do Comprador (KYC) — CRÍTICO para certos nichos
+
+Dependendo do segmento (veículos, máquinas):
+
+Upload de documentos
+
+Selfie com liveness check
+
+Validação de CPF/CNPJ
+
+Score de confiabilidade
+
+1.7 Catálogo com Busca Avançada, Filtros e Ordenação Inteligente
+
+Principalmente para lotes grandes:
+
+Filtros por preço, categoria, vendedor, estado, região
+
+Ordenação por leilões que estão para encerrar
+
+Destaques pagos (upsell)
+
+1.8 Gestão de Lotes em Massa (para vendedores profissionais) — CRÍTICO
+
+Para vendedores com muitos itens:
+
+Importação via Excel/CSV
+
+Cadastro múltiplo
+
+Edição em lote
+
+Auditoria e pré-visualização antes da publicação
+
+1.9 Regra de Depósito Garantidor (pré-autorização no cartão)
+
+Evita lances falsos.
+Muitos leilões exigem:
+
+pré-autorização no cartão
+
+pagamento de caução
+
+verificação de limite
+
+1.10 Cancelamento Automático de Arremate Não Pago (background job)
+
+Regras típicas:
+
+comprador tem X horas para pagar
+
+se não pagar → perde direito
+
+item volta para o leilão ou entra em remarcação
+
+1.11 Módulo de Logs Operacionais e Dashboard Administrativo
+
+Para monitorar:
+
+usuários conectados
+
+pôr-em-lotes ativos
+
+quantidade de lances/minuto
+
+falhas em pagamentos
+
+fila de notificações
+
+✅ 2. Diferenciais de Mercado (Componentes Premium)
+
+Essas são funcionalidades que distinguem plataformas profissionais e aumentam engajamento e receita.
+
+2.1 Sala de Leilão Virtual (Live Auction com Chat ao Vivo)
+
+Plataformas top possuem:
+
+visualização em tempo real
+
+ranking de disputadores
+
+avatar dos usuários disputando
+
+chat moderado
+
+Gera engajamento altíssimo.
+
+2.2 Algoritmo de Recomendação (“Você pode gostar”)
+
+Trabalha similar a e-commerces:
+
+ver histórico do comprador
+
+recomendar lotes compatíveis
+
+aumentar conversão
+
+2.3 App Mobile com Notificações Push (iOS/Android)
+
+Diferencial forte para:
+
+alertas de lance superado
+
+início de leilão
+
+encerramento próximo
+
+2.4 Lances Automáticos Inteligentes (Auto-bid / Proxy Bidding)
+
+O usuário define:
+
+valor máximo
+
+plataforma aumenta o lance automaticamente
+
+respeitando incrementos
+
+É extremamente comum em grandes leiloeiras.
+
+2.5 Certificação Digital para Termos de Arremate
+
+Assinatura digital integrada:
+
+imutabilidade
+
+validação jurídica
+
+contrato automático pós-venda
+
+2.6 Mecanismo de “Lance Rápido” (1-Click Bid)
+
+O usuário habilita e confirma uma vez.
+Depois ele dá lance com 1 clique.
+Excelente para aumentar competitividade no final do leilão.
+
+2.7 Analytics de Performance para Vendedores (portal profissional)
+
+Métricas desejadas:
+
+engajamento por produto
+
+número de observadores
+
+curva de disputa
+
+valor estimado vs arrematado
+
+estatísticas de acesso
+
+✅ 3. Infraestrutura e Operação – Pontos Críticos Adicionais
+3.1 Contingência de Realtime (fallback automático)
+
+Ideal:
+
+SSE → fallback para polling leve
+
+WebSocket → fallback para SSE
+
+Assim o usuário nunca perde o leilão
+
+3.2 Relatórios e Exportações Pesadas via Jobs Assíncronos
+
+Não pode rodar no serviço Web do leilão, senão impacta a disputa.
+
+Deve usar:
+
+filas
+
+workers
+
+escalonamento automático
+
+3.3 Mecanismo de Trava de Conflito (Optimistic Lock)
+
+No momento do lance, precisa garantir:
+
+atomicidade
+
+não perder lances simultâneos
+
+consistência do valor atual
+
+3.4 Proteção de concorrência no encerramento (closing arbitration)
+
+Crítico para evitar:
+
+“empate técnico”
+
+race conditions
+
+lances recebidos no exato segundo final
+
+----------------------
+
+🔥 Diferenciais e Funcionalidades Avançadas para Evolução do Sistema de Leilão Eletrônico
+
+Este documento lista funcionalidades de valor agregado, características competitivas e componentes diferenciais de mercado que podem ser incorporados após o MVP. Eles não fazem parte do escopo mínimo, mas fortalecem a solução e aumentam seu poder comercial, escalabilidade e maturidade.
+
+🚀 1. Experiência Avançada do Usuário (UX)
+1.1. Modo Espectador Avançado (“Spectator Mode”)
+
+Visualização em tempo real dos lances (via WebSocket/SSE).
+
+Indicadores de “intensidade do leilão” (heat level).
+
+Timeline visual dos lances para compreensão do fluxo.
+
+Destaca usuários que mais participaram (“top bidders”).
+
+1.2. Estratégia de Lances com Assistente Inteligente
+
+Sugestão automatizada de lances baseada em:
+
+histórico do item,
+
+ritmo atual do leilão,
+
+comportamento dos participantes.
+
+Alertas inteligentes ("agora é um bom momento para entrar").
+
+1.3. Acessibilidade Avançada
+
+Modo alto contraste.
+
+Leitura automática dos lances (text-to-speech leve).
+
+Navegação simplificada para usuários com mobilidade reduzida.
+
+🔒 2. Segurança e Compliance Diferenciados
+2.1. Monitoramento Antifraude em Tempo Real
+
+Detecção de padrões suspeitos:
+
+lances sincronizados,
+
+manipulação de preços,
+
+múltiplas contas suspeitas no mesmo IP.
+
+Uso de classificação de risco e bloqueio automático.
+
+2.2. Auditoria Criptografada Imutável
+
+Registro imutável de toda ação crítica.
+
+Exportável em formato assinado digitalmente.
+
+Possibilidade de usar hash chaining (estilo “mini blockchain” interno).
+
+2.3. Mecanismo de “Prova de Lance”
+
+Geração de um token hashado para comprovar que o lance foi recebido no backend.
+
+Evita disputas internas sobre “quem clicou primeiro”.
+
+📈 3. Análises e Inteligência de Negócio
+3.1. Painel Avançado de Análises (Real-Time BI)
+
+Temperatura do leilão (intensidade).
+
+Previsão de preço final por machine learning leve.
+
+Detecção de “stalling” (quando o leilão desacelera).
+
+Percentual de participação ativa dos compradores.
+
+3.2. Relatórios e Insights Pós-Leilão
+
+Relatório automático com:
+
+curvas de preço,
+
+comportamento dos lances,
+
+top compradores,
+
+performance comparada com leilões anteriores.
+
+3.3. Recomendações Inteligentes para Vendedores
+
+Sugestão de horários mais eficientes para abrir leilões.
+
+Comparação entre categoria de produto vs. valor final.
+
+🔌 4. Conectividade e Extensibilidade
+4.1. API Pública (Marketplace / Parceiros)
+
+Permite integração com plataformas de revenda ou marketplaces.
+
+Conectores simplificados para ERPs.
+
+4.2. Webhooks de Eventos
+
+Notificação automática de:
+
+novo lance,
+
+leilão encerrado,
+
+price-up,
+
+status do pagamento.
+
+4.3. Suporte a Plugins de Estratégias
+
+Inserção de estratégias customizadas de lances automáticos (bots permitidos para alguns cenários de B2B).
+
+Módulo plugável para regras específicas de domínio.
+
+🎯 5. Operação, Governança e Performance
+5.1. Observabilidade Real-Time
+
+Métricas chave:
+
+tempo médio entre lances,
+
+latência por cluster,
+
+capacidade de throughput simultâneo.
+
+Dashboards com Grafana/Kibana.
+
+5.2. Failover Inteligente para Lances
+
+Se um nó falhar, a sessão de WebSocket é retomada automaticamente no outro nó.
+
+Reenvio confiável do lance, evitando perda por falha de rede.
+
+5.3. Mecanismo de Degradação Controlada
+
+Em picos de tráfego extremo:
+
+o sistema desliga recursos menos críticos,
+
+mantém o fluxo do leilão intacto.
+
+💼 6. Diferenciais para Clientes Corporativos (B2B)
+6.1. Modo Privado / Leilões Privados
+
+Leilões acessíveis apenas para compradores selecionados.
+
+Autenticação forte com MFA.
+
+6.2. Controle Avançado de Permissões
+
+Perfis:
+
+auditor,
+
+operador de lances,
+
+administrador,
+
+observador.
+
+6.3. SLA e Prioridade de Processamento
+
+Lances críticos podem ter prioridade de rede (QoS).
+
+Prevenção de latência injusta entre diferentes usuários.
+
+🤖 7. Funcionalidades Inteligentes Não Essenciais (Futuro)
+7.1. Chat com IA durante o leilão
+
+Explica dinâmica do leilão.
+
+Sugere estratégias.
+
+Informa sobre histórico de preços e comportamento dos concorrentes.
+
+7.2. Previsão de “Momento Ideal para Dar Lance”
+
+Baseado na curva do leilão.
+
+Analisa os competidores ativos.
+
+7.3. Classificação de Risco do Comprador
+
+Sem dados pessoais sensíveis.
+
+Apenas padrões anônimos de comportamento.

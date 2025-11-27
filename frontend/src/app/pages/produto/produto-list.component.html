@@ -1,0 +1,137 @@
+<div class="produto-list-container">
+  <div class="page-header">
+    <h2>Meus Produtos</h2>
+    <div class="header-actions">
+      <a routerLink="/produtos/novo" class="btn btn-primary">
+        Novo Produto
+      </a>
+    </div>
+  </div>
+
+  <div class="alert alert-error" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Carregando produtos...</p>
+  </div>
+
+  <div class="produtos-content" *ngIf="!loading && !error">
+    <!-- Estatísticas -->
+    <div class="stats-bar" *ngIf="totalElements > 0">
+      <p>Total de {{ totalElements }} produto{{ totalElements !== 1 ? 's' : '' }}</p>
+    </div>
+
+    <!-- Lista de produtos -->
+    <div class="produtos-grid" *ngIf="produtos.length > 0">
+      <div class="produto-card" *ngFor="let produto of produtos">
+        <!-- Imagem do produto -->
+        <div class="produto-image">
+          <img 
+            [src]="produto.images[0] || '/assets/images/no-image.png'" 
+            [alt]="produto.title"
+            (error)="$event.target.src='/assets/images/no-image.png'">
+          <div class="status-badge" [class]="getStatusClass(produto.status)">
+            {{ getStatusText(produto.status) }}
+          </div>
+        </div>
+
+        <!-- Informações do produto -->
+        <div class="produto-info">
+          <h3 class="produto-title">{{ produto.title }}</h3>
+          <p class="produto-categoria" *ngIf="produto.categoria">{{ produto.categoria }}</p>
+          
+          <div class="produto-precos">
+            <div class="preco-atual">
+              <span class="label">Preço Atual:</span>
+              <span class="valor">{{ formatarPreco(produto.currentPrice) }}</span>
+            </div>
+            <div class="preco-inicial" *ngIf="produto.currentPrice !== produto.initialPrice">
+              <span class="label">Preço Inicial:</span>
+              <span class="valor">{{ formatarPreco(produto.initialPrice) }}</span>
+            </div>
+          </div>
+
+          <div class="produto-tempo" *ngIf="produto.isActive">
+            <span class="label">Tempo restante:</span>
+            <span class="tempo" [class.urgente]="produto.timeRemaining < 3600">
+              {{ formatarTempoRestante(produto.timeRemaining) }}
+            </span>
+          </div>
+
+          <div class="produto-data">
+            <span class="label">Criado em:</span>
+            <span class="data">{{ produto.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="produto-actions">
+          <a [routerLink]="['/produtos', produto.id]" class="btn btn-sm btn-secondary">
+            Visualizar
+          </a>
+          
+          <a 
+            *ngIf="canEdit(produto)" 
+            [routerLink]="['/produtos', produto.id, 'editar']" 
+            class="btn btn-sm btn-primary">
+            Editar
+          </a>
+          
+          <button 
+            *ngIf="canPublish(produto)" 
+            (click)="publicarProduto(produto)" 
+            class="btn btn-sm btn-success">
+            Publicar
+          </button>
+          
+          <button 
+            *ngIf="canDelete(produto)" 
+            (click)="excluirProduto(produto)" 
+            class="btn btn-sm btn-danger">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado vazio -->
+    <div class="empty-state" *ngIf="produtos.length === 0">
+      <div class="empty-icon">📦</div>
+      <h3>Nenhum produto encontrado</h3>
+      <p>Você ainda não criou nenhum produto. Comece criando seu primeiro produto!</p>
+      <a routerLink="/produtos/novo" class="btn btn-primary">
+        Criar Primeiro Produto
+      </a>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button 
+        class="btn btn-sm btn-secondary" 
+        (click)="paginaAnterior()" 
+        [disabled]="currentPage === 0">
+        Anterior
+      </button>
+
+      <div class="pagination-pages">
+        <button 
+          *ngFor="let page of getPaginationPages()" 
+          class="btn btn-sm" 
+          [class.btn-primary]="page === currentPage"
+          [class.btn-secondary]="page !== currentPage"
+          (click)="irParaPagina(page)">
+          {{ page + 1 }}
+        </button>
+      </div>
+
+      <button 
+        class="btn btn-sm btn-secondary" 
+        (click)="proximaPagina()" 
+        [disabled]="currentPage === totalPages - 1">
+        Próxima
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Visitante"
+                  targetNamespace="http://example.com/bpmn">
+
+  <!-- Pool -->
+  <bpmn:collaboration id="Collaboration_Visitante">
+    <bpmn:participant id="Participant_Visitante" name="Visitante" processRef="Process_Visitante"/>
+  </bpmn:collaboration>
+
+  <!-- Processo do Visitante -->
+  <bpmn:process id="Process_Visitante" isExecutable="false" name="Fluxo do Visitante">
+
+    <!-- Evento Inicial -->
+    <bpmn:startEvent id="StartEvent_Visitante" name="Acessa plataforma">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Tarefas -->
+    <bpmn:task id="Task_VisualizarProdutos" name="Visualizar produtos">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_IniciarCadastro" name="Iniciar cadastro">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_ConfirmarEmail" name="Confirmar email">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Login" name="Login">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Navegar" name="Navegar e buscar produtos">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+
+    <!-- Evento Final -->
+    <bpmn:endEvent id="EndEvent_Visitante" name="Saída">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequência de fluxos -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Visitante" targetRef="Task_VisualizarProdutos"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_VisualizarProdutos" targetRef="Task_IniciarCadastro"/>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_IniciarCadastro" targetRef="Task_ConfirmarEmail"/>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_ConfirmarEmail" targetRef="Task_Login"/>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Login" targetRef="Task_Navegar"/>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Navegar" targetRef="EndEvent_Visitante"/>
+
+  </bpmn:process>
+
+  <!-- Diagrama visual -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Visitante">
+    <bpmndi:BPMNPlane id="BPMNPlane_Visitante" bpmnElement="Process_Visitante">
+
+      <!-- Evento Inicial -->
+      <bpmndi:BPMNShape id="Shape_StartEvent" bpmnElement="StartEvent_Visitante">
+        <dc:Bounds x="100" y="150" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Tarefas -->
+      <bpmndi:BPMNShape id="Shape_VisualizarProdutos" bpmnElement="Task_VisualizarProdutos">
+        <dc:Bounds x="200" y="140" width="100" height="50"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_IniciarCadastro" bpmnElement="Task_IniciarCadastro">
+        <dc:Bounds x="350" y="140" width="100" height="50"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_ConfirmarEmail" bpmnElement="Task_ConfirmarEmail">
+        <dc:Bounds x="500" y="140" width="100" height="50"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Login" bpmnElement="Task_Login">
+        <dc:Bounds x="650" y="140" width="100" height="50"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Shape_Navegar" bpmnElement="Task_Navegar">
+        <dc:Bounds x="800" y="140" width="120" height="50"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Evento Final -->
+      <bpmndi:BPMNShape id="Shape_EndEvent" bpmnElement="EndEvent_Visitante">
+        <dc:Bounds x="960" y="150" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Shape_Pool_Visitante" bpmnElement="Participant_Visitante" isHorizontal="true">
+        <dc:Bounds x="50" y="100" width="970" height="120"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Fluxos -->
+      <bpmndi:BPMNEdge id="Edge_Flow_1" bpmnElement="Flow_1">
+        <di:waypoint x="136" y="168"/>
+        <di:waypoint x="200" y="165"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Flow_2" bpmnElement="Flow_2">
+        <di:waypoint x="300" y="165"/>
+        <di:waypoint x="350" y="165"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Flow_3" bpmnElement="Flow_3">
+        <di:waypoint x="450" y="165"/>
+        <di:waypoint x="500" y="165"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Flow_4" bpmnElement="Flow_4">
+        <di:waypoint x="600" y="165"/>
+        <di:waypoint x="650" y="165"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Flow_5" bpmnElement="Flow_5">
+        <di:waypoint x="750" y="165"/>
+        <di:waypoint x="800" y="165"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Edge_Flow_6" bpmnElement="Flow_6">
+        <di:waypoint x="920" y="165"/>
+        <di:waypoint x="960" y="168"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

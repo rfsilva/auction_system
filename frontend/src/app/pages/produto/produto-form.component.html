@@ -1,0 +1,250 @@
+<div class="produto-form-container">
+  <div class="form-header">
+    <h2>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h2>
+    <p class="form-subtitle">
+      {{ isEditMode ? 'Atualize as informações do seu produto' : 'Preencha os dados para criar um novo produto' }}
+    </p>
+  </div>
+
+  <div class="alert alert-error" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <div class="alert alert-success" *ngIf="success">
+    {{ success }}
+  </div>
+
+  <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="produto-form">
+    <!-- Informações Básicas -->
+    <div class="form-section">
+      <h3>Informações Básicas</h3>
+      
+      <div class="form-group">
+        <label for="title">Título *</label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          class="form-control"
+          [class.invalid]="isFieldInvalid('title')"
+          placeholder="Digite o título do produto">
+        <div class="error-message" *ngIf="isFieldInvalid('title')">
+          {{ getFieldError('title') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descrição *</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="form-control"
+          [class.invalid]="isFieldInvalid('description')"
+          rows="4"
+          placeholder="Descreva detalhadamente o produto"></textarea>
+        <div class="error-message" *ngIf="isFieldInvalid('description')">
+          {{ getFieldError('description') }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="categoria">Categoria</label>
+          <select id="categoria" formControlName="categoria" class="form-control">
+            <option value="">Selecione uma categoria</option>
+            <option *ngFor="let categoria of categorias" [value]="categoria">
+              {{ categoria }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="weight">Peso (kg)</label>
+          <input
+            type="number"
+            id="weight"
+            formControlName="weight"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('weight')"
+            step="0.001"
+            placeholder="0.000">
+          <div class="error-message" *ngIf="isFieldInvalid('weight')">
+            {{ getFieldError('weight') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dimensions">Dimensões (JSON)</label>
+        <input
+          type="text"
+          id="dimensions"
+          formControlName="dimensions"
+          class="form-control"
+          placeholder='{"length": 10, "width": 5, "height": 3}'>
+        <small class="form-help">Formato JSON com comprimento, largura e altura em cm</small>
+      </div>
+    </div>
+
+    <!-- Preços e Leilão -->
+    <div class="form-section">
+      <h3>Preços e Configurações do Leilão</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="initialPrice">Preço Inicial (R$) *</label>
+          <input
+            type="number"
+            id="initialPrice"
+            formControlName="initialPrice"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('initialPrice')"
+            step="0.01"
+            placeholder="0.00">
+          <div class="error-message" *ngIf="isFieldInvalid('initialPrice')">
+            {{ getFieldError('initialPrice') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reservePrice">Preço de Reserva (R$)</label>
+          <input
+            type="number"
+            id="reservePrice"
+            formControlName="reservePrice"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('reservePrice')"
+            step="0.01"
+            placeholder="0.00">
+          <div class="error-message" *ngIf="isFieldInvalid('reservePrice')">
+            {{ getFieldError('reservePrice') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="incrementMin">Incremento Mínimo (R$) *</label>
+          <input
+            type="number"
+            id="incrementMin"
+            formControlName="incrementMin"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('incrementMin')"
+            step="0.01"
+            placeholder="1.00">
+          <div class="error-message" *ngIf="isFieldInvalid('incrementMin')">
+            {{ getFieldError('incrementMin') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="endDateTime">Data de Encerramento *</label>
+          <input
+            type="datetime-local"
+            id="endDateTime"
+            formControlName="endDateTime"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('endDateTime')">
+          <div class="error-message" *ngIf="isFieldInvalid('endDateTime')">
+            {{ getFieldError('endDateTime') }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anti-Snipe -->
+    <div class="form-section">
+      <h3>Configurações Anti-Snipe</h3>
+      
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="antiSnipeEnabled">
+          <span class="checkmark"></span>
+          Ativar proteção anti-snipe
+        </label>
+        <small class="form-help">Estende automaticamente o leilão quando há lances nos últimos minutos</small>
+      </div>
+
+      <div class="form-group" *ngIf="produtoForm.get('antiSnipeEnabled')?.value">
+        <label for="antiSnipeExtension">Extensão Anti-Snipe (segundos)</label>
+        <input
+          type="number"
+          id="antiSnipeExtension"
+          formControlName="antiSnipeExtension"
+          class="form-control"
+          [class.invalid]="isFieldInvalid('antiSnipeExtension')"
+          min="60"
+          max="3600">
+        <div class="error-message" *ngIf="isFieldInvalid('antiSnipeExtension')">
+          {{ getFieldError('antiSnipeExtension') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Imagens -->
+    <div class="form-section">
+      <h3>Imagens</h3>
+      
+      <div formArrayName="images">
+        <div *ngFor="let image of imagesArray.controls; let i = index" class="image-input-group">
+          <div class="form-group">
+            <label>URL da Imagem {{ i + 1 }}</label>
+            <div class="input-with-button">
+              <input
+                type="url"
+                [formControlName]="i"
+                class="form-control"
+                placeholder="https://exemplo.com/imagem.jpg">
+              <button type="button" class="btn btn-danger btn-sm" (click)="removerImagem(i)">
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button type="button" class="btn btn-secondary" (click)="adicionarImagem()">
+        Adicionar Imagem
+      </button>
+    </div>
+
+    <!-- Tags -->
+    <div class="form-section">
+      <h3>Tags</h3>
+      
+      <div formArrayName="tags">
+        <div *ngFor="let tag of tagsArray.controls; let i = index" class="tag-input-group">
+          <div class="form-group">
+            <label>Tag {{ i + 1 }}</label>
+            <div class="input-with-button">
+              <input
+                type="text"
+                [formControlName]="i"
+                class="form-control"
+                placeholder="Digite uma tag">
+              <button type="button" class="btn btn-danger btn-sm" (click)="removerTag(i)">
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button type="button" class="btn btn-secondary" (click)="adicionarTag()">
+        Adicionar Tag
+      </button>
+    </div>
+
+    <!-- Botões -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="cancelar()" [disabled]="loading">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="loading || produtoForm.invalid">
+        <span *ngIf="loading" class="spinner"></span>
+        {{ isEditMode ? 'Atualizar Produto' : 'Criar Produto' }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: leilao-mysql-dev
+    environment:
+      MYSQL_DATABASE: leilao_db
+      MYSQL_USER: leilao_user
+      MYSQL_PASSWORD: leilao_pass
+      MYSQL_ROOT_PASSWORD: leilao_root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: leilao-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    restart: unless-stopped
+
+volumes:
+  mysql_dev_data:
+  redis_dev_data:
