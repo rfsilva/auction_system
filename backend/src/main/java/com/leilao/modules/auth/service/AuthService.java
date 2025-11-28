@@ -3,8 +3,6 @@ package com.leilao.modules.auth.service;
 import com.leilao.modules.auth.dto.*;
 import com.leilao.modules.auth.entity.Usuario;
 import com.leilao.modules.auth.repository.UsuarioRepository;
-import com.leilao.modules.vendedor.entity.Vendedor;
-import com.leilao.modules.vendedor.repository.VendedorRepository;
 import com.leilao.shared.enums.UserRole;
 import com.leilao.shared.enums.UserStatus;
 import com.leilao.shared.exception.BusinessException;
@@ -36,7 +34,6 @@ public class AuthService {
     private static final int LOCKOUT_DURATION_MINUTES = 30;
 
     private final UsuarioRepository usuarioRepository;
-    private final VendedorRepository vendedorRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -106,16 +103,13 @@ public class AuthService {
         usuario.setEmail(request.getEmail());
         usuario.setSenhaHash(passwordEncoder.encode(request.getPassword()));
         usuario.setTelefone(request.getPhone());
-        usuario.setStatus(UserStatus.ACTIVE); // Mudando para ACTIVE para facilitar os testes
+        usuario.setStatus(UserStatus.ACTIVE); // Ativo para facilitar os testes
         
-        // Por padrão, todo usuário registrado pode ser vendedor e comprador
-        usuario.setRoles(Set.of(UserRole.VISITOR, UserRole.PARTICIPANT, UserRole.BUYER, UserRole.SELLER));
+        // Usuário registrado recebe apenas roles básicas (não é vendedor automaticamente)
+        usuario.setRoles(Set.of(UserRole.VISITOR, UserRole.PARTICIPANT, UserRole.BUYER));
 
         // Salvar usuário
         usuario = usuarioRepository.save(usuario);
-
-        // Criar registro de vendedor automaticamente
-        criarVendedorParaUsuario(usuario);
 
         // Gerar tokens
         String token = jwtService.generateToken(usuario);
@@ -124,7 +118,7 @@ public class AuthService {
         // Converter para DTO
         UserDto userDto = convertToDto(usuario);
 
-        log.info("Usuário registrado com sucesso: {}", usuario.getId());
+        log.info("Usuário registrado com sucesso: {} (roles: {})", usuario.getId(), usuario.getRoles());
         return new AuthResponse(token, refreshToken, userDto);
     }
 
@@ -157,27 +151,6 @@ public class AuthService {
      */
     public boolean checkEmailExists(String email) {
         return usuarioRepository.existsByEmail(email);
-    }
-
-    /**
-     * Cria registro de vendedor para o usuário
-     */
-    private void criarVendedorParaUsuario(Usuario usuario) {
-        try {
-            // Verificar se já existe vendedor para este usuário
-            if (!vendedorRepository.existsByUsuarioId(usuario.getId())) {
-                Vendedor vendedor = new Vendedor();
-                vendedor.setUsuarioId(usuario.getId());
-                vendedor.setCompanyName(usuario.getNome()); // Usar nome do usuário como nome da empresa inicialmente
-                vendedor.setVerificado(false);
-                
-                vendedorRepository.save(vendedor);
-                log.info("Registro de vendedor criado para usuário: {}", usuario.getId());
-            }
-        } catch (Exception e) {
-            log.error("Erro ao criar registro de vendedor para usuário {}: {}", usuario.getId(), e.getMessage());
-            // Não falhar o registro do usuário por causa disso
-        }
     }
 
     /**
