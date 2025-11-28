@@ -31,6 +31,31 @@
     background-color: #fee;
     color: #c33;
     border: 1px solid #fcc;
+
+    .alert-header {
+      margin-bottom: 0.5rem;
+    }
+
+    .error-details {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #fcc;
+
+      p {
+        margin: 0 0 0.5rem 0;
+        font-weight: 600;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.5rem;
+
+        li {
+          margin-bottom: 0.25rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
   }
 
   &.alert-success {
@@ -84,7 +109,7 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 1rem;
-      transition: border-color 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
       &:focus {
         outline: none;
@@ -94,7 +119,11 @@
 
       &.invalid {
         border-color: #dc3545;
-        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+        background-color: #fff5f5;
+        
+        &:focus {
+          box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+        }
       }
     }
 
@@ -108,12 +137,18 @@
       margin-top: 0.25rem;
       font-size: 0.875rem;
       color: #666;
+      font-style: italic;
     }
 
     .error-message {
       color: #dc3545;
       font-size: 0.875rem;
+      font-weight: 500;
       margin-top: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      background-color: #fff5f5;
+      border-left: 3px solid #dc3545;
+      border-radius: 0 4px 4px 0;
     }
   }
 
@@ -126,6 +161,7 @@
 
       input[type="checkbox"] {
         margin-right: 0.5rem;
+        transform: scale(1.1);
       }
 
       .checkmark {
@@ -136,6 +172,12 @@
 
   .image-input-group,
   .tag-input-group {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+
     .input-with-button {
       display: flex;
       gap: 0.5rem;
@@ -189,6 +231,7 @@
 
     &:hover:not(:disabled) {
       background-color: #0056b3;
+      transform: translateY(-1px);
     }
   }
 
@@ -225,7 +268,51 @@
   }
 }
 
+/* Melhorias visuais para campos inválidos */
+.form-group:has(.form-control.invalid) {
+  label {
+    color: #dc3545;
+    font-weight: 600;
+  }
+}
+
+/* Animação para mensagens de erro */
+.error-message {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Responsividade melhorada */
+@media (max-width: 768px) {
+  .produto-form-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form-header {
+    margin-bottom: 1.5rem;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .alert .error-details ul {
+    padding-left: 1rem;
+  }
 }

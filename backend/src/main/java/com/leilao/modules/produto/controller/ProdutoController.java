@@ -6,13 +6,17 @@ import com.leilao.modules.produto.service.ProdutoService;
 import com.leilao.shared.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProdutoController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProdutoController.class);
     private final ProdutoService produtoService;
 
     /**
@@ -35,6 +40,28 @@ public class ProdutoController {
     public ResponseEntity<ApiResponse<ProdutoDto>> criarProduto(
             @Valid @RequestBody ProdutoCreateRequest request,
             @AuthenticationPrincipal Usuario usuario) {
+        
+        // Debug logs
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        logger.info("=== DEBUG CRIAR PRODUTO ===");
+        logger.info("Authentication: {}", auth != null ? auth.getClass().getSimpleName() : "null");
+        logger.info("Principal: {}", auth != null ? auth.getPrincipal().getClass().getSimpleName() : "null");
+        logger.info("Usuario parameter: {}", usuario != null ? usuario.getClass().getSimpleName() : "null");
+        
+        if (auth != null && auth.getPrincipal() != null) {
+            logger.info("Principal details: {}", auth.getPrincipal().toString());
+        }
+        
+        if (usuario == null) {
+            logger.error("Usuario é null! Verificando authentication principal...");
+            if (auth != null && auth.getPrincipal() instanceof Usuario) {
+                usuario = (Usuario) auth.getPrincipal();
+                logger.info("Usuario recuperado do authentication: {}", usuario.getEmail());
+            } else {
+                logger.error("Principal não é uma instância de Usuario!");
+                throw new RuntimeException("Usuário não autenticado corretamente");
+            }
+        }
         
         ProdutoDto produto = produtoService.criarProduto(request, usuario.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -50,6 +77,13 @@ public class ProdutoController {
             @PathVariable String produtoId,
             @Valid @RequestBody ProdutoUpdateRequest request,
             @AuthenticationPrincipal Usuario usuario) {
+        
+        if (usuario == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Usuario) {
+                usuario = (Usuario) auth.getPrincipal();
+            }
+        }
         
         ProdutoDto produto = produtoService.atualizarProduto(produtoId, request, usuario.getId());
         return ResponseEntity.ok(ApiResponse.success("Produto atualizado com sucesso", produto));
@@ -76,6 +110,13 @@ public class ProdutoController {
             @AuthenticationPrincipal Usuario usuario,
             @PageableDefault(size = 20) Pageable pageable) {
         
+        if (usuario == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Usuario) {
+                usuario = (Usuario) auth.getPrincipal();
+            }
+        }
+        
         Page<ProdutoDto> produtos = produtoService.listarProdutosVendedor(usuario.getId(), pageable);
         return ResponseEntity.ok(ApiResponse.success("Produtos listados com sucesso", produtos));
     }
@@ -89,6 +130,13 @@ public class ProdutoController {
             @PathVariable String produtoId,
             @AuthenticationPrincipal Usuario usuario) {
         
+        if (usuario == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Usuario) {
+                usuario = (Usuario) auth.getPrincipal();
+            }
+        }
+        
         produtoService.excluirProduto(produtoId, usuario.getId());
         return ResponseEntity.ok(ApiResponse.success("Produto excluído com sucesso", null));
     }
@@ -101,6 +149,13 @@ public class ProdutoController {
     public ResponseEntity<ApiResponse<ProdutoDto>> publicarProduto(
             @PathVariable String produtoId,
             @AuthenticationPrincipal Usuario usuario) {
+        
+        if (usuario == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Usuario) {
+                usuario = (Usuario) auth.getPrincipal();
+            }
+        }
         
         ProdutoDto produto = produtoService.publicarProduto(produtoId, usuario.getId());
         return ResponseEntity.ok(ApiResponse.success("Produto publicado com sucesso", produto));

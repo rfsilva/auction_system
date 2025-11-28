@@ -1,0 +1,19 @@
+<div class="produto-image-container" [style.height.px]="height">
+  <!-- Placeholder sempre visível -->
+  <div class="image-placeholder" [class.hidden]="imageLoaded && !imageError">
+    <div class="placeholder-content">
+      <div class="placeholder-icon">{{ getPlaceholderIcon() }}</div>
+      <div class="placeholder-text">{{ getPlaceholderText() }}</div>
+    </div>
+  </div>
+  
+  <!-- Imagem real -->
+  <img 
+    *ngIf="shouldShowImage()"
+    [src]="imageSrc"
+    [alt]="alt"
+    [class.loaded]="imageLoaded"
+    (load)="onImageLoad()"
+    (error)="onImageError()"
+    loading="lazy">
+</div>

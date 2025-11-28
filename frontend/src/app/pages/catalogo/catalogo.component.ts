@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ProdutoService } from '../../core/services/produto.service';
+import { ProdutoImageComponent } from '../../shared/components/produto-image.component';
 import { Produto, CatalogoFiltro, PaginatedResponse } from '../../core/models/produto.model';
 
 @Component({
   selector: 'app-catalogo',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ProdutoImageComponent],
   templateUrl: './catalogo.component.html',
   styleUrls: ['./catalogo.component.scss']
 })
@@ -44,6 +45,22 @@ export class CatalogoComponent implements OnInit {
     this.buscarProdutos();
   }
 
+  // TrackBy function para otimizar *ngFor
+  trackByProdutoId(index: number, produto: Produto): string {
+    return produto.id;
+  }
+
+  // Função para obter a primeira imagem válida
+  getFirstImage(images: string[] | undefined): string | undefined {
+    if (!images || images.length === 0) {
+      return undefined;
+    }
+    
+    // Retornar a primeira imagem que não seja vazia
+    const firstValidImage = images.find(img => img && img.trim() !== '');
+    return firstValidImage;
+  }
+
   carregarCategorias() {
     this.produtoService.listarCategorias().subscribe({
       next: (response) => {
@@ -71,6 +88,12 @@ export class CatalogoComponent implements OnInit {
           this.currentPage = paginatedData.number;
           this.totalPages = paginatedData.totalPages;
           this.totalElements = paginatedData.totalElements;
+          
+          console.log('Produtos do catálogo carregados:', this.produtos.length);
+          // Log das imagens para debug
+          this.produtos.forEach(produto => {
+            console.log(`Catálogo - ${produto.title}:`, produto.images);
+          });
         }
         this.loading = false;
       },

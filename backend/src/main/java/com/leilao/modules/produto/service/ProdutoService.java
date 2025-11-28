@@ -3,6 +3,7 @@ package com.leilao.modules.produto.service;
 import com.leilao.modules.produto.dto.*;
 import com.leilao.modules.produto.entity.Produto;
 import com.leilao.modules.produto.repository.ProdutoRepository;
+import com.leilao.modules.vendedor.service.VendedorService;
 import com.leilao.shared.enums.ProdutoStatus;
 import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service para operações com Produto
@@ -29,19 +29,24 @@ import java.util.stream.Collectors;
 public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
+    private final VendedorService vendedorService;
 
     /**
      * Cria um novo produto
      */
     @Transactional
-    public ProdutoDto criarProduto(ProdutoCreateRequest request, String sellerId) {
-        log.info("Criando produto para vendedor: {}", sellerId);
+    public ProdutoDto criarProduto(ProdutoCreateRequest request, String usuarioId) {
+        log.info("Criando produto para usuário: {}", usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        log.info("Vendedor ID encontrado: {} para usuário: {}", vendedorId, usuarioId);
         
         // Validações de negócio
         validarCriacaoProduto(request);
         
         Produto produto = new Produto();
-        produto.setSellerId(sellerId);
+        produto.setSellerId(vendedorId); // Usar o ID do vendedor, não do usuário
         produto.setTitle(request.getTitle());
         produto.setDescription(request.getDescription());
         produto.setImagesList(request.getImages());
@@ -60,7 +65,7 @@ public class ProdutoService {
         
         produto = produtoRepository.save(produto);
         
-        log.info("Produto criado com sucesso: {}", produto.getId());
+        log.info("Produto criado com sucesso: {} para vendedor: {}", produto.getId(), vendedorId);
         return convertToDto(produto);
     }
 
@@ -68,13 +73,16 @@ public class ProdutoService {
      * Atualiza um produto existente
      */
     @Transactional
-    public ProdutoDto atualizarProduto(String produtoId, ProdutoUpdateRequest request, String sellerId) {
-        log.info("Atualizando produto: {} por vendedor: {}", produtoId, sellerId);
+    public ProdutoDto atualizarProduto(String produtoId, ProdutoUpdateRequest request, String usuarioId) {
+        log.info("Atualizando produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
+        if (!produto.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para editar este produto");
         }
         
@@ -145,8 +153,11 @@ public class ProdutoService {
      * Lista produtos do vendedor
      */
     @Transactional(readOnly = true)
-    public Page<ProdutoDto> listarProdutosVendedor(String sellerId, Pageable pageable) {
-        Page<Produto> produtos = produtoRepository.findBySellerId(sellerId, pageable);
+    public Page<ProdutoDto> listarProdutosVendedor(String usuarioId, Pageable pageable) {
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Page<Produto> produtos = produtoRepository.findBySellerId(vendedorId, pageable);
         return produtos.map(this::convertToDto);
     }
 
@@ -154,13 +165,16 @@ public class ProdutoService {
      * Exclui um produto
      */
     @Transactional
-    public void excluirProduto(String produtoId, String sellerId) {
-        log.info("Excluindo produto: {} por vendedor: {}", produtoId, sellerId);
+    public void excluirProduto(String produtoId, String usuarioId) {
+        log.info("Excluindo produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
+        if (!produto.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para excluir este produto");
         }
         
@@ -176,13 +190,16 @@ public class ProdutoService {
      * Publica um produto (muda status para ACTIVE)
      */
     @Transactional
-    public ProdutoDto publicarProduto(String produtoId, String sellerId) {
-        log.info("Publicando produto: {} por vendedor: {}", produtoId, sellerId);
+    public ProdutoDto publicarProduto(String produtoId, String usuarioId) {
+        log.info("Publicando produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
+        if (!produto.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para publicar este produto");
         }
         

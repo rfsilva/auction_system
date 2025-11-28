@@ -92,12 +92,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  }
+  /* Removido transition para evitar flickering */
 
   .produto-image {
     position: relative;
@@ -108,6 +103,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      /* Evitar reflow durante carregamento */
+      display: block;
     }
 
     .status-badge {
@@ -286,7 +283,8 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  /* Transition apenas para hover, não para mudanças de estado */
+  transition: background-color 0.15s ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -339,7 +337,30 @@
   }
 }
 
+/* Otimizações para evitar repaints */
+.produtos-content {
+  /* Criar um novo contexto de stacking para evitar repaints */
+  transform: translateZ(0);
+  /* Usar will-change apenas quando necessário */
+  &.loading {
+    will-change: contents;
+  }
+}
+
+/* Animação apenas para o spinner */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Evitar flash of unstyled content */
+.produto-card {
+  /* Garantir que o card tenha altura mínima */
+  min-height: 400px;
+}
+
+/* Otimização para imagens */
+.produto-image img {
+  /* Evitar layout shift durante carregamento */
+  background-color: #f8f9fa;
 }

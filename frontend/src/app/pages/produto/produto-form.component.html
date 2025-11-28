@@ -6,12 +6,24 @@
     </p>
   </div>
 
+  <!-- Alerta de erro geral -->
   <div class="alert alert-error" *ngIf="error">
-    {{ error }}
+    <div class="alert-header">
+      <strong>❌ {{ error }}</strong>
+    </div>
+    
+    <!-- Lista de erros específicos -->
+    <div class="error-details" *ngIf="hasValidationErrors()">
+      <p><strong>Erros encontrados:</strong></p>
+      <ul>
+        <li *ngFor="let errorMsg of getValidationErrorsList()">{{ errorMsg }}</li>
+      </ul>
+    </div>
   </div>
 
+  <!-- Alerta de sucesso -->
   <div class="alert alert-success" *ngIf="success">
-    {{ success }}
+    <strong>✅ {{ success }}</strong>
   </div>
 
   <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="produto-form">
@@ -81,8 +93,12 @@
           id="dimensions"
           formControlName="dimensions"
           class="form-control"
+          [class.invalid]="isFieldInvalid('dimensions')"
           placeholder='{"length": 10, "width": 5, "height": 3}'>
         <small class="form-help">Formato JSON com comprimento, largura e altura em cm</small>
+        <div class="error-message" *ngIf="isFieldInvalid('dimensions')">
+          {{ getFieldError('dimensions') }}
+        </div>
       </div>
     </div>
 
@@ -116,6 +132,7 @@
             [class.invalid]="isFieldInvalid('reservePrice')"
             step="0.01"
             placeholder="0.00">
+          <small class="form-help">Preço mínimo para venda (opcional)</small>
           <div class="error-message" *ngIf="isFieldInvalid('reservePrice')">
             {{ getFieldError('reservePrice') }}
           </div>
@@ -146,6 +163,7 @@
             formControlName="endDateTime"
             class="form-control"
             [class.invalid]="isFieldInvalid('endDateTime')">
+          <small class="form-help">Deve ser pelo menos 1 hora no futuro</small>
           <div class="error-message" *ngIf="isFieldInvalid('endDateTime')">
             {{ getFieldError('endDateTime') }}
           </div>
@@ -176,6 +194,7 @@
           [class.invalid]="isFieldInvalid('antiSnipeExtension')"
           min="60"
           max="3600">
+        <small class="form-help">Entre 60 e 3600 segundos (1 minuto a 1 hora)</small>
         <div class="error-message" *ngIf="isFieldInvalid('antiSnipeExtension')">
           {{ getFieldError('antiSnipeExtension') }}
         </div>
@@ -195,10 +214,14 @@
                 type="url"
                 [formControlName]="i"
                 class="form-control"
+                [class.invalid]="validationErrors['images.' + i]"
                 placeholder="https://exemplo.com/imagem.jpg">
               <button type="button" class="btn btn-danger btn-sm" (click)="removerImagem(i)">
                 Remover
               </button>
+            </div>
+            <div class="error-message" *ngIf="validationErrors['images.' + i]">
+              {{ validationErrors['images.' + i] }}
             </div>
           </div>
         </div>
@@ -207,6 +230,7 @@
       <button type="button" class="btn btn-secondary" (click)="adicionarImagem()">
         Adicionar Imagem
       </button>
+      <small class="form-help">Use URLs válidas (http:// ou https://)</small>
     </div>
 
     <!-- Tags -->
@@ -222,10 +246,14 @@
                 type="text"
                 [formControlName]="i"
                 class="form-control"
+                [class.invalid]="validationErrors['tags.' + i]"
                 placeholder="Digite uma tag">
               <button type="button" class="btn btn-danger btn-sm" (click)="removerTag(i)">
                 Remover
               </button>
+            </div>
+            <div class="error-message" *ngIf="validationErrors['tags.' + i]">
+              {{ validationErrors['tags.' + i] }}
             </div>
           </div>
         </div>
@@ -234,6 +262,7 @@
       <button type="button" class="btn btn-secondary" (click)="adicionarTag()">
         Adicionar Tag
       </button>
+      <small class="form-help">Palavras-chave para facilitar a busca</small>
     </div>
 
     <!-- Botões -->
@@ -241,7 +270,7 @@
       <button type="button" class="btn btn-secondary" (click)="cancelar()" [disabled]="loading">
         Cancelar
       </button>
-      <button type="submit" class="btn btn-primary" [disabled]="loading || produtoForm.invalid">
+      <button type="submit" class="btn btn-primary" [disabled]="loading">
         <span *ngIf="loading" class="spinner"></span>
         {{ isEditMode ? 'Atualizar Produto' : 'Criar Produto' }}
       </button>
