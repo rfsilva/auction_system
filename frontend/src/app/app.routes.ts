@@ -57,6 +57,27 @@ export const routes: Routes = [
         path: 'produtos/:id',
         loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
         canActivate: [authGuard]
+      },
+      // Rotas de lotes para vendedores
+      {
+        path: 'lotes',
+        loadComponent: () => import('./pages/lote/lote-list.component').then(m => m.LoteListComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'lotes/novo',
+        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'lotes/:id',
+        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'lotes/:id/editar',
+        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
+        canActivate: [authGuard]
       }
     ]
   },

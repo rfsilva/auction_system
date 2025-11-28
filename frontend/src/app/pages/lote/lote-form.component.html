@@ -1,0 +1,219 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            {{ isEditMode ? 'Editar Lote' : 'Novo Lote' }}
+          </h4>
+        </div>
+        
+        <div class="card-body">
+          <!-- Alertas -->
+          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ error }}
+            <button type="button" class="btn-close" (click)="error = ''"></button>
+          </div>
+          
+          <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ success }}
+            <button type="button" class="btn-close" (click)="success = ''"></button>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">{{ isEditMode ? 'Atualizando lote...' : 'Criando lote...' }}</p>
+          </div>
+
+          <!-- Formulário -->
+          <form [formGroup]="loteForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+            
+            <!-- Informações Básicas -->
+            <div class="row">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Informações Básicas
+                </h5>
+              </div>
+            </div>
+
+            <!-- Título -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="title" class="form-label">
+                  Título do Lote <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  class="form-control"
+                  [class.is-invalid]="isFieldInvalid('title')"
+                  formControlName="title"
+                  placeholder="Digite o título do lote"
+                  maxlength="255">
+                <div class="invalid-feedback">
+                  {{ getFieldError('title') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="description" class="form-label">Descrição</label>
+                <textarea
+                  id="description"
+                  class="form-control"
+                  [class.is-invalid]="isFieldInvalid('description')"
+                  formControlName="description"
+                  rows="4"
+                  placeholder="Descreva o lote (opcional)"
+                  maxlength="5000"></textarea>
+                <div class="invalid-feedback">
+                  {{ getFieldError('description') }}
+                </div>
+                <div class="form-text">
+                  Máximo 5000 caracteres
+                </div>
+              </div>
+            </div>
+
+            <!-- Data de Encerramento -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="loteEndDateTime" class="form-label">
+                  Data e Hora de Encerramento <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  id="loteEndDateTime"
+                  class="form-control"
+                  [class.is-invalid]="isFieldInvalid('loteEndDateTime')"
+                  formControlName="loteEndDateTime">
+                <div class="invalid-feedback">
+                  {{ getFieldError('loteEndDateTime') }}
+                </div>
+                <div class="form-text">
+                  O lote será encerrado automaticamente nesta data
+                </div>
+              </div>
+            </div>
+
+            <!-- Produtos Associados -->
+            <div class="row">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="fas fa-box me-2"></i>
+                  Produtos do Lote
+                </h5>
+              </div>
+            </div>
+
+            <!-- Loading Produtos -->
+            <div *ngIf="loadingProdutos" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Carregando produtos...</span>
+              </div>
+              <span class="ms-2">Carregando produtos disponíveis...</span>
+            </div>
+
+            <!-- Lista de Produtos Disponíveis -->
+            <div *ngIf="!loadingProdutos" class="row mb-4">
+              <div class="col-12">
+                <div *ngIf="produtosDisponiveis.length === 0" class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Nenhum produto disponível para associar ao lote. 
+                  <a routerLink="/produtos/novo" class="alert-link">Criar novo produto</a>
+                </div>
+
+                <div *ngIf="produtosDisponiveis.length > 0" class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0">Produtos Disponíveis ({{ produtosDisponiveis.length }})</h6>
+                    <small class="text-muted">Selecione os produtos que farão parte deste lote</small>
+                  </div>
+                  <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div class="row">
+                      <div *ngFor="let produto of produtosDisponiveis" class="col-md-6 mb-3">
+                        <div class="form-check">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            [id]="'produto-' + produto.id"
+                            [checked]="isProdutoSelecionado(produto.id)"
+                            (change)="onProdutoToggle(produto, $event)">
+                          <label class="form-check-label w-100" [for]="'produto-' + produto.id">
+                            <div class="card card-sm">
+                              <div class="card-body p-2">
+                                <h6 class="card-title mb-1">{{ produto.title }}</h6>
+                                <p class="card-text small text-muted mb-1">
+                                  {{ produto.description | slice:0:100 }}{{ produto.description.length > 100 ? '...' : '' }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <span class="badge bg-secondary">{{ produto.categoria || 'Sem categoria' }}</span>
+                                  <strong class="text-primary">R$ {{ produto.initialPrice | number:'1.2-2' }}</strong>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumo dos Produtos Selecionados -->
+            <div *ngIf="produtosSelecionados.length > 0" class="row mb-4">
+              <div class="col-12">
+                <div class="alert alert-success">
+                  <h6 class="alert-heading">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Produtos Selecionados ({{ produtosSelecionados.length }})
+                  </h6>
+                  <ul class="mb-0">
+                    <li *ngFor="let produto of produtosSelecionados">
+                      {{ produto.title }} - R$ {{ produto.initialPrice | number:'1.2-2' }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="row">
+              <div class="col-12">
+                <div class="d-flex justify-content-between">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="cancelar()"
+                    [disabled]="loading">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="loading || loteForm.invalid">
+                    <i class="fas fa-save me-2"></i>
+                    {{ isEditMode ? 'Atualizar Lote' : 'Criar Lote' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

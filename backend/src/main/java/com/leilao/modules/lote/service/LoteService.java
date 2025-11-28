@@ -1,0 +1,383 @@
+package com.leilao.modules.lote.service;
+
+import com.leilao.modules.lote.dto.LoteCreateRequest;
+import com.leilao.modules.lote.dto.LoteDto;
+import com.leilao.modules.lote.dto.LoteUpdateRequest;
+import com.leilao.modules.lote.entity.Lote;
+import com.leilao.modules.lote.repository.LoteRepository;
+import com.leilao.modules.produto.entity.Produto;
+import com.leilao.modules.produto.repository.ProdutoRepository;
+import com.leilao.modules.vendedor.service.VendedorService;
+import com.leilao.shared.enums.LoteStatus;
+import com.leilao.shared.enums.ProdutoStatus;
+import com.leilao.shared.exception.BusinessException;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Service para operações de Lote
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class LoteService {
+
+    private final LoteRepository loteRepository;
+    private final ProdutoRepository produtoRepository;
+    private final VendedorService vendedorService;
+
+    /**
+     * Cria um novo lote
+     */
+    @Transactional
+    public LoteDto criarLote(LoteCreateRequest request, String usuarioId) {
+        log.info("Criando novo lote para usuário: {}", usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        validarCriacaoLote(request);
+        
+        Lote lote = Lote.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .loteEndDateTime(request.getLoteEndDateTime())
+                .sellerId(vendedorId)
+                .status(LoteStatus.DRAFT)
+                .build();
+        
+        lote = loteRepository.save(lote);
+        
+        // Associar produtos ao lote se fornecidos
+        if (request.getProdutoIds() != null && !request.getProdutoIds().isEmpty()) {
+            associarProdutosAoLote(lote.getId(), request.getProdutoIds(), usuarioId);
+        }
+        
+        log.info("Lote criado com sucesso: {}", lote.getId());
+        return convertToDto(lote);
+    }
+
+    /**
+     * Atualiza um lote existente
+     */
+    @Transactional
+    public LoteDto atualizarLote(String loteId, LoteUpdateRequest request, String usuarioId) {
+        log.info("Atualizando lote: {} para usuário: {}", loteId, usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Lote lote = buscarLotePorId(loteId);
+        
+        // Verificar se o vendedor é o proprietário
+        if (!lote.getSellerId().equals(vendedorId)) {
+            throw new BusinessException("Você não tem permissão para editar este lote");
+        }
+        
+        validarEdicaoLote(lote);
+        
+        // Atualizar campos se fornecidos
+        if (request.getTitle() != null) {
+            lote.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            lote.setDescription(request.getDescription());
+        }
+        if (request.getLoteEndDateTime() != null) {
+            validarDataEncerramento(request.getLoteEndDateTime());
+            lote.setLoteEndDateTime(request.getLoteEndDateTime());
+        }
+        
+        lote = loteRepository.save(lote);
+        
+        // Atualizar associação de produtos se fornecida
+        if (request.getProdutoIds() != null) {
+            atualizarAssociacaoProdutos(lote.getId(), request.getProdutoIds(), usuarioId);
+        }
+        
+        log.info("Lote atualizado com sucesso: {}", loteId);
+        return convertToDto(lote);
+    }
+
+    /**
+     * Busca lote por ID
+     */
+    @Transactional(readOnly = true)
+    public LoteDto buscarPorId(String loteId) {
+        Lote lote = buscarLotePorId(loteId);
+        return convertToDto(lote);
+    }
+
+    /**
+     * Lista lotes do vendedor
+     */
+    @Transactional(readOnly = true)
+    public Page<LoteDto> listarLotesVendedor(String usuarioId, Pageable pageable) {
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Page<Lote> lotes = loteRepository.findBySellerId(vendedorId, pageable);
+        return lotes.map(this::convertToDto);
+    }
+
+    /**
+     * Lista lotes públicos (para visitantes)
+     */
+    @Transactional(readOnly = true)
+    public Page<LoteDto> listarLotesPublicos(String termo, Pageable pageable) {
+        Page<Lote> lotes;
+        if (termo != null && !termo.trim().isEmpty()) {
+            lotes = loteRepository.findLotesPublicosComFiltros(termo.trim(), pageable);
+        } else {
+            lotes = loteRepository.findLotesPublicos(pageable);
+        }
+        return lotes.map(this::convertToDto);
+    }
+
+    /**
+     * Ativa um lote
+     */
+    @Transactional
+    public LoteDto ativarLote(String loteId, String usuarioId) {
+        log.info("Ativando lote: {} para usuário: {}", loteId, usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Lote lote = buscarLotePorId(loteId);
+        
+        // Verificar se o vendedor é o proprietário
+        if (!lote.getSellerId().equals(vendedorId)) {
+            throw new BusinessException("Você não tem permissão para ativar este lote");
+        }
+        
+        validarAtivacaoLote(lote);
+        
+        lote.activate();
+        lote = loteRepository.save(lote);
+        
+        // Ativar produtos associados
+        ativarProdutosDoLote(loteId);
+        
+        log.info("Lote ativado com sucesso: {}", loteId);
+        return convertToDto(lote);
+    }
+
+    /**
+     * Cancela um lote
+     */
+    @Transactional
+    public LoteDto cancelarLote(String loteId, String usuarioId) {
+        log.info("Cancelando lote: {} para usuário: {}", loteId, usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Lote lote = buscarLotePorId(loteId);
+        
+        // Verificar se o vendedor é o proprietário
+        if (!lote.getSellerId().equals(vendedorId)) {
+            throw new BusinessException("Você não tem permissão para cancelar este lote");
+        }
+        
+        lote.cancel();
+        lote = loteRepository.save(lote);
+        
+        // Cancelar produtos associados
+        cancelarProdutosDoLote(loteId);
+        
+        log.info("Lote cancelado com sucesso: {}", loteId);
+        return convertToDto(lote);
+    }
+
+    /**
+     * Exclui um lote
+     */
+    @Transactional
+    public void excluirLote(String loteId, String usuarioId) {
+        log.info("Excluindo lote: {} para usuário: {}", loteId, usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Lote lote = buscarLotePorId(loteId);
+        
+        // Verificar se o vendedor é o proprietário
+        if (!lote.getSellerId().equals(vendedorId)) {
+            throw new BusinessException("Você não tem permissão para excluir este lote");
+        }
+        
+        validarExclusaoLote(lote);
+        
+        // Desassociar produtos do lote
+        desassociarProdutosDoLote(loteId);
+        
+        loteRepository.delete(lote);
+        
+        log.info("Lote excluído com sucesso: {}", loteId);
+    }
+
+    /**
+     * Atualiza lotes expirados
+     */
+    @Transactional
+    public void atualizarLotesExpirados() {
+        List<Lote> lotesExpirados = loteRepository.findLotesExpirados(LocalDateTime.now());
+        
+        for (Lote lote : lotesExpirados) {
+            lote.close();
+            loteRepository.save(lote);
+            log.info("Lote {} marcado como fechado por expiração", lote.getId());
+        }
+    }
+
+    // Métodos auxiliares
+
+    private Lote buscarLotePorId(String loteId) {
+        return loteRepository.findById(loteId)
+                .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado: " + loteId));
+    }
+
+    private void validarCriacaoLote(LoteCreateRequest request) {
+        validarDataEncerramento(request.getLoteEndDateTime());
+    }
+
+    private void validarDataEncerramento(LocalDateTime dataEncerramento) {
+        if (dataEncerramento.isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+        }
+    }
+
+    private void validarEdicaoLote(Lote lote) {
+        if (!lote.canBeEdited()) {
+            throw new BusinessException("Lote não pode ser editado no status atual: " + lote.getStatus());
+        }
+    }
+
+    private void validarAtivacaoLote(Lote lote) {
+        if (!lote.canBeActivated()) {
+            throw new BusinessException("Lote não pode ser ativado no status atual: " + lote.getStatus());
+        }
+        
+        // Verificar se há produtos associados
+        List<Produto> produtos = produtoRepository.findByLoteId(lote.getId());
+        if (produtos.isEmpty()) {
+            throw new BusinessException("Lote deve ter pelo menos um produto para ser ativado");
+        }
+    }
+
+    private void validarExclusaoLote(Lote lote) {
+        if (!lote.isDraft()) {
+            throw new BusinessException("Apenas lotes em rascunho podem ser excluídos");
+        }
+    }
+
+    private void associarProdutosAoLote(String loteId, List<String> produtoIds, String usuarioId) {
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        for (String produtoId : produtoIds) {
+            Produto produto = produtoRepository.findById(produtoId)
+                    .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId));
+            
+            // Verificar se o produto pertence ao vendedor
+            if (!produto.getSellerId().equals(vendedorId)) {
+                throw new BusinessException("Produto " + produtoId + " não pertence ao vendedor");
+            }
+            
+            // Verificar se o produto pode ser associado a um lote
+            if (!produto.isDraft()) {
+                throw new BusinessException("Produto " + produtoId + " não pode ser associado ao lote no status atual");
+            }
+            
+            produto.setLoteId(loteId);
+            produtoRepository.save(produto);
+        }
+    }
+
+    private void atualizarAssociacaoProdutos(String loteId, List<String> novosProdutoIds, String usuarioId) {
+        // Desassociar produtos atuais
+        List<Produto> produtosAtuais = produtoRepository.findByLoteId(loteId);
+        for (Produto produto : produtosAtuais) {
+            produto.setLoteId(null);
+            produtoRepository.save(produto);
+        }
+        
+        // Associar novos produtos
+        if (!novosProdutoIds.isEmpty()) {
+            associarProdutosAoLote(loteId, novosProdutoIds, usuarioId);
+        }
+    }
+
+    private void ativarProdutosDoLote(String loteId) {
+        List<Produto> produtos = produtoRepository.findByLoteId(loteId);
+        for (Produto produto : produtos) {
+            if (produto.isDraft()) {
+                produto.setStatus(ProdutoStatus.ACTIVE);
+                produtoRepository.save(produto);
+            }
+        }
+    }
+
+    private void cancelarProdutosDoLote(String loteId) {
+        List<Produto> produtos = produtoRepository.findByLoteId(loteId);
+        for (Produto produto : produtos) {
+            if (produto.isActive() || produto.isDraft()) {
+                produto.setStatus(ProdutoStatus.CANCELLED);
+                produtoRepository.save(produto);
+            }
+        }
+    }
+
+    private void desassociarProdutosDoLote(String loteId) {
+        List<Produto> produtos = produtoRepository.findByLoteId(loteId);
+        for (Produto produto : produtos) {
+            produto.setLoteId(null);
+            produtoRepository.save(produto);
+        }
+    }
+
+    private LoteDto convertToDto(Lote lote) {
+        // Buscar produtos associados
+        List<Produto> produtos = produtoRepository.findByLoteId(lote.getId());
+        List<String> produtoIds = produtos.stream()
+                .map(Produto::getId)
+                .collect(Collectors.toList());
+        
+        // Calcular tempo restante
+        long timeRemaining = 0;
+        if (lote.getLoteEndDateTime() != null) {
+            Duration duration = Duration.between(LocalDateTime.now(), lote.getLoteEndDateTime());
+            timeRemaining = Math.max(0, duration.getSeconds());
+        }
+        
+        return LoteDto.builder()
+                .id(lote.getId())
+                .sellerId(lote.getSellerId())
+                .title(lote.getTitle())
+                .description(lote.getDescription())
+                .loteEndDateTime(lote.getLoteEndDateTime())
+                .status(lote.getStatus())
+                .createdAt(lote.getCreatedAt())
+                .updatedAt(lote.getUpdatedAt())
+                .isActive(lote.isActive())
+                .isExpired(lote.isExpired())
+                .canBeEdited(lote.canBeEdited())
+                .canBeActivated(lote.canBeActivated())
+                .canBeCancelled(lote.canBeCancelled())
+                .timeRemaining(timeRemaining)
+                .produtoIds(produtoIds)
+                .totalProdutos(produtos.size())
+                .build();
+    }
+}

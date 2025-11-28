@@ -138,6 +138,7 @@ public class Produto {
         }
     }
 
+    // Métodos de status
     public boolean isActive() {
         return ProdutoStatus.ACTIVE.equals(this.status);
     }
@@ -157,5 +158,44 @@ public class Produto {
 
     public boolean canReceiveBids() {
         return isActive() && !isExpired();
+    }
+
+    // Métodos de negócio
+    public void publish() {
+        if (!isDraft()) {
+            throw new IllegalStateException("Apenas produtos em rascunho podem ser publicados");
+        }
+        this.status = ProdutoStatus.ACTIVE;
+    }
+
+    public void cancel() {
+        if (isSold() || status == ProdutoStatus.EXPIRED) {
+            throw new IllegalStateException("Produto não pode ser cancelado no status atual: " + status);
+        }
+        this.status = ProdutoStatus.CANCELLED;
+    }
+
+    public void markAsSold() {
+        if (!isActive()) {
+            throw new IllegalStateException("Apenas produtos ativos podem ser marcados como vendidos");
+        }
+        this.status = ProdutoStatus.SOLD;
+    }
+
+    public void expire() {
+        if (!isActive()) {
+            throw new IllegalStateException("Apenas produtos ativos podem expirar");
+        }
+        this.status = ProdutoStatus.EXPIRED;
+    }
+
+    public void updateCurrentPrice(BigDecimal newPrice) {
+        if (newPrice == null || newPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Preço deve ser maior que zero");
+        }
+        if (this.currentPrice != null && newPrice.compareTo(this.currentPrice) <= 0) {
+            throw new IllegalArgumentException("Novo preço deve ser maior que o preço atual");
+        }
+        this.currentPrice = newPrice;
     }
 }

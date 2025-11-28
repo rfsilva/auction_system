@@ -1,0 +1,419 @@
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      
+      <!-- Cabeçalho -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1">
+            <i class="fas fa-boxes me-2 text-primary"></i>
+            Meus Lotes
+          </h2>
+          <p class="text-muted mb-0">Gerencie seus lotes de produtos</p>
+        </div>
+        <a routerLink="/lotes/novo" class="btn btn-primary">
+          <i class="fas fa-plus me-2"></i>
+          Novo Lote
+        </a>
+      </div>
+
+      <!-- Alertas -->
+      <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+        <button type="button" class="btn-close" (click)="error = ''"></button>
+      </div>
+      
+      <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        {{ success }}
+        <button type="button" class="btn-close" (click)="success = ''"></button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Carregando lotes...</p>
+      </div>
+
+      <!-- Lista de Lotes -->
+      <div *ngIf="!loading" class="card shadow-sm">
+        <div class="card-header bg-light">
+          <div class="row align-items-center">
+            <div class="col">
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Lista de Lotes
+              </h5>
+            </div>
+            <div class="col-auto">
+              <span class="badge bg-primary">{{ totalElements }} lote(s)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <!-- Tabela Desktop -->
+          <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th width="5%"></th>
+                  <th>Título</th>
+                  <th>Status</th>
+                  <th>Produtos</th>
+                  <th>Encerramento</th>
+                  <th>Tempo Restante</th>
+                  <th>Criado em</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let lote of lotes">
+                  <!-- Linha principal -->
+                  <tr [class.table-active]="isExpanded(lote.id)">
+                    <td class="text-center">
+                      <button 
+                        class="btn btn-sm btn-link p-0" 
+                        (click)="toggleDetalhes(lote.id)"
+                        [title]="isExpanded(lote.id) ? 'Ocultar detalhes' : 'Ver detalhes'">
+                        <i class="fas" [class.fa-chevron-down]="!isExpanded(lote.id)" [class.fa-chevron-up]="isExpanded(lote.id)"></i>
+                      </button>
+                    </td>
+                    <td>
+                      <div>
+                        <h6 class="mb-1">{{ lote.title }}</h6>
+                        <small class="text-muted">
+                          {{ lote.description | slice:0:50 }}{{ lote.description && lote.description.length > 50 ? '...' : '' }}
+                        </small>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusClass(lote.status)">
+                        {{ getStatusText(lote.status) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge bg-info">{{ lote.totalProdutos }} produto(s)</span>
+                    </td>
+                    <td>
+                      <small>{{ formatarData(lote.loteEndDateTime) }}</small>
+                    </td>
+                    <td>
+                      <span [ngClass]="lote.isExpired ? 'text-danger' : 'text-success'">
+                        {{ formatarTempoRestante(lote.timeRemaining) }}
+                      </span>
+                    </td>
+                    <td>
+                      <small class="text-muted">{{ formatarData(lote.createdAt) }}</small>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <!-- Visualizar -->
+                        <a [routerLink]="['/lotes', lote.id]" class="btn btn-outline-info" title="Visualizar">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        
+                        <!-- Editar -->
+                        <a *ngIf="canEdit(lote)" 
+                           [routerLink]="['/lotes', lote.id, 'editar']" 
+                           class="btn btn-outline-primary" 
+                           title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <!-- Ativar -->
+                        <button *ngIf="canActivate(lote)" 
+                                (click)="ativarLote(lote)" 
+                                class="btn btn-outline-success" 
+                                title="Ativar">
+                          <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <!-- Cancelar -->
+                        <button *ngIf="canCancel(lote)" 
+                                (click)="cancelarLote(lote)" 
+                                class="btn btn-outline-warning" 
+                                title="Cancelar">
+                          <i class="fas fa-stop"></i>
+                        </button>
+                        
+                        <!-- Excluir -->
+                        <button *ngIf="canDelete(lote)" 
+                                (click)="excluirLote(lote)" 
+                                class="btn btn-outline-danger" 
+                                title="Excluir">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Linha de detalhes expandida -->
+                  <tr *ngIf="isExpanded(lote.id)" class="table-secondary">
+                    <td colspan="8">
+                      <div class="p-3">
+                        <div class="row">
+                          <div class="col-md-8">
+                            <h6 class="text-primary mb-2">
+                              <i class="fas fa-info-circle me-2"></i>
+                              Detalhes do Lote
+                            </h6>
+                            <div class="mb-3">
+                              <strong>Descrição Completa:</strong>
+                              <p class="mb-2">{{ lote.description || 'Sem descrição' }}</p>
+                            </div>
+                            
+                            <div class="row">
+                              <div class="col-sm-6">
+                                <strong>ID do Lote:</strong>
+                                <p class="text-muted small">{{ lote.id }}</p>
+                              </div>
+                              <div class="col-sm-6">
+                                <strong>Vendedor ID:</strong>
+                                <p class="text-muted small">{{ lote.sellerId }}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div class="col-md-4">
+                            <h6 class="text-primary mb-2">
+                              <i class="fas fa-cog me-2"></i>
+                              Configurações
+                            </h6>
+                            
+                            <div class="mb-2">
+                              <strong>Pode ser editado:</strong>
+                              <span class="ms-2">
+                                <i class="fas" [class.fa-check-circle]="lote.canBeEdited" [class.fa-times-circle]="!lote.canBeEdited" 
+                                   [class.text-success]="lote.canBeEdited" [class.text-danger]="!lote.canBeEdited"></i>
+                                {{ lote.canBeEdited ? 'Sim' : 'Não' }}
+                              </span>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Pode ser ativado:</strong>
+                              <span class="ms-2">
+                                <i class="fas" [class.fa-check-circle]="lote.canBeActivated" [class.fa-times-circle]="!lote.canBeActivated" 
+                                   [class.text-success]="lote.canBeActivated" [class.text-danger]="!lote.canBeActivated"></i>
+                                {{ lote.canBeActivated ? 'Sim' : 'Não' }}
+                              </span>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Pode ser cancelado:</strong>
+                              <span class="ms-2">
+                                <i class="fas" [class.fa-check-circle]="lote.canBeCancelled" [class.fa-times-circle]="!lote.canBeCancelled" 
+                                   [class.text-success]="lote.canBeCancelled" [class.text-danger]="!lote.canBeCancelled"></i>
+                                {{ lote.canBeCancelled ? 'Sim' : 'Não' }}
+                              </span>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Expirado:</strong>
+                              <span class="ms-2">
+                                <i class="fas" [class.fa-check-circle]="lote.isExpired" [class.fa-times-circle]="!lote.isExpired" 
+                                   [class.text-danger]="lote.isExpired" [class.text-success]="!lote.isExpired"></i>
+                                {{ lote.isExpired ? 'Sim' : 'Não' }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Produtos associados -->
+                        <div *ngIf="lote.produtoIds && lote.produtoIds.length > 0" class="mt-3">
+                          <h6 class="text-primary mb-2">
+                            <i class="fas fa-box me-2"></i>
+                            Produtos Associados ({{ lote.totalProdutos }})
+                          </h6>
+                          <div class="row">
+                            <div *ngFor="let produtoId of lote.produtoIds" class="col-md-6 col-lg-4 mb-2">
+                              <div class="card card-sm">
+                                <div class="card-body p-2">
+                                  <small class="text-muted">ID: {{ produtoId }}</small>
+                                  <div class="mt-1">
+                                    <a [routerLink]="['/produtos', produtoId]" class="btn btn-sm btn-outline-primary">
+                                      <i class="fas fa-eye me-1"></i>Ver Produto
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div *ngIf="!lote.produtoIds || lote.produtoIds.length === 0" class="mt-3">
+                          <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Nenhum produto associado a este lote.
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cards Mobile -->
+          <div class="d-md-none">
+            <div *ngFor="let lote of lotes" class="card mb-3 mx-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h6 class="card-title mb-0">{{ lote.title }}</h6>
+                  <div class="d-flex align-items-center">
+                    <span class="badge me-2" [ngClass]="getStatusClass(lote.status)">
+                      {{ getStatusText(lote.status) }}
+                    </span>
+                    <button 
+                      class="btn btn-sm btn-link p-0" 
+                      (click)="toggleDetalhes(lote.id)"
+                      [title]="isExpanded(lote.id) ? 'Ocultar detalhes' : 'Ver detalhes'">
+                      <i class="fas" [class.fa-chevron-down]="!isExpanded(lote.id)" [class.fa-chevron-up]="isExpanded(lote.id)"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <p class="card-text text-muted small mb-2">
+                  {{ lote.description | slice:0:100 }}{{ lote.description && lote.description.length > 100 ? '...' : '' }}
+                </p>
+                
+                <div class="row text-center mb-3">
+                  <div class="col-4">
+                    <small class="text-muted d-block">Produtos</small>
+                    <span class="badge bg-info">{{ lote.totalProdutos }}</span>
+                  </div>
+                  <div class="col-4">
+                    <small class="text-muted d-block">Encerra em</small>
+                    <small [ngClass]="lote.isExpired ? 'text-danger' : 'text-success'">
+                      {{ formatarTempoRestante(lote.timeRemaining) }}
+                    </small>
+                  </div>
+                  <div class="col-4">
+                    <small class="text-muted d-block">Criado</small>
+                    <small>{{ formatarData(lote.createdAt) }}</small>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                  <div class="btn-group btn-group-sm">
+                    <a [routerLink]="['/lotes', lote.id]" class="btn btn-outline-info">
+                      <i class="fas fa-eye me-1"></i>Ver
+                    </a>
+                    <a *ngIf="canEdit(lote)" 
+                       [routerLink]="['/lotes', lote.id, 'editar']" 
+                       class="btn btn-outline-primary">
+                      <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                  </div>
+                  
+                  <div class="btn-group btn-group-sm">
+                    <button *ngIf="canActivate(lote)" 
+                            (click)="ativarLote(lote)" 
+                            class="btn btn-outline-success">
+                      <i class="fas fa-play me-1"></i>Ativar
+                    </button>
+                    <button *ngIf="canCancel(lote)" 
+                            (click)="cancelarLote(lote)" 
+                            class="btn btn-outline-warning">
+                      <i class="fas fa-stop me-1"></i>Cancelar
+                    </button>
+                    <button *ngIf="canDelete(lote)" 
+                            (click)="excluirLote(lote)" 
+                            class="btn btn-outline-danger">
+                      <i class="fas fa-trash me-1"></i>Excluir
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Detalhes expandidos mobile -->
+                <div *ngIf="isExpanded(lote.id)" class="mt-3 pt-3 border-top">
+                  <h6 class="text-primary mb-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes
+                  </h6>
+                  
+                  <div class="mb-2">
+                    <strong>Descrição Completa:</strong>
+                    <p class="small mb-2">{{ lote.description || 'Sem descrição' }}</p>
+                  </div>
+                  
+                  <div class="mb-2">
+                    <strong>ID:</strong>
+                    <small class="text-muted d-block">{{ lote.id }}</small>
+                  </div>
+                  
+                  <div class="mb-2">
+                    <strong>Produtos:</strong>
+                    <span class="ms-2">{{ lote.totalProdutos }} associado(s)</span>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-6">
+                      <strong>Editável:</strong>
+                      <i class="fas ms-1" [class.fa-check]="lote.canBeEdited" [class.fa-times]="!lote.canBeEdited" 
+                         [class.text-success]="lote.canBeEdited" [class.text-danger]="!lote.canBeEdited"></i>
+                    </div>
+                    <div class="col-6">
+                      <strong>Expirado:</strong>
+                      <i class="fas ms-1" [class.fa-check]="lote.isExpired" [class.fa-times]="!lote.isExpired" 
+                         [class.text-danger]="lote.isExpired" [class.text-success]="!lote.isExpired"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado Vazio -->
+          <div *ngIf="lotes.length === 0 && !loading" class="text-center py-5">
+            <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum lote encontrado</h5>
+            <p class="text-muted">Você ainda não criou nenhum lote.</p>
+            <a routerLink="/lotes/novo" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>
+              Criar Primeiro Lote
+            </a>
+          </div>
+        </div>
+
+        <!-- Paginação -->
+        <div *ngIf="totalPages > 1" class="card-footer bg-light">
+          <nav aria-label="Navegação de páginas">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 0">
+                <button class="page-link" (click)="paginaAnterior()" [disabled]="currentPage === 0">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+              </li>
+              
+              <li *ngFor="let page of getPaginationPages()" 
+                  class="page-item" 
+                  [class.active]="page === currentPage">
+                <button class="page-link" (click)="irParaPagina(page)">
+                  {{ page + 1 }}
+                </button>
+              </li>
+              
+              <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+                <button class="page-link" (click)="proximaPagina()" [disabled]="currentPage === totalPages - 1">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+          
+          <div class="text-center mt-2">
+            <small class="text-muted">
+              Página {{ currentPage + 1 }} de {{ totalPages }} 
+              ({{ totalElements }} lote(s) no total)
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

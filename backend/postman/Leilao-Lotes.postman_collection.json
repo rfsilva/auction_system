@@ -1,0 +1,942 @@
+{
+	"info": {
+		"_postman_id": "leilao-lotes-collection",
+		"name": "Leilão - CRUD de Lotes (História 2)",
+		"description": "Collection para testar os endpoints de CRUD de Lotes implementados na História 2 da Sprint 2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Setup - Autenticação",
+			"item": [
+				{
+					"name": "Registrar Vendedor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('authToken', response.data.token);",
+									"        pm.environment.set('refreshToken', response.data.refreshToken);",
+									"        pm.environment.set('userId', response.data.user.id);",
+									"        console.log('Usuário registrado e tokens salvos');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Vendedor Teste\",\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\",\n    \"phone\": \"+5511999999999\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/auth/register",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Vendedor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('authToken', response.data.token);",
+									"        pm.environment.set('refreshToken', response.data.refreshToken);",
+									"        pm.environment.set('userId', response.data.user.id);",
+									"        console.log('Login realizado e tokens salvos');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/auth/login",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Preparação - Produtos",
+			"item": [
+				{
+					"name": "Criar Produto 1 (para associar ao lote)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('produtoId1', response.data.id);",
+									"        console.log('Produto 1 criado:', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Produto Teste 1 para Lote\",\n    \"description\": \"Descrição do produto teste 1 que será associado ao lote\",\n    \"initialPrice\": 100.00,\n    \"incrementMin\": 5.00,\n    \"endDateTime\": \"2024-12-31T18:00:00\",\n    \"categoria\": \"Eletrônicos\",\n    \"tags\": [\"teste\", \"lote\"]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/produtos",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"produtos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Produto 2 (para associar ao lote)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('produtoId2', response.data.id);",
+									"        console.log('Produto 2 criado:', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Produto Teste 2 para Lote\",\n    \"description\": \"Descrição do produto teste 2 que será associado ao lote\",\n    \"initialPrice\": 200.00,\n    \"incrementMin\": 10.00,\n    \"endDateTime\": \"2024-12-31T18:00:00\",\n    \"categoria\": \"Casa e Jardim\",\n    \"tags\": [\"teste\", \"lote\"]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/produtos",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"produtos"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. CRUD de Lotes",
+			"item": [
+				{
+					"name": "Criar Lote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response contains lote data', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data).to.have.property('id');",
+									"    pm.expect(response.data).to.have.property('title');",
+									"    pm.expect(response.data).to.have.property('status');",
+									"    pm.expect(response.data.status).to.equal('DRAFT');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('loteId', response.data.id);",
+									"        console.log('Lote criado:', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Lote Teste - Eletrônicos e Casa\",\n    \"description\": \"Lote de teste contendo produtos eletrônicos e de casa e jardim\",\n    \"loteEndDateTime\": \"2024-12-31T20:00:00\",\n    \"produtoIds\": [\"{{produtoId1}}\", \"{{produtoId2}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/lotes",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Lote por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response contains lote data', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data).to.have.property('id');",
+									"    pm.expect(response.data).to.have.property('title');",
+									"    pm.expect(response.data).to.have.property('totalProdutos');",
+									"    pm.expect(response.data.totalProdutos).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/{{loteId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"{{loteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Meus Lotes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response contains paginated data', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data).to.have.property('content');",
+									"    pm.expect(response.data).to.have.property('totalElements');",
+									"    pm.expect(response.data.content).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/meus-lotes?page=0&size=20",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"meus-lotes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Lote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Lote title was updated', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.title).to.include('ATUALIZADO');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Lote Teste - ATUALIZADO - Eletrônicos e Casa\",\n    \"description\": \"Lote de teste ATUALIZADO contendo produtos eletrônicos e de casa e jardim com nova descrição\",\n    \"loteEndDateTime\": \"2024-12-31T21:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/lotes/{{loteId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"{{loteId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Ações de Lote",
+			"item": [
+				{
+					"name": "Ativar Lote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Lote status is ACTIVE', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.status).to.equal('ACTIVE');",
+									"    pm.expect(response.data.isActive).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/{{loteId}}/ativar",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"{{loteId}}",
+								"ativar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Lote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Lote status is CANCELLED', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.status).to.equal('CANCELLED');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/{{loteId}}/cancelar",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"{{loteId}}",
+								"cancelar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Catálogo Público",
+			"item": [
+				{
+					"name": "Buscar Lotes Públicos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response contains paginated data', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data).to.have.property('content');",
+									"    pm.expect(response.data).to.have.property('totalElements');",
+									"    pm.expect(response.data.content).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/catalogo/lotes?page=0&size=20",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"catalogo",
+								"lotes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Lotes Públicos com Filtro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/catalogo/lotes?termo=eletrônicos&page=0&size=20",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"catalogo",
+								"lotes"
+							],
+							"query": [
+								{
+									"key": "termo",
+									"value": "eletrônicos"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Lote Específico no Catálogo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response contains lote data', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data).to.have.property('id');",
+									"    pm.expect(response.data).to.have.property('title');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/catalogo/lotes/{{loteId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"catalogo",
+								"lotes",
+								"{{loteId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Testes de Validação",
+			"item": [
+				{
+					"name": "Criar Lote com Data Inválida (deve falhar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 or 422', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test('Response has success false', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Lote com Data Inválida\",\n    \"description\": \"Este lote deve falhar por ter data no passado\",\n    \"loteEndDateTime\": \"2020-01-01T10:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/lotes",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Lote sem Título (deve falhar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 or 422', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test('Response has success false', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Lote sem título deve falhar\",\n    \"loteEndDateTime\": \"2024-12-31T18:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/lotes",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Lote Inexistente (deve falhar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Response has success false', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/lote-inexistente-123",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"lote-inexistente-123"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Limpeza (Opcional)",
+			"item": [
+				{
+					"name": "Criar Novo Lote para Exclusão",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('loteParaExcluir', response.data.id);",
+									"        console.log('Lote para exclusão criado:', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Lote para Exclusão\",\n    \"description\": \"Este lote será excluído para testar a funcionalidade\",\n    \"loteEndDateTime\": \"2024-12-31T18:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/lotes",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Lote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success true', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{apiUrl}}/lotes/{{loteParaExcluir}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"lotes",
+								"{{loteParaExcluir}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
