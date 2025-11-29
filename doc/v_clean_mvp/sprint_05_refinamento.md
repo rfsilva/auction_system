@@ -9,14 +9,21 @@ Garantir monitoramento do sistema, métricas de operação, relatórios gerencia
 
 ---
 
+## 📝 Regras Gerais
+  1. **Backend**:
+	1.1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
+	1.2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
+	1.3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
+	1.4. Sempre que possível, aplicar Lombok para eliminar verbosidade de código
+	1.5. Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
+	1.6. Criar collection do postman para testes de endpoints (novos ou atualizados) REST
+  2. **Frontend**:
+	2.1. Sempre que um novo componente for criado, não gerar HTML e CSS inline, separando os arquivos .html, .scss e .ts
+	2.2. Formulários de CRUD (se criados ou atualizados) devem apresentar erros de validação claros, sendo: regras de negócio no topo do formulário, e erros de validação de campo em cada campo criticado
+  3. **Integração**:
+	3.1. Garantir consistência de chamadas REST entre frontend e backend através de testes integrados
+
 ## Histórias Detalhadas
-- **Regras Gerais** 
-  1. Backend: Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
-  2. Backend: Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
-  3. Backend: Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
-  4. Backend: Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-  5. Backend: Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
-  6. Frontend: Sempre que um novo componente for criado, não gerar HTML e CSS inline: separe os arquivos
 
 ### História 1: Monitoramento e Health Checks
 - **Tipo:** Enabler
