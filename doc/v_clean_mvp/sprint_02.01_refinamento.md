@@ -10,19 +10,47 @@ Implementar o sistema de contratação que permite à plataforma controlar quem 
 
 ---
 
-## 📝 Regras Gerais
-  1. **Backend**:
-	1.1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
-	1.2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
-	1.3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
-	1.4. Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-	1.5. Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
-	1.6. Criar collection do postman para testes de endpoints (novos ou atualizados) REST
-  2. **Frontend**:
-	2.1. Sempre que um novo componente for criado, não gerar HTML e CSS inline, separando os arquivos .html, .scss e .ts
-	2.2. Formulários de CRUD (se criados ou atualizados) devem apresentar erros de validação claros, sendo: regras de negócio no topo do formulário, e erros de validação de campo em cada campo criticado
-  3. **Integração**:
-	3.1. Garantir consistência de chamadas REST entre frontend e backend através de testes integrados
+## 📘 Contexto do Projeto
+
+### 🛠️ Backend:
+- Java 21 + Spring Boot 3 + API REST + DTO + Validation + Lombok + JPA + MySQL + Flyway
+- Entidade JPA completa (com Lombok, constraints e relacionamentos)
+- DTOs (request/response), validadores e mappers
+- Repository
+- Service com regras de negócio
+- Controller REST com todos os endpoints CRUD + filtros se aplicável
+- Migrations (somente se necessário; primeiro valide se existe na V1)
+- Regras de validação (negócio e campos)
+- Mensagens de erro claras	
+
+### 🎨 Frontend: 
+- Angular 18 (standalone) + HttpClient com fetch + Reactive Forms + rotas
+- Model (interface ou classe)
+- Service TS com chamadas REST usando `HttpClient` (withFetch)
+- Component de listagem + filtros
+- Component de formulário (create/update)
+- Component de detalhe (se fizer sentido)
+- Component sem HTML e SCSS inline - criar arquivos separados
+- Reactive Forms com validações
+- Mensagens de erro (negócio no topo, campos em cada campo)
+- Rotas completas do módulo	
+
+### 🔗 Integrações:
+- Geração da collection Postman dos endpoints criados/alterados
+- Garantir consistência do contrato REST gerado no backend para uso no frontend  
+
+### 🛢️ Banco de Dados:
+- Migrations versionadas (V1 = legado), prefixo "tb_" e nome singular
+- Evitar ao máximo queries nativas e named queries
+- Não criar estruturas específicas do banco de dados (TYPE, TRIGGER, PROCEDURE, FUNCTION, etc.) no migrations
+- Para entities novas, validar no migrations se tabela já implementada. Se não, criar, se sim e precisar atualizar, atualize em versão nova.
+
+### ⚠️ Importante:
+- Manter padrões de nomenclatura e pastas
+- NÃO inventar regra que não esteja no documento funcional.
+- Analise a história. SE a história tiver regra incompleta, liste os "pontos pendentes" no bloco ANOTAÇÕES.
+- Mantenha código limpo e dentro dos padrões fornecidos.
+- Comece lendo o material, identifique entidades e regras, e só então gere tudo.
 
 ## 📋 Histórias Detalhadas
 
@@ -114,93 +142,6 @@ Implementar o sistema de contratação que permite à plataforma controlar quem 
 
 ---
 
-## 📊 Modelo de Dados Ajustado
-
-### Ajustes na tb_contrato
-```sql
--- Adicionar campos necessários para o novo modelo
-ALTER TABLE tb_contrato ADD COLUMN categoria VARCHAR(100);
-ALTER TABLE tb_contrato ADD COLUMN tipo_contrato ENUM('GERAL', 'CATEGORIA_ESPECIFICA') DEFAULT 'GERAL';
-ALTER TABLE tb_contrato ADD COLUMN status ENUM('DRAFT', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'SUSPENDED') DEFAULT 'DRAFT';
-ALTER TABLE tb_contrato ADD COLUMN observacoes TEXT;
-ALTER TABLE tb_contrato ADD COLUMN created_by VARCHAR(36);
-ALTER TABLE tb_contrato ADD COLUMN updated_by VARCHAR(36);
-
--- Índices para performance
-CREATE INDEX idx_tb_contrato_status ON tb_contrato(status);
-CREATE INDEX idx_tb_contrato_categoria ON tb_contrato(categoria);
-CREATE INDEX idx_tb_contrato_vigencia ON tb_contrato(valid_from, valid_to);
-```
-
-### Ajustes na tb_lote
-```sql
--- Adicionar referência obrigatória ao contrato
-ALTER TABLE tb_lote ADD COLUMN contract_id VARCHAR(36) NOT NULL;
-ALTER TABLE tb_lote ADD CONSTRAINT fk_lote_contrato 
-    FOREIGN KEY (contract_id) REFERENCES tb_contrato(id);
-
--- Índice para performance
-CREATE INDEX idx_tb_lote_contract_id ON tb_lote(contract_id);
-```
-
-### Nova tabela tb_vendedor_contrato (relacionamento)
-```sql
--- Tabela para relacionamento N:N entre vendedores e contratos
-CREATE TABLE tb_vendedor_contrato (
-    id VARCHAR(36) PRIMARY KEY,
-    vendedor_id VARCHAR(36) NOT NULL,
-    contrato_id VARCHAR(36) NOT NULL,
-    data_ativacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_desativacao TIMESTAMP NULL,
-    ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    motivo_desativacao VARCHAR(255),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (vendedor_id) REFERENCES tb_vendedor(id) ON DELETE CASCADE,
-    FOREIGN KEY (contrato_id) REFERENCES tb_contrato(id) ON DELETE CASCADE,
-    
-    UNIQUE KEY uk_vendedor_contrato_ativo (vendedor_id, contrato_id, ativo)
-);
-
--- Índices para performance
-CREATE INDEX idx_tb_vendedor_contrato_vendedor ON tb_vendedor_contrato(vendedor_id);
-CREATE INDEX idx_tb_vendedor_contrato_contrato ON tb_vendedor_contrato(contrato_id);
-CREATE INDEX idx_tb_vendedor_contrato_ativo ON tb_vendedor_contrato(ativo);
-```
-
-### Nova tabela tb_comissao (para cálculos)
-```sql
--- Tabela para registrar comissões calculadas
-CREATE TABLE tb_comissao (
-    id VARCHAR(36) PRIMARY KEY,
-    lote_id VARCHAR(36) NOT NULL,
-    contrato_id VARCHAR(36) NOT NULL,
-    vendedor_id VARCHAR(36) NOT NULL,
-    valor_venda DECIMAL(15,2) NOT NULL,
-    percentual_comissao DECIMAL(5,4) NOT NULL,
-    valor_comissao DECIMAL(15,2) NOT NULL,
-    status ENUM('PENDENTE', 'CALCULADA', 'PAGA', 'CANCELADA') DEFAULT 'PENDENTE',
-    data_calculo TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    data_pagamento TIMESTAMP NULL,
-    observacoes TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (lote_id) REFERENCES tb_lote(id),
-    FOREIGN KEY (contrato_id) REFERENCES tb_contrato(id),
-    FOREIGN KEY (vendedor_id) REFERENCES tb_vendedor(id)
-);
-
--- Índices para performance
-CREATE INDEX idx_tb_comissao_lote ON tb_comissao(lote_id);
-CREATE INDEX idx_tb_comissao_vendedor ON tb_comissao(vendedor_id);
-CREATE INDEX idx_tb_comissao_status ON tb_comissao(status);
-CREATE INDEX idx_tb_comissao_data_calculo ON tb_comissao(data_calculo);
-```
-
----
-
 ## 🎯 Critérios de Aceite da Sprint
 
 ### Funcionais
@@ -227,75 +168,4 @@ CREATE INDEX idx_tb_comissao_data_calculo ON tb_comissao(data_calculo);
 
 ---
 
-## 🚀 Impacto e Dependências
-
-### Impacto na Sprint 2 Original
-- **História 2 (CRUD Lotes)**: Precisa ser ajustada para incluir seleção de contrato
-- **Testes existentes**: Podem quebrar, precisam ser atualizados
-- **Frontend atual**: Formulário de lote precisa ser modificado
-
-### Dependências
-- **Pré-requisito**: Conclusão da História 1 antes das demais
-- **Bloqueante**: Sistema de lotes atual não funcionará até ajustes
-- **Sequencial**: História 2 → História 3 → demais podem ser paralelas
-
-### Riscos
-- **Alto**: Mudança significativa no modelo de negócio
-- **Médio**: Impacto em funcionalidades já implementadas
-- **Baixo**: Complexidade técnica (estrutura já existe)
-
----
-
-## 📈 Métricas de Sucesso
-
-### Negócio
-- **Controle de Vendedores**: 100% dos vendedores com contrato
-- **Receita Rastreável**: Todas as comissões calculadas corretamente
-- **Flexibilidade**: Múltiplos tipos de contrato funcionando
-
-### Técnico
-- **Performance**: Consultas de contrato < 200ms
-- **Disponibilidade**: Sistema funcionando 99.9%
-- **Qualidade**: 0 bugs críticos em produção
-
----
-
-## 🔄 Fluxo de Implementação Sugerido
-
-### Fase 1 - Fundação (Semana 1)
-1. **História 1**: CRUD de Contratos
-2. **História 2**: Processo de Contratação
-3. **Ajustes no AuthService**: Remover auto-atribuição de SELLER
-
-### Fase 2 - Integração (Semana 2)
-1. **História 3**: Validação de Contratos em Lotes
-2. **História 5**: Múltiplos Contratos
-3. **História 6**: Auditoria
-
-### Fase 3 - Finalização
-1. **História 4**: Dashboard
-2. **Testes integrados**
-3. **Documentação**
-
----
-
-## 📝 Observações Importantes
-
-### Regras Gerais da Sprint
-1. **Backend**: Seguir padrões estabelecidos (prefixo "tb_", Lombok, etc.)
-2. **Frontend**: Separar HTML, CSS e TypeScript
-3. **Validações**: Implementar tanto no frontend quanto backend
-4. **Auditoria**: Registrar todas as operações críticas
-5. **Performance**: Otimizar consultas com índices apropriados
-
-### Considerações de Negócio
-- **Migração**: Vendedores existentes precisarão de contratos retroativos
-- **Comunicação**: Usuários devem ser notificados sobre mudanças
-- **Suporte**: Documentar processo para equipe de atendimento
-- **Legal**: Contratos devem seguir legislação aplicável
-
----
-
 **Story Points Totais Sprint S2.1:** 52 SP
-
-**Observação Crítica**: Esta sprint é **fundamental** para o modelo de negócio da plataforma e deve ser implementada antes de continuar com outras funcionalidades de leilão. Sem ela, a plataforma não consegue gerar receita de forma controlada e auditável.

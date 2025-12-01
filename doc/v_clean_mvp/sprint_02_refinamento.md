@@ -8,22 +8,49 @@
 Implementar funcionalidades básicas de catálogo, produtos e leilões estáticos, permitindo criação de produtos, lotes e visualização por visitantes e compradores, sem ainda lidar com lances dinâmicos.
 
 ---
+## 📘 Contexto do Projeto
 
-## 📝 Regras Gerais
-  1. **Backend**:
-	1.1. Se precisar criar entity nova, localizar primeiro a tabela em V1 do migrations. Se não encontrar, criar migration para criação da tabela.
-	1.2. Se for necessário criar tabela, usar prefixo "tb_" e nome no singular
-	1.3. Não criar estruturas do tipo TYPE, TRIGGER, PROCEDURE, FUNCTION no migrations
-	1.4. Sempre que possível, aplicar Lombok para eliminar verbosidade de código
-	1.5. Não gerar nem atualizar nenhum teste unitário ou integrado nesse momento.
-	1.6. Criar collection do postman para testes de endpoints (novos ou atualizados) REST
-  2. **Frontend**:
-	2.1. Sempre que um novo componente for criado, não gerar HTML e CSS inline, separando os arquivos .html, .scss e .ts
-	2.2. Formulários de CRUD (se criados ou atualizados) devem apresentar erros de validação claros, sendo: regras de negócio no topo do formulário, e erros de validação de campo em cada campo criticado
-  3. **Integração**:
-	3.1. Garantir consistência de chamadas REST entre frontend e backend através de testes integrados
+### 🛠️ Backend:
+- Java 21 + Spring Boot 3 + API REST + DTO + Validation + Lombok + JPA + MySQL + Flyway
+- Entidade JPA completa (com Lombok, constraints e relacionamentos)
+- DTOs (request/response), validadores e mappers
+- Repository
+- Service com regras de negócio
+- Controller REST com todos os endpoints CRUD + filtros se aplicável
+- Migrations (somente se necessário; primeiro valide se existe na V1)
+- Regras de validação (negócio e campos)
+- Mensagens de erro claras	
 
-## Histórias Detalhadas
+### 🎨 Frontend: 
+- Angular 18 (standalone) + HttpClient com fetch + Reactive Forms + rotas
+- Model (interface ou classe)
+- Service TS com chamadas REST usando `HttpClient` (withFetch)
+- Component de listagem + filtros
+- Component de formulário (create/update)
+- Component de detalhe (se fizer sentido)
+- Component sem HTML e SCSS inline - criar arquivos separados
+- Reactive Forms com validações
+- Mensagens de erro (negócio no topo, campos em cada campo)
+- Rotas completas do módulo	
+
+### 🔗 Integrações:
+- Geração da collection Postman dos endpoints criados/alterados
+- Garantir consistência do contrato REST gerado no backend para uso no frontend  
+
+### 🛢️ Banco de Dados:
+- Migrations versionadas (V1 = legado), prefixo "tb_" e nome singular
+- Evitar ao máximo queries nativas e named queries
+- Não criar estruturas específicas do banco de dados (TYPE, TRIGGER, PROCEDURE, FUNCTION, etc.) no migrations
+- Para entities novas, validar no migrations se tabela já implementada. Se não, criar, se sim e precisar atualizar, atualize em versão nova.
+
+### ⚠️ Importante:
+- Manter padrões de nomenclatura e pastas
+- NÃO inventar regra que não esteja no documento funcional.
+- Analise a história. SE a história tiver regra incompleta, liste os "pontos pendentes" no bloco ANOTAÇÕES.
+- Mantenha código limpo e dentro dos padrões fornecidos.
+- Comece lendo o material, identifique entidades e regras, e só então gere tudo.
+
+## 📋 Histórias Detalhadas
 
 ### História 1: CRUD de Produtos
 - **Tipo:** Funcional
