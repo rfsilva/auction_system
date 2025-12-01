@@ -1,0 +1,458 @@
+{
+  "info": {
+    "name": "Leilão - Contratos API",
+    "description": "Collection para testar endpoints de contratos do sistema de leilão",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contrato_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "seller_id",
+      "value": "770e8400-e29b-41d4-a716-446655440001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', response.data.token);",
+                  "        console.log('Token JWT salvo:', response.data.token);",
+                  "    }",
+                  "}",
+                  "",
+                  "// Teste para verificar se o login foi bem-sucedido",
+                  "pm.test('Login realizado com sucesso', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.token).to.not.be.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@leilao.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contratos - CRUD",
+      "item": [
+        {
+          "name": "Criar Contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('contrato_id', response.data.id);",
+                  "        console.log('Contrato criado:', response.data.id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Contrato criado com sucesso', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"{{seller_id}}\",\n  \"feeRate\": 0.05,\n  \"terms\": \"Contrato de comissão padrão. O vendedor concorda em pagar uma taxa de 5% sobre o valor final de venda de cada produto arrematado através da plataforma. Esta taxa será automaticamente deduzida do valor a ser repassado ao vendedor.\",\n  \"validFrom\": \"2024-01-01T00:00:00\",\n  \"validTo\": \"2024-12-31T23:59:59\",\n  \"categoria\": \"Eletrônicos\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/contratos",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"]
+            }
+          }
+        },
+        {
+          "name": "Listar Contratos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Listagem de contratos bem-sucedida', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('content');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos?page=0&size=20&sort=createdAt&direction=desc",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "direction",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Contrato por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Contrato",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feeRate\": 0.06,\n  \"terms\": \"Contrato de comissão atualizado. O vendedor concorda em pagar uma taxa de 6% sobre o valor final de venda de cada produto arrematado através da plataforma.\",\n  \"categoria\": \"Eletrônicos\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Excluir Contrato",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contratos - Ações",
+      "item": [
+        {
+          "name": "Ativar Contrato",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}/ativar",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}", "ativar"]
+            }
+          }
+        },
+        {
+          "name": "Cancelar Contrato",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}/cancelar",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}", "cancelar"]
+            }
+          }
+        },
+        {
+          "name": "Suspender Contrato",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/{{contrato_id}}/suspender",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "{{contrato_id}}", "suspender"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contratos - Consultas",
+      "item": [
+        {
+          "name": "Listar Contratos por Vendedor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/vendedor/{{seller_id}}?page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "vendedor", "{{seller_id}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Contrato Ativo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/vendedor/{{seller_id}}/ativo?categoria=Eletrônicos",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "vendedor", "{{seller_id}}", "ativo"],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verificar se Vendedor tem Contrato Ativo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/vendedor/{{seller_id}}/tem-ativo",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "vendedor", "{{seller_id}}", "tem-ativo"]
+            }
+          }
+        },
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos/categorias",
+              "host": ["{{base_url}}"],
+              "path": ["contratos", "categorias"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contratos - Filtros",
+      "item": [
+        {
+          "name": "Filtrar por Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos?status=ACTIVE&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Categoria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos?categoria=Eletrônicos&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Faixa de Taxa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos?feeRateMin=0.03&feeRateMax=0.07&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "feeRateMin",
+                  "value": "0.03"
+                },
+                {
+                  "key": "feeRateMax",
+                  "value": "0.07"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar nos Termos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/contratos?termo=comissão&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "termo",
+                  "value": "comissão"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

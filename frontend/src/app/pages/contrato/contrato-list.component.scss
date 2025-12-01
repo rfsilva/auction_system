@@ -1,0 +1,192 @@
+// Estilos para listagem de contratos
+
+.btn.active {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: white;
+}
+
+.card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  
+  &:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Badges de status
+.badge {
+  &.badge-secondary {
+    background-color: #6c757d;
+  }
+  
+  &.badge-success {
+    background-color: #198754;
+  }
+  
+  &.badge-warning {
+    background-color: #ffc107;
+    color: #000;
+  }
+  
+  &.badge-danger {
+    background-color: #dc3545;
+  }
+}
+
+// Botões de ação
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// Área de filtros
+.card-body form {
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .form-control, .form-select {
+    font-size: 0.875rem;
+  }
+}
+
+// Paginação
+.pagination {
+  .page-link {
+    color: var(--bs-primary);
+    border-color: #dee2e6;
+    
+    &:hover {
+      color: var(--bs-primary);
+      background-color: #e9ecef;
+      border-color: #dee2e6;
+    }
+  }
+  
+  .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+  
+  .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #dee2e6;
+  }
+}
+
+// Loading state
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Empty state
+.fa-file-contract {
+  opacity: 0.5;
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+    
+    .d-flex.gap-2 {
+      justify-content: stretch;
+      
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+  
+  .card-body {
+    .d-flex.justify-content-between {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+      
+      .d-flex.gap-1 {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+  }
+  
+  .row.g-3 {
+    .col-md-3, .col-md-6 {
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Animações
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Cores de texto para dias restantes
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+// Área de termos do contrato
+.bg-light {
+  background-color: #f8f9fa !important;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
+
+// Código
+code {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+}

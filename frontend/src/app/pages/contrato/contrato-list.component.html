@@ -1,0 +1,314 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Gestão de Contratos</h2>
+      <p class="text-muted mb-0">Gerencie contratos de vendedores da plataforma</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button 
+        class="btn btn-outline-secondary" 
+        (click)="toggleFiltros()"
+        [class.active]="mostrarFiltros">
+        <i class="fas fa-filter me-1"></i>
+        Filtros
+      </button>
+      <a routerLink="/admin/contratos/novo" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>
+        Novo Contrato
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4" [class.d-none]="!mostrarFiltros">
+    <div class="card-body">
+      <form (ngSubmit)="aplicarFiltros()">
+        <div class="row g-3">
+          <!-- Busca geral -->
+          <div class="col-md-4">
+            <label class="form-label">Buscar</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Buscar nos termos do contrato..."
+              [value]="filtros.termo || ''"
+              (input)="onBuscar($event)">
+          </div>
+
+          <!-- Status -->
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" [(ngModel)]="filtros.status" name="status">
+              <option value="">Todos</option>
+              <option [value]="ContractStatus.DRAFT">Rascunho</option>
+              <option [value]="ContractStatus.ACTIVE">Ativo</option>
+              <option [value]="ContractStatus.EXPIRED">Expirado</option>
+              <option [value]="ContractStatus.CANCELLED">Cancelado</option>
+              <option [value]="ContractStatus.SUSPENDED">Suspenso</option>
+            </select>
+          </div>
+
+          <!-- Categoria -->
+          <div class="col-md-2">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" [(ngModel)]="filtros.categoria" name="categoria">
+              <option value="">Todas</option>
+              <option *ngFor="let categoria of categorias" [value]="categoria">
+                {{ categoria }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Taxa mínima -->
+          <div class="col-md-2">
+            <label class="form-label">Taxa Mín. (%)</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              step="0.01"
+              min="0"
+              max="50"
+              [(ngModel)]="filtros.feeRateMin" 
+              name="feeRateMin">
+          </div>
+
+          <!-- Taxa máxima -->
+          <div class="col-md-2">
+            <label class="form-label">Taxa Máx. (%)</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              step="0.01"
+              min="0"
+              max="50"
+              [(ngModel)]="filtros.feeRateMax" 
+              name="feeRateMax">
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="fas fa-search me-1"></i>
+              Aplicar Filtros
+            </button>
+            <button type="button" class="btn btn-outline-secondary" (click)="limparFiltros()">
+              <i class="fas fa-times me-1"></i>
+              Limpar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2 text-muted">Carregando contratos...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="carregarContratos()">
+      Tentar Novamente
+    </button>
+  </div>
+
+  <!-- Lista de contratos -->
+  <div *ngIf="!loading && !error">
+    <!-- Resumo -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <small class="text-muted">
+        <ng-container *ngIf="paginacao">
+          Mostrando {{ paginacao.size * paginacao.number + 1 }} - 
+          {{ Math.min(paginacao.size * (paginacao.number + 1), paginacao.totalElements) }} 
+          de {{ paginacao.totalElements }} contratos
+        </ng-container>
+      </small>
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted">Ordenar por:</small>
+        <select class="form-select form-select-sm" style="width: auto;" 
+                [(ngModel)]="filtros.sort" (change)="aplicarFiltros()">
+          <option value="createdAt">Data de Criação</option>
+          <option value="validFrom">Data de Início</option>
+          <option value="validTo">Data de Fim</option>
+          <option value="feeRate">Taxa</option>
+          <option value="status">Status</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary" 
+                (click)="filtros.direction = filtros.direction === 'asc' ? 'desc' : 'asc'; aplicarFiltros()">
+          <i class="fas" [class.fa-sort-up]="filtros.direction === 'asc'" 
+             [class.fa-sort-down]="filtros.direction === 'desc'"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards de contratos -->
+    <div class="row g-3">
+      <div class="col-12" *ngFor="let contrato of contratos; trackBy: trackByContratoId">
+        <div class="card">
+          <div class="card-body">
+            <!-- Header do contrato -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <h5 class="mb-0">{{ contrato.sellerName || 'Vendedor não encontrado' }}</h5>
+                  <span class="badge" [class]="getStatusClass(contrato.status)">
+                    {{ getStatusText(contrato.status) }}
+                  </span>
+                  <span *ngIf="isProximoVencimento(contrato)" class="badge bg-warning text-dark">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Vence em breve
+                  </span>
+                </div>
+                <div class="text-muted small">
+                  <span *ngIf="contrato.sellerCompanyName">{{ contrato.sellerCompanyName }} • </span>
+                  Taxa: {{ formatarTaxa(contrato.feeRate) }}
+                  <span *ngIf="contrato.categoria"> • Categoria: {{ contrato.categoria }}</span>
+                </div>
+              </div>
+              <div class="d-flex gap-1">
+                <!-- Ações -->
+                <button *ngIf="canActivate(contrato)" 
+                        class="btn btn-sm btn-success" 
+                        (click)="ativarContrato(contrato)"
+                        title="Ativar contrato">
+                  <i class="fas fa-play"></i>
+                </button>
+                <button *ngIf="canSuspend(contrato)" 
+                        class="btn btn-sm btn-warning" 
+                        (click)="suspenderContrato(contrato)"
+                        title="Suspender contrato">
+                  <i class="fas fa-pause"></i>
+                </button>
+                <button *ngIf="canCancel(contrato)" 
+                        class="btn btn-sm btn-danger" 
+                        (click)="cancelarContrato(contrato)"
+                        title="Cancelar contrato">
+                  <i class="fas fa-stop"></i>
+                </button>
+                <a *ngIf="canEdit(contrato)" 
+                   [routerLink]="['/admin/contratos', contrato.id, 'editar']"
+                   class="btn btn-sm btn-outline-primary"
+                   title="Editar contrato">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button *ngIf="canDelete(contrato)" 
+                        class="btn btn-sm btn-outline-danger" 
+                        (click)="excluirContrato(contrato)"
+                        title="Excluir contrato">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" 
+                        (click)="toggleDetalhes(contrato.id)"
+                        [title]="isExpanded(contrato.id) ? 'Ocultar detalhes' : 'Ver detalhes'">
+                  <i class="fas" [class.fa-chevron-down]="!isExpanded(contrato.id)" 
+                     [class.fa-chevron-up]="isExpanded(contrato.id)"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Informações básicas -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <small class="text-muted d-block">Vigência</small>
+                <div class="fw-medium">
+                  {{ formatarData(contrato.validFrom) }}
+                  <span *ngIf="contrato.validTo"> até {{ formatarData(contrato.validTo) }}</span>
+                  <span *ngIf="!contrato.validTo" class="text-success"> (sem expiração)</span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <small class="text-muted d-block">Criado em</small>
+                <div class="fw-medium">{{ formatarData(contrato.createdAt) }}</div>
+                <small *ngIf="contrato.createdByName" class="text-muted">por {{ contrato.createdByName }}</small>
+              </div>
+              <div class="col-md-3" *ngIf="contrato.approvedAt">
+                <small class="text-muted d-block">Aprovado em</small>
+                <div class="fw-medium">{{ formatarData(contrato.approvedAt) }}</div>
+                <small *ngIf="contrato.approvedByName" class="text-muted">por {{ contrato.approvedByName }}</small>
+              </div>
+              <div class="col-md-3" *ngIf="contrato.daysUntilExpiration !== undefined">
+                <small class="text-muted d-block">Dias restantes</small>
+                <div class="fw-medium" 
+                     [class.text-danger]="contrato.daysUntilExpiration <= 7"
+                     [class.text-warning]="contrato.daysUntilExpiration > 7 && contrato.daysUntilExpiration <= 30">
+                  {{ contrato.daysUntilExpiration }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes expandidos -->
+            <div *ngIf="isExpanded(contrato.id)" class="border-top pt-3">
+              <div class="row g-3">
+                <div class="col-12">
+                  <small class="text-muted d-block mb-2">Termos do Contrato</small>
+                  <div class="bg-light p-3 rounded small" style="max-height: 200px; overflow-y: auto;">
+                    {{ contrato.terms }}
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Informações técnicas -->
+              <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                  <small class="text-muted d-block">ID do Contrato</small>
+                  <code class="small">{{ contrato.id }}</code>
+                </div>
+                <div class="col-md-6">
+                  <small class="text-muted d-block">ID do Vendedor</small>
+                  <code class="small">{{ contrato.sellerId }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="contratos.length === 0" class="text-center py-5">
+      <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
+      <h4 class="text-muted">Nenhum contrato encontrado</h4>
+      <p class="text-muted">
+        <span *ngIf="filtros.termo || filtros.status || filtros.categoria">
+          Tente ajustar os filtros ou 
+        </span>
+        <a routerLink="/admin/contratos/novo" class="text-decoration-none">
+          criar um novo contrato
+        </a>
+      </p>
+    </div>
+
+    <!-- Paginação -->
+    <nav *ngIf="paginacao && paginacao.totalPages > 1" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="paginacao.first">
+          <button class="page-link" (click)="paginaAnterior()" [disabled]="paginacao.first">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </li>
+        
+        <li *ngFor="let page of getPaginationPages()" 
+            class="page-item" 
+            [class.active]="page === paginacao.number">
+          <button class="page-link" (click)="irParaPagina(page)">
+            {{ page + 1 }}
+          </button>
+        </li>
+        
+        <li class="page-item" [class.disabled]="paginacao.last">
+          <button class="page-link" (click)="proximaPagina()" [disabled]="paginacao.last">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>

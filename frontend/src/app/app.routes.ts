@@ -78,6 +78,27 @@ export const routes: Routes = [
         path: 'lotes/:id/editar',
         loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
         canActivate: [authGuard]
+      },
+      // Rotas de contratos para administradores
+      {
+        path: 'admin/contratos',
+        loadComponent: () => import('./pages/contrato/contrato-list.component').then(m => m.ContratoListComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'admin/contratos/novo',
+        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'admin/contratos/:id',
+        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'admin/contratos/:id/editar',
+        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
+        canActivate: [authGuard]
       }
     ]
   },
