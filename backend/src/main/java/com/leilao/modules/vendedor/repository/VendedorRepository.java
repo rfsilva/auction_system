@@ -4,6 +4,7 @@ import com.leilao.modules.vendedor.entity.Vendedor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -21,4 +22,14 @@ public interface VendedorRepository extends JpaRepository<Vendedor, String> {
      * Verifica se existe vendedor para o usuário
      */
     boolean existsByUsuarioId(String usuarioId);
+
+    /**
+     * Busca vendedores ativos
+     */
+    List<Vendedor> findByActiveTrue();
+
+    /**
+     * Busca vendedores por status ativo
+     */
+    List<Vendedor> findByActive(Boolean active);
 }

@@ -9,6 +9,7 @@ import com.leilao.modules.vendedor.entity.Vendedor;
 import com.leilao.modules.vendedor.repository.VendedorRepository;
 import com.leilao.shared.enums.ContractStatus;
 import com.leilao.shared.enums.UserRole;
+import com.leilao.shared.enums.UserStatus;
 import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.List;
 
 /**
  * Service para operações com contratos
+ * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
  */
 @Service
 @RequiredArgsConstructor
@@ -37,7 +39,64 @@ public class ContratoService {
     private final UsuarioRepository usuarioRepository;
 
     /**
-     * Cria um novo contrato
+     * Cria um novo contrato a partir de usuário (novo fluxo)
+     * Promove automaticamente o usuário a vendedor se necessário
+     */
+    @Transactional
+    public ContratoDto criarContratoDeUsuario(ContratoCreateFromUserRequest request, String adminId) {
+        log.info("Criando contrato para usuário: {}", request.getUsuarioId());
+
+        // Validar se o usuário existe e está ativo
+        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+
+        if (usuario.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("Usuário deve estar ativo para ter um contrato");
+        }
+
+        // Verificar se já é vendedor
+        Vendedor vendedor = vendedorRepository.findByUsuarioId(request.getUsuarioId()).orElse(null);
+        
+        // Se não é vendedor, criar registro de vendedor
+        if (vendedor == null) {
+            vendedor = criarVendedor(usuario);
+            log.info("Usuário {} promovido a vendedor: {}", usuario.getId(), vendedor.getId());
+        }
+
+        // Verificar se já tem contrato ativo conflitante
+        validarConflitosContrato(vendedor.getId(), null, request.getCategoria(), 
+                                request.getValidFrom(), request.getValidTo());
+
+        // Validar regras de negócio
+        validarCriacaoContratoFromUser(request);
+
+        // Criar contrato
+        Contrato contrato = new Contrato();
+        contrato.setSellerId(vendedor.getId());
+        contrato.setFeeRate(request.getFeeRate());
+        contrato.setTerms(request.getTerms());
+        contrato.setValidFrom(request.getValidFrom() != null ? request.getValidFrom() : LocalDateTime.now());
+        contrato.setValidTo(request.getValidTo());
+        contrato.setCategoria(request.getCategoria());
+        contrato.setStatus(ContractStatus.DRAFT);
+        contrato.setActive(false);
+        contrato.setCreatedBy(adminId);
+
+        contrato = contratoRepository.save(contrato);
+        log.info("Contrato criado com sucesso: {}", contrato.getId());
+
+        // Ativar imediatamente se solicitado
+        ContratoDto contratoDto = convertToDto(contrato);
+        if (Boolean.TRUE.equals(request.getAtivarImediatamente())) {
+            contratoDto = ativarContrato(contrato.getId(), adminId);
+            log.info("Contrato ativado imediatamente: {}", contrato.getId());
+        }
+
+        return contratoDto;
+    }
+
+    /**
+     * Cria um novo contrato (fluxo antigo - para vendedores existentes)
      */
     @Transactional
     public ContratoDto criarContrato(ContratoCreateRequest request, String adminId) {
@@ -70,6 +129,62 @@ public class ContratoService {
         log.info("Contrato criado com sucesso: {}", contrato.getId());
 
         return convertToDto(contrato);
+    }
+
+    /**
+     * Ativa usuário como vendedor criando um contrato
+     * História 2: Processo de Contratação de Vendedores
+     */
+    @Transactional
+    public ContratoDto ativarVendedor(AtivarVendedorRequest request, String adminId) {
+        log.info("Ativando usuário {} como vendedor", request.getUsuarioId());
+
+        // Validar se o usuário existe e está ativo
+        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+
+        if (usuario.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("Usuário deve estar ativo para ser transformado em vendedor");
+        }
+
+        // Verificar se já é vendedor com contrato ativo
+        Vendedor vendedorExistente = vendedorRepository.findByUsuarioId(request.getUsuarioId()).orElse(null);
+        if (vendedorExistente != null && vendedorTemContratoAtivo(vendedorExistente.getId())) {
+            throw new BusinessException("Usuário já é um vendedor ativo com contrato vigente");
+        }
+
+        // Criar vendedor se não existir
+        String vendedorId;
+        if (vendedorExistente == null) {
+            Vendedor novoVendedor = criarVendedor(usuario);
+            vendedorId = novoVendedor.getId();
+            log.info("Vendedor criado para usuário {}: {}", usuario.getId(), vendedorId);
+        } else {
+            vendedorId = vendedorExistente.getId();
+            log.info("Usando vendedor existente: {}", vendedorId);
+        }
+
+        // Criar contrato
+        ContratoCreateRequest contratoRequest = new ContratoCreateRequest();
+        contratoRequest.setSellerId(vendedorId);
+        contratoRequest.setFeeRate(request.getFeeRate());
+        contratoRequest.setTerms(request.getTerms());
+        contratoRequest.setValidFrom(request.getValidFrom() != null ? request.getValidFrom() : LocalDateTime.now());
+        contratoRequest.setValidTo(request.getValidTo());
+        contratoRequest.setCategoria(request.getCategoria());
+
+        ContratoDto contrato = criarContrato(contratoRequest, adminId);
+
+        // Ativar imediatamente se solicitado
+        if (request.getAtivarImediatamente()) {
+            contrato = ativarContrato(contrato.getId(), adminId);
+            log.info("Contrato ativado imediatamente para vendedor: {}", vendedorId);
+        }
+
+        log.info("Usuário {} transformado em vendedor com sucesso. Contrato: {}", 
+                request.getUsuarioId(), contrato.getId());
+
+        return contrato;
     }
 
     /**
@@ -278,7 +393,41 @@ public class ContratoService {
                 .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
     }
 
+    /**
+     * Cria um novo vendedor para o usuário
+     * História 2: Processo de Contratação de Vendedores
+     */
+    private Vendedor criarVendedor(Usuario usuario) {
+        Vendedor vendedor = new Vendedor();
+        vendedor.setUsuarioId(usuario.getId());
+        
+        // Usar dados do usuário como padrão
+        vendedor.setCompanyName(usuario.getNome() + " - Vendedor");
+        vendedor.setContactEmail(usuario.getEmail());
+        vendedor.setContactPhone(usuario.getTelefone());
+        
+        // Dados padrão para novos vendedores
+        vendedor.setDescription("Vendedor ativado via contrato administrativo");
+        vendedor.setActive(true);
+
+        return vendedorRepository.save(vendedor);
+    }
+
     private void validarCriacaoContrato(ContratoCreateRequest request) {
+        // Validar taxa
+        if (request.getFeeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Taxa deve ser maior que zero");
+        }
+
+        // Validar datas
+        if (request.getValidTo() != null && request.getValidFrom() != null) {
+            if (request.getValidTo().isBefore(request.getValidFrom())) {
+                throw new BusinessException("Data de fim deve ser posterior à data de início");
+            }
+        }
+    }
+
+    private void validarCriacaoContratoFromUser(ContratoCreateFromUserRequest request) {
         // Validar taxa
         if (request.getFeeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Taxa deve ser maior que zero");

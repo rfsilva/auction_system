@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -22,6 +21,7 @@ import java.util.List;
 /**
  * Controller para operações com contratos
  * Apenas administradores podem gerenciar contratos
+ * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
  */
 @RestController
 @RequestMapping("/contratos")
@@ -33,7 +33,27 @@ public class ContratoController {
     private final ContratoService contratoService;
 
     /**
-     * Cria um novo contrato
+     * Cria um novo contrato a partir de usuário (novo fluxo)
+     * Promove automaticamente o usuário a vendedor se necessário
+     */
+    @PostMapping("/criar-de-usuario")
+    public ResponseEntity<ApiResponse<ContratoDto>> criarContratoDeUsuario(
+            @Valid @RequestBody ContratoCreateFromUserRequest request,
+            @AuthenticationPrincipal Usuario admin) {
+        
+        log.info("Admin {} criando contrato para usuário {}", admin.getId(), request.getUsuarioId());
+        
+        ContratoDto contrato = contratoService.criarContratoDeUsuario(request, admin.getId());
+        
+        String message = Boolean.TRUE.equals(request.getAtivarImediatamente())
+                ? "Contrato criado e ativado com sucesso. Usuário promovido a vendedor ativo."
+                : "Contrato criado em rascunho. Usuário promovido a vendedor. Ative quando necessário.";
+        
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
+    }
+
+    /**
+     * Cria um novo contrato (fluxo antigo - para vendedores existentes)
      */
     @PostMapping
     public ResponseEntity<ApiResponse<ContratoDto>> criarContrato(
@@ -45,6 +65,26 @@ public class ContratoController {
         ContratoDto contrato = contratoService.criarContrato(request, admin.getId());
         
         return ResponseEntity.ok(ApiResponse.success("Contrato criado com sucesso", contrato));
+    }
+
+    /**
+     * Ativa usuário como vendedor através de contrato
+     * História 2: Processo de Contratação de Vendedores
+     */
+    @PostMapping("/ativar-vendedor")
+    public ResponseEntity<ApiResponse<ContratoDto>> ativarVendedor(
+            @Valid @RequestBody AtivarVendedorRequest request,
+            @AuthenticationPrincipal Usuario admin) {
+        
+        log.info("Admin {} ativando usuário {} como vendedor", admin.getId(), request.getUsuarioId());
+        
+        ContratoDto contrato = contratoService.ativarVendedor(request, admin.getId());
+        
+        String message = request.getAtivarImediatamente() 
+                ? "Usuário transformado em vendedor ativo com sucesso"
+                : "Contrato criado em rascunho. Ative quando necessário";
+        
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**

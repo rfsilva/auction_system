@@ -11,9 +11,21 @@ import {
   ApiResponse,
   ContractStatus 
 } from '../models/contrato.model';
+import { AtivarVendedorRequest } from '../models/ativar-vendedor.model';
+
+export interface ContratoCreateFromUserRequest {
+  usuarioId: string;
+  feeRate: number;
+  terms: string;
+  validFrom?: string;
+  validTo?: string;
+  categoria?: string;
+  ativarImediatamente?: boolean;
+}
 
 /**
  * Service para operações com contratos
+ * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
  */
 @Injectable({
   providedIn: 'root'
@@ -25,10 +37,26 @@ export class ContratoService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Cria um novo contrato
+   * Cria um novo contrato a partir de usuário (novo fluxo)
+   * Promove automaticamente o usuário a vendedor se necessário
+   */
+  criarContratoDeUsuario(contrato: ContratoCreateFromUserRequest): Observable<ApiResponse<Contrato>> {
+    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/criar-de-usuario`, contrato);
+  }
+
+  /**
+   * Cria um novo contrato (fluxo antigo - para vendedores existentes)
    */
   criarContrato(contrato: ContratoCreateRequest): Observable<ApiResponse<Contrato>> {
     return this.http.post<ApiResponse<Contrato>>(this.baseUrl, contrato);
+  }
+
+  /**
+   * Ativa usuário como vendedor através de contrato
+   * História 2: Processo de Contratação de Vendedores
+   */
+  ativarVendedor(request: AtivarVendedorRequest): Observable<ApiResponse<Contrato>> {
+    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/ativar-vendedor`, request);
   }
 
   /**

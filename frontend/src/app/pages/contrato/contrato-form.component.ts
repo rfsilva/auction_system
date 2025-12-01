@@ -2,9 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { ContratoService } from '../../core/services/contrato.service';
+import { ContratoService, ContratoCreateFromUserRequest } from '../../core/services/contrato.service';
+import { UsuarioService, UsuarioSugestaoDto } from '../../core/services/usuario.service';
 import { AuthService } from '../../core/services/auth.service';
 import { 
   Contrato, 
@@ -22,6 +23,7 @@ import {
 export class ContratoFormComponent implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
 
   // Estados
   loading = false;
@@ -32,7 +34,12 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
   // Dados
   contrato: Contrato | null = null;
   categorias: string[] = [];
-  vendedores: any[] = []; // TODO: Implementar interface de vendedor
+  usuarios: UsuarioSugestaoDto[] = [];
+  usuarioSelecionado: UsuarioSugestaoDto | null = null;
+  
+  // Busca de usuários
+  buscandoUsuarios = false;
+  termoBusca = '';
   
   // Formulário
   contratoForm: FormGroup;
@@ -44,11 +51,25 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private contratoService: ContratoService,
+    private usuarioService: UsuarioService,
     public authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.contratoForm = this.createForm();
+    
+    // Setup do debounce para busca de usuários
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(termo => {
+      if (termo.length >= 2) {
+        this.buscarUsuarios(termo);
+      } else {
+        this.usuarios = [];
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -56,7 +77,6 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
     this.isEditMode = !!this.contratoId;
     
     this.carregarCategorias();
-    this.carregarVendedores();
     
     if (this.isEditMode && this.contratoId) {
       this.carregarContrato();
@@ -72,7 +92,7 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
 
   createForm(): FormGroup {
     return this.fb.group({
-      sellerId: ['', [Validators.required]],
+      usuarioId: ['', [Validators.required]], // Mudança: usuarioId em vez de sellerId
       feeRate: ['', [
         Validators.required,
         Validators.min(0.0001),
@@ -160,13 +180,26 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  carregarVendedores(): void {
-    // TODO: Implementar service de vendedores
-    // Por enquanto, mock de dados
-    this.vendedores = [
-      { id: '1', nome: 'João Silva', empresa: 'Silva & Cia' },
-      { id: '2', nome: 'Maria Santos', empresa: 'Santos Ltda' }
-    ];
+  buscarUsuarios(termo: string): void {
+    this.buscandoUsuarios = true;
+    this.usuarioService.buscarUsuarios(termo)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.usuarios = response.data;
+          } else {
+            console.error('Erro ao buscar usuários:', response.message);
+            this.usuarios = [];
+          }
+          this.buscandoUsuarios = false;
+        },
+        error: (error) => {
+          console.error('Erro ao buscar usuários:', error);
+          this.usuarios = [];
+          this.buscandoUsuarios = false;
+        }
+      });
   }
 
   preencherFormulario(contrato: Contrato): void {
@@ -177,13 +210,48 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
       new Date(contrato.validTo).toISOString().slice(0, 16) : '';
 
     this.contratoForm.patchValue({
-      sellerId: contrato.sellerId,
+      usuarioId: contrato.sellerId, // No backend, ainda usamos sellerId
       feeRate: contrato.feeRate * 100, // Converter para porcentagem
       terms: contrato.terms,
       validFrom: validFrom,
       validTo: validTo,
       categoria: contrato.categoria || ''
     });
+
+    // Se estamos editando, buscar o usuário selecionado
+    if (contrato.sellerName) {
+      this.usuarioSelecionado = {
+        id: contrato.sellerId,
+        nome: contrato.sellerName,
+        email: '', // Não temos o email no contrato
+        isVendedor: true,
+        temContratoAtivo: true
+      };
+      this.termoBusca = contrato.sellerName;
+    }
+  }
+
+  // Busca de usuários
+
+  onBuscarUsuario(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const termo = target.value || '';
+    this.termoBusca = termo;
+    this.searchSubject.next(termo);
+  }
+
+  selecionarUsuario(usuario: UsuarioSugestaoDto): void {
+    this.usuarioSelecionado = usuario;
+    this.termoBusca = usuario.nome;
+    this.contratoForm.patchValue({ usuarioId: usuario.id });
+    this.usuarios = []; // Limpar lista após seleção
+  }
+
+  limparSelecao(): void {
+    this.usuarioSelecionado = null;
+    this.termoBusca = '';
+    this.contratoForm.patchValue({ usuarioId: '' });
+    this.usuarios = [];
   }
 
   // Submissão do formulário
@@ -201,25 +269,33 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
 
     const formData = this.contratoForm.value;
     
-    // Preparar dados para envio
-    const contratoData = {
-      sellerId: formData.sellerId,
-      feeRate: formData.feeRate / 100, // Converter de porcentagem para decimal
-      terms: formData.terms,
-      validFrom: formData.validFrom || undefined,
-      validTo: formData.validTo || undefined,
-      categoria: formData.categoria || undefined
-    };
-
     if (this.isEditMode && this.contratoId) {
-      this.atualizarContrato(contratoData as ContratoUpdateRequest);
+      // Para edição, usar o método antigo
+      const contratoData: ContratoUpdateRequest = {
+        feeRate: formData.feeRate / 100, // Converter de porcentagem para decimal
+        terms: formData.terms,
+        validFrom: formData.validFrom || undefined,
+        validTo: formData.validTo || undefined,
+        categoria: formData.categoria || undefined
+      };
+      this.atualizarContrato(contratoData);
     } else {
-      this.criarContrato(contratoData as ContratoCreateRequest);
+      // Para criação, usar o novo método
+      const contratoData: ContratoCreateFromUserRequest = {
+        usuarioId: formData.usuarioId,
+        feeRate: formData.feeRate / 100, // Converter de porcentagem para decimal
+        terms: formData.terms,
+        validFrom: formData.validFrom || undefined,
+        validTo: formData.validTo || undefined,
+        categoria: formData.categoria || undefined,
+        ativarImediatamente: false // Por padrão, criar em rascunho
+      };
+      this.criarContrato(contratoData);
     }
   }
 
-  criarContrato(contratoData: ContratoCreateRequest): void {
-    this.contratoService.criarContrato(contratoData)
+  criarContrato(contratoData: ContratoCreateFromUserRequest): void {
+    this.contratoService.criarContratoDeUsuario(contratoData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -313,7 +389,7 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
 
   getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      sellerId: 'Vendedor',
+      usuarioId: 'Usuário',
       feeRate: 'Taxa de comissão',
       terms: 'Termos do contrato',
       validFrom: 'Data de início',
@@ -350,5 +426,17 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
 
   formatarTaxa(taxa: number): string {
     return this.contratoService.formatarTaxa(taxa / 100);
+  }
+
+  formatarNomeUsuario(usuario: UsuarioSugestaoDto): string {
+    return this.usuarioService.formatarNomeUsuario(usuario);
+  }
+
+  getStatusClass(usuario: UsuarioSugestaoDto): string {
+    return this.usuarioService.getStatusClass(usuario);
+  }
+
+  getStatusIcon(usuario: UsuarioSugestaoDto): string {
+    return this.usuarioService.getStatusIcon(usuario);
   }
 }

@@ -6,7 +6,7 @@
         {{ isEditMode ? 'Editar Contrato' : 'Novo Contrato' }}
       </h2>
       <p class="text-muted mb-0">
-        {{ isEditMode ? 'Atualize as informações do contrato' : 'Crie um novo contrato para vendedor' }}
+        {{ isEditMode ? 'Atualize as informações do contrato' : 'Crie um novo contrato para usuário' }}
       </p>
     </div>
     <button class="btn btn-outline-secondary" (click)="cancelar()">
@@ -44,27 +44,84 @@
           </div>
 
           <form [formGroup]="contratoForm" (ngSubmit)="onSubmit()">
-            <!-- Vendedor -->
+            <!-- Usuário -->
             <div class="mb-3">
-              <label for="sellerId" class="form-label">
-                Vendedor <span class="text-danger">*</span>
+              <label for="usuarioId" class="form-label">
+                Usuário <span class="text-danger">*</span>
               </label>
-              <select 
-                id="sellerId" 
-                class="form-select"
-                formControlName="sellerId"
-                [class.is-invalid]="isFieldInvalid('sellerId')"
-                [disabled]="isEditMode">
-                <option value="">Selecione um vendedor</option>
-                <option *ngFor="let vendedor of vendedores" [value]="vendedor.id">
-                  {{ vendedor.nome }} - {{ vendedor.empresa }}
-                </option>
-              </select>
-              <div *ngIf="isFieldInvalid('sellerId')" class="invalid-feedback">
-                {{ getFieldError('sellerId') }}
+              
+              <!-- Campo de busca -->
+              <div class="position-relative">
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [class.is-invalid]="isFieldInvalid('usuarioId')"
+                  [disabled]="isEditMode"
+                  placeholder="Digite o nome ou email do usuário..."
+                  [value]="termoBusca"
+                  (input)="onBuscarUsuario($event)"
+                  autocomplete="off">
+                
+                <!-- Botão para limpar seleção -->
+                <button 
+                  *ngIf="usuarioSelecionado && !isEditMode" 
+                  type="button" 
+                  class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+                  (click)="limparSelecao()"
+                  title="Limpar seleção">
+                  <i class="fas fa-times"></i>
+                </button>
+                
+                <!-- Loading da busca -->
+                <div *ngIf="buscandoUsuarios" class="position-absolute top-50 end-0 translate-middle-y me-2">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Buscando...</span>
+                  </div>
+                </div>
               </div>
-              <div *ngIf="isEditMode" class="form-text">
-                O vendedor não pode ser alterado após a criação do contrato.
+
+              <!-- Lista de resultados -->
+              <div *ngIf="usuarios.length > 0 && !usuarioSelecionado" class="dropdown-menu show w-100 mt-1" style="position: static;">
+                <button 
+                  *ngFor="let usuario of usuarios" 
+                  type="button"
+                  class="dropdown-item d-flex align-items-center"
+                  (click)="selecionarUsuario(usuario)">
+                  <i [class]="getStatusIcon(usuario)" [class]="getStatusClass(usuario)" class="me-2"></i>
+                  <div class="flex-grow-1">
+                    <div class="fw-medium">{{ usuario.nome }}</div>
+                    <small class="text-muted">{{ usuario.email }}</small>
+                  </div>
+                  <small *ngIf="usuario.isVendedor" class="badge bg-info">Vendedor</small>
+                  <small *ngIf="usuario.temContratoAtivo" class="badge bg-success ms-1">Ativo</small>
+                </button>
+              </div>
+
+              <!-- Usuário selecionado -->
+              <div *ngIf="usuarioSelecionado" class="mt-2 p-2 bg-light rounded border">
+                <div class="d-flex align-items-center">
+                  <i [class]="getStatusIcon(usuarioSelecionado)" [class]="getStatusClass(usuarioSelecionado)" class="me-2"></i>
+                  <div class="flex-grow-1">
+                    <div class="fw-medium">{{ usuarioSelecionado.nome }}</div>
+                    <small class="text-muted">{{ usuarioSelecionado.email }}</small>
+                  </div>
+                  <small *ngIf="usuarioSelecionado.isVendedor" class="badge bg-info">Vendedor</small>
+                  <small *ngIf="usuarioSelecionado.temContratoAtivo" class="badge bg-success ms-1">Ativo</small>
+                </div>
+              </div>
+
+              <div *ngIf="isFieldInvalid('usuarioId')" class="invalid-feedback d-block">
+                {{ getFieldError('usuarioId') }}
+              </div>
+              
+              <div class="form-text">
+                <span *ngIf="!isEditMode">
+                  Digite pelo menos 2 caracteres para buscar usuários. 
+                  Se o usuário não for vendedor, ele será automaticamente promovido ao criar o contrato.
+                </span>
+                <span *ngIf="isEditMode">
+                  O usuário não pode ser alterado após a criação do contrato.
+                </span>
               </div>
             </div>
 
@@ -215,12 +272,14 @@
         </div>
         <div class="card-body">
           <ul class="mb-0">
+            <li><strong>Novo fluxo:</strong> Selecione qualquer usuário do sistema para criar um contrato.</li>
+            <li><strong>Promoção automática:</strong> Se o usuário não for vendedor, ele será automaticamente promovido ao salvar o contrato.</li>
             <li>Contratos são criados em status "Rascunho" e precisam ser ativados manualmente.</li>
             <li>Apenas contratos em rascunho podem ser editados.</li>
             <li>A taxa de comissão é aplicada sobre o valor final de venda dos produtos.</li>
             <li>Contratos específicos para categoria têm prioridade sobre contratos gerais.</li>
-            <li>Vendedores só podem vender quando possuem pelo menos um contrato ativo.</li>
-            <li>Contratos expirados automaticamente suspendem a capacidade de venda do vendedor.</li>
+            <li>Usuários só podem vender quando possuem pelo menos um contrato ativo.</li>
+            <li>Contratos expirados automaticamente suspendem a capacidade de venda do usuário.</li>
           </ul>
         </div>
       </div>

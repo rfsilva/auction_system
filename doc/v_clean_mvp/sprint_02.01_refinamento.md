@@ -15,6 +15,7 @@ Implementar o sistema de contratação que permite à plataforma controlar quem 
 ### 🛠️ Backend:
 - Java 21 + Spring Boot 3 + API REST + DTO + Validation + Lombok + JPA + MySQL + Flyway
 - Entidade JPA completa (com Lombok, constraints e relacionamentos)
+- Usar String para campos UUID quando as colunas do banco são VARCHAR(36)
 - DTOs (request/response), validadores e mappers
 - Repository
 - Service com regras de negócio
@@ -71,10 +72,9 @@ Implementar o sistema de contratação que permite à plataforma controlar quem 
 - **Descrição:** Sistema para transformar usuário comum em vendedor através de contrato.
 - **Tasks / Sub-tasks:**
   1. Ajustar AuthService para não dar role SELLER automaticamente - 1 SP
-  2. Criar endpoint para ativar vendedor via contrato - 2 SP
-  3. Implementar regras: usuário vira vendedor quando tem contrato ativo - 2 SP
-  4. Frontend: tela para selecionar usuário e criar contrato - 3 SP
-  5. Notificações: avisar usuário quando vira vendedor - 1 SP
+  2. Implementar regras: usuário vira vendedor quando tem contrato ativo - 2 SP
+  3. Frontend: tela para selecionar usuário e criar contrato - 3 SP
+  4. Notificações: avisar usuário quando vira vendedor - 1 SP
 - **Story Points:** 9 SP
 
 ### História 3: Validação de Contratos em Lotes
