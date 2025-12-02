@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Service para operações de autenticação e autorização
@@ -172,10 +171,11 @@ public class AuthService {
 
     /**
      * Converte Usuario para UserDto
+     * ✅ CORRIGIDO: Usando String diretamente (sem conversão UUID)
      */
     public UserDto convertToDto(Usuario usuario) {
         UserDto dto = new UserDto();
-        dto.setId(UUID.fromString(usuario.getId()));
+        dto.setId(usuario.getId()); // ✅ String direto, sem UUID.fromString()
         dto.setName(usuario.getNome());
         dto.setEmail(usuario.getEmail());
         dto.setPhone(usuario.getTelefone());

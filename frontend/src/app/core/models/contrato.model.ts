@@ -1,6 +1,17 @@
 /**
  * Modelos para o sistema de contratos
+ * Consolidado com interfaces de ativação de vendedores
  */
+
+// Importa interfaces comuns do arquivo centralizado
+import type { 
+  ApiResponse, 
+  PaginatedResponse, 
+  ContratoFiltro as BaseContratoFiltro
+} from '../../shared/interfaces/api.interfaces';
+
+// ✅ CORRIGIDO: ContractStatus importado como valor (enum) não como tipo
+import { ContractStatus } from '../../shared/interfaces/api.interfaces';
 
 export interface Contrato {
   id: string;
@@ -49,42 +60,23 @@ export interface ContratoUpdateRequest {
   categoria?: string;
 }
 
-export interface ContratoFiltro {
-  sellerId?: string;
-  sellerName?: string;
-  status?: ContractStatus;
+/**
+ * Interface consolidada para ativação de vendedores
+ * Movida de ativar-vendedor.model.ts para consolidação
+ */
+export interface AtivarVendedorRequest {
+  usuarioId: string;
+  feeRate: number;
+  terms: string;
+  validFrom?: string;
+  validTo?: string;
   categoria?: string;
-  active?: boolean;
-  feeRateMin?: number;
-  feeRateMax?: number;
-  termo?: string;
-  page?: number;
-  size?: number;
-  sort?: string;
-  direction?: string;
+  ativarImediatamente?: boolean;
 }
 
-export enum ContractStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
-  EXPIRED = 'EXPIRED',
-  CANCELLED = 'CANCELLED',
-  SUSPENDED = 'SUSPENDED'
-}
+// ✅ CORRIGIDO: Re-exporta enum como valor e tipos como type
+export { ContractStatus };
+export type { ApiResponse, PaginatedResponse };
 
-export interface PaginatedResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-  first: boolean;
-  last: boolean;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  timestamp: string;
-}
+// Alias para manter compatibilidade
+export type ContratoFiltro = BaseContratoFiltro;

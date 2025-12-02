@@ -8,17 +8,17 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * DTO para dados do usuário
+ * PADRONIZAÇÃO: Usando String para ID (compatível com VARCHAR(36))
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
 
-    private UUID id;
+    private String id; // ✅ CORRIGIDO: String em vez de UUID
     private String name;
     private String email;
     private String phone;
@@ -29,7 +29,7 @@ public class UserDto {
     private LocalDateTime ultimoLogin;
 
     // Construtor adicional para casos básicos
-    public UserDto(UUID id, String name, String email, UserStatus status, Set<UserRole> roles) {
+    public UserDto(String id, String name, String email, UserStatus status, Set<UserRole> roles) {
         this.id = id;
         this.name = name;
         this.email = email;

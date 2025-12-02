@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+
+// ✅ CONSOLIDADO: Importa do arquivo centralizado
 import { 
   Contrato, 
   ContratoCreateRequest, 
@@ -9,9 +11,9 @@ import {
   ContratoFiltro, 
   PaginatedResponse, 
   ApiResponse,
-  ContractStatus 
-} from '../models/contrato.model';
-import { AtivarVendedorRequest } from '../models/ativar-vendedor.model';
+  ContractStatus,
+  AtivarVendedorRequest
+} from '../../shared/interfaces/api.interfaces';
 
 export interface ContratoCreateFromUserRequest {
   usuarioId: string;
@@ -26,6 +28,7 @@ export interface ContratoCreateFromUserRequest {
 /**
  * Service para operações com contratos
  * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
+ * ✅ CONSOLIDADO: Usa interfaces do arquivo centralizado
  */
 @Injectable({
   providedIn: 'root'
