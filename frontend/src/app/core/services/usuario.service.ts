@@ -18,6 +18,16 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 /**
  * Service para operações com usuários (para seleção em contratos)
  */
@@ -31,7 +41,31 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Busca usuários para seleção em contratos
+   * Lista todos os usuários com paginação
+   */
+  listarUsuarios(
+    page: number = 0, 
+    size: number = 20, 
+    termo?: string,
+    tipoFiltro?: string
+  ): Observable<ApiResponse<PaginatedResponse<UsuarioSugestaoDto>>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    if (termo && termo.trim()) {
+      params = params.set('termo', termo.trim());
+    }
+
+    if (tipoFiltro && tipoFiltro !== '') {
+      params = params.set('tipo', tipoFiltro);
+    }
+
+    return this.http.get<ApiResponse<PaginatedResponse<UsuarioSugestaoDto>>>(`${this.baseUrl}/listar`, { params });
+  }
+
+  /**
+   * Busca usuários para seleção em contratos (método antigo - manter compatibilidade)
    */
   buscarUsuarios(termo: string, limit: number = 10): Observable<ApiResponse<UsuarioSugestaoDto[]>> {
     let params = new HttpParams()

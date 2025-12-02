@@ -140,8 +140,9 @@ public class Contrato {
     }
 
     public void approve(String approvedBy) {
-        if (status != ContractStatus.DRAFT) {
-            throw new IllegalStateException("Apenas contratos em rascunho podem ser aprovados");
+        // ✅ CORREÇÃO: Permitir ativar contratos em DRAFT ou SUSPENDED
+        if (status != ContractStatus.DRAFT && status != ContractStatus.SUSPENDED) {
+            throw new IllegalStateException("Apenas contratos em rascunho ou suspensos podem ser ativados");
         }
         this.status = ContractStatus.ACTIVE;
         this.active = true;

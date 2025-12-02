@@ -1,11 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { ContratoService, ContratoCreateFromUserRequest } from '../../core/services/contrato.service';
-import { UsuarioService, UsuarioSugestaoDto } from '../../core/services/usuario.service';
+import { UsuarioService, UsuarioSugestaoDto, PaginatedResponse } from '../../core/services/usuario.service';
 import { AuthService } from '../../core/services/auth.service';
 import { 
   Contrato, 
@@ -16,14 +16,14 @@ import {
 @Component({
   selector: 'app-contrato-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './contrato-form.component.html',
   styleUrl: './contrato-form.component.scss'
 })
 export class ContratoFormComponent implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>();
-  private searchSubject = new Subject<string>();
+  private filtroSubject = new Subject<string>();
 
   // Estados
   loading = false;
@@ -34,12 +34,22 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
   // Dados
   contrato: Contrato | null = null;
   categorias: string[] = [];
-  usuarios: UsuarioSugestaoDto[] = [];
-  usuarioSelecionado: UsuarioSugestaoDto | null = null;
   
-  // Busca de usuários
-  buscandoUsuarios = false;
-  termoBusca = '';
+  // Lista de usuários
+  usuarios: UsuarioSugestaoDto[] = [];
+  usuariosFiltrados: UsuarioSugestaoDto[] = [];
+  usuarioSelecionado: UsuarioSugestaoDto | null = null;
+  loadingUsuarios = false;
+  
+  // Paginação
+  paginaAtual = 0;
+  totalPaginas = 0;
+  totalUsuarios = 0;
+  itensPorPagina = 20;
+  
+  // Filtros
+  filtroUsuarios = '';
+  filtroTipoUsuario = '';
   
   // Formulário
   contratoForm: FormGroup;
@@ -58,17 +68,14 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
   ) {
     this.contratoForm = this.createForm();
     
-    // Setup do debounce para busca de usuários
-    this.searchSubject.pipe(
+    // Setup do debounce para filtro de usuários
+    this.filtroSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       takeUntil(this.destroy$)
-    ).subscribe(termo => {
-      if (termo.length >= 2) {
-        this.buscarUsuarios(termo);
-      } else {
-        this.usuarios = [];
-      }
+    ).subscribe(() => {
+      this.paginaAtual = 0; // Reset para primeira página ao filtrar
+      this.carregarUsuarios();
     });
   }
 
@@ -80,6 +87,9 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
     
     if (this.isEditMode && this.contratoId) {
       this.carregarContrato();
+    } else {
+      // Carregar usuários apenas no modo criação
+      this.carregarUsuarios();
     }
   }
 
@@ -92,11 +102,11 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
 
   createForm(): FormGroup {
     return this.fb.group({
-      usuarioId: ['', [Validators.required]], // Mudança: usuarioId em vez de sellerId
+      usuarioId: ['', [Validators.required]],
       feeRate: ['', [
         Validators.required,
-        Validators.min(0.0001),
-        Validators.max(0.5000)
+        Validators.min(0.01),    // Mínimo 0.01% (em porcentagem)
+        Validators.max(50.00)    // Máximo 50.00% (em porcentagem)
       ]],
       terms: ['', [
         Validators.required,
@@ -180,24 +190,36 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  buscarUsuarios(termo: string): void {
-    this.buscandoUsuarios = true;
-    this.usuarioService.buscarUsuarios(termo)
+  carregarUsuarios(): void {
+    this.loadingUsuarios = true;
+    
+    this.usuarioService.listarUsuarios(
+      this.paginaAtual, 
+      this.itensPorPagina, 
+      this.filtroUsuarios,
+      this.filtroTipoUsuario
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
-            this.usuarios = response.data;
+            const paginatedData = response.data;
+            this.usuarios = paginatedData.content;
+            this.usuariosFiltrados = [...this.usuarios];
+            this.totalUsuarios = paginatedData.totalElements;
+            this.totalPaginas = paginatedData.totalPages;
           } else {
-            console.error('Erro ao buscar usuários:', response.message);
+            console.error('Erro ao carregar usuários:', response.message);
             this.usuarios = [];
+            this.usuariosFiltrados = [];
           }
-          this.buscandoUsuarios = false;
+          this.loadingUsuarios = false;
         },
         error: (error) => {
-          console.error('Erro ao buscar usuários:', error);
+          console.error('Erro ao carregar usuários:', error);
           this.usuarios = [];
-          this.buscandoUsuarios = false;
+          this.usuariosFiltrados = [];
+          this.loadingUsuarios = false;
         }
       });
   }
@@ -210,7 +232,7 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
       new Date(contrato.validTo).toISOString().slice(0, 16) : '';
 
     this.contratoForm.patchValue({
-      usuarioId: contrato.sellerId, // No backend, ainda usamos sellerId
+      usuarioId: contrato.sellerId,
       feeRate: contrato.feeRate * 100, // Converter para porcentagem
       terms: contrato.terms,
       validFrom: validFrom,
@@ -218,7 +240,7 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
       categoria: contrato.categoria || ''
     });
 
-    // Se estamos editando, buscar o usuário selecionado
+    // Se estamos editando, criar o usuário selecionado
     if (contrato.sellerName) {
       this.usuarioSelecionado = {
         id: contrato.sellerId,
@@ -227,31 +249,55 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
         isVendedor: true,
         temContratoAtivo: true
       };
-      this.termoBusca = contrato.sellerName;
     }
   }
 
-  // Busca de usuários
-
-  onBuscarUsuario(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const termo = target.value || '';
-    this.termoBusca = termo;
-    this.searchSubject.next(termo);
-  }
+  // Gerenciamento de usuários
 
   selecionarUsuario(usuario: UsuarioSugestaoDto): void {
     this.usuarioSelecionado = usuario;
-    this.termoBusca = usuario.nome;
     this.contratoForm.patchValue({ usuarioId: usuario.id });
-    this.usuarios = []; // Limpar lista após seleção
   }
 
   limparSelecao(): void {
     this.usuarioSelecionado = null;
-    this.termoBusca = '';
     this.contratoForm.patchValue({ usuarioId: '' });
-    this.usuarios = [];
+  }
+
+  // Filtros e paginação
+
+  aplicarFiltroUsuarios(): void {
+    this.filtroSubject.next(this.filtroUsuarios);
+  }
+
+  irParaPagina(pagina: number): void {
+    if (pagina >= 0 && pagina < this.totalPaginas) {
+      this.paginaAtual = pagina;
+      this.carregarUsuarios();
+    }
+  }
+
+  getPaginationPages(): number[] {
+    const pages: number[] = [];
+    const maxPages = 5; // Máximo de páginas a mostrar
+    
+    let startPage = Math.max(0, this.paginaAtual - Math.floor(maxPages / 2));
+    let endPage = Math.min(this.totalPaginas - 1, startPage + maxPages - 1);
+    
+    // Ajustar se não temos páginas suficientes no início
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(0, endPage - maxPages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  trackByUsuarioId(index: number, usuario: UsuarioSugestaoDto): string {
+    return usuario.id;
   }
 
   // Submissão do formulário
@@ -379,8 +425,8 @@ export class ContratoFormComponent implements OnInit, OnDestroy {
     const errors = control.errors;
     
     if (errors['required']) return `${this.getFieldLabel(fieldName)} é obrigatório`;
-    if (errors['min']) return `${this.getFieldLabel(fieldName)} deve ser maior que ${errors['min'].min}`;
-    if (errors['max']) return `${this.getFieldLabel(fieldName)} deve ser menor que ${errors['max'].max}`;
+    if (errors['min']) return `${this.getFieldLabel(fieldName)} deve ser maior que ${errors['min'].min}%`;
+    if (errors['max']) return `${this.getFieldLabel(fieldName)} deve ser menor que ${errors['max'].max}%`;
     if (errors['minlength']) return `${this.getFieldLabel(fieldName)} deve ter pelo menos ${errors['minlength'].requiredLength} caracteres`;
     if (errors['maxlength']) return `${this.getFieldLabel(fieldName)} deve ter no máximo ${errors['maxlength'].requiredLength} caracteres`;
     

@@ -1,0 +1,455 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="fas fa-users me-2"></i>
+        Gestão de Usuários
+      </h2>
+      <p class="text-muted mb-0">
+        Gerencie todos os usuários do sistema
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="toggleFiltros()">
+        <i class="fas fa-filter me-1"></i>
+        {{ mostrarFiltros ? 'Ocultar' : 'Mostrar' }} Filtros
+      </button>
+      <button class="btn btn-primary" (click)="carregarUsuarios()">
+        <i class="fas fa-sync-alt me-1"></i>
+        Atualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensagens -->
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="clearMessages()"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="clearMessages()"></button>
+  </div>
+
+  <!-- Filtros -->
+  <div *ngIf="mostrarFiltros" class="card mb-4">
+    <div class="card-header">
+      <h6 class="mb-0">
+        <i class="fas fa-search me-2"></i>
+        Filtros de Busca
+      </h6>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="filtroForm">
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label for="nome" class="form-label">Nome</label>
+            <input 
+              type="text" 
+              id="nome"
+              class="form-control"
+              formControlName="nome"
+              placeholder="Filtrar por nome">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input 
+              type="email" 
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="Filtrar por email">
+          </div>
+          <div class="col-md-2 mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select id="status" class="form-select" formControlName="status">
+              <option value="">Todos</option>
+              <option [value]="UserStatus.ACTIVE">Ativo</option>
+              <option [value]="UserStatus.INACTIVE">Inativo</option>
+              <option [value]="UserStatus.SUSPENDED">Suspenso</option>
+              <option [value]="UserStatus.PENDING_VERIFICATION">Pendente</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label for="role" class="form-label">Perfil</label>
+            <select id="role" class="form-select" formControlName="role">
+              <option value="">Todos</option>
+              <option [value]="UserRole.ADMIN">Administrador</option>
+              <option [value]="UserRole.SELLER">Vendedor</option>
+              <option [value]="UserRole.BUYER">Comprador</option>
+              <option [value]="UserRole.VISITOR">Visitante</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label for="isVendedor" class="form-label">É Vendedor</label>
+            <select id="isVendedor" class="form-select" formControlName="isVendedor">
+              <option value="">Todos</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-2 mb-3">
+            <label for="emailVerificado" class="form-label">Email Verificado</label>
+            <select id="emailVerificado" class="form-select" formControlName="emailVerificado">
+              <option value="">Todos</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label for="telefoneVerificado" class="form-label">Telefone Verificado</label>
+            <select id="telefoneVerificado" class="form-select" formControlName="telefoneVerificado">
+              <option value="">Todos</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label for="temContratoAtivo" class="form-label">Contrato Ativo</label>
+            <select id="temContratoAtivo" class="form-select" formControlName="temContratoAtivo">
+              <option value="">Todos</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-secondary me-2" (click)="limparFiltros()">
+              <i class="fas fa-eraser me-1"></i>
+              Limpar
+            </button>
+            <button type="button" class="btn btn-primary" (click)="aplicarFiltros()">
+              <i class="fas fa-search me-1"></i>
+              Aplicar Filtros
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ações em lote -->
+  <div *ngIf="usuariosSelecionados.size > 0" class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>
+          <i class="fas fa-check-square me-2"></i>
+          {{ usuariosSelecionados.size }} usuário(s) selecionado(s)
+        </span>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" (click)="ativarSelecionados()">
+            <i class="fas fa-check me-1"></i>
+            Ativar
+          </button>
+          <button class="btn btn-warning btn-sm" (click)="desativarSelecionados()">
+            <i class="fas fa-pause me-1"></i>
+            Desativar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2 text-muted">Carregando usuários...</p>
+  </div>
+
+  <!-- Lista de usuários -->
+  <div *ngIf="!loading" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h6 class="mb-0">
+          Usuários ({{ totalUsuarios }})
+        </h6>
+        <small class="text-muted">Página {{ paginaAtual + 1 }} de {{ totalPaginas }}</small>
+      </div>
+      <div class="form-check">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          id="selectAll"
+          [checked]="todosSelecionados()"
+          [indeterminate]="algunsSelecionados()"
+          (change)="selecionarTodos()">
+        <label class="form-check-label" for="selectAll">
+          Selecionar todos
+        </label>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div *ngIf="usuarios.length === 0" class="text-center py-5">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhum usuário encontrado</h5>
+        <p class="text-muted">Tente ajustar os filtros de busca</p>
+      </div>
+
+      <div *ngIf="usuarios.length > 0" class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th width="40">
+                <input 
+                  type="checkbox" 
+                  class="form-check-input"
+                  [checked]="todosSelecionados()"
+                  [indeterminate]="algunsSelecionados()"
+                  (change)="selecionarTodos()">
+              </th>
+              <th>Usuário</th>
+              <th>Status</th>
+              <th>Perfis</th>
+              <th>Verificações</th>
+              <th>Último Login</th>
+              <th width="120">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let usuario of usuarios; trackBy: trackByUsuarioId">
+              <!-- Linha principal -->
+              <tr [class.table-active]="isUsuarioSelecionado(usuario.id)">
+                <td>
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [checked]="isUsuarioSelecionado(usuario.id)"
+                    (change)="toggleUsuarioSelecionado(usuario.id)">
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <div class="avatar-circle">
+                        {{ usuario.nome.charAt(0).toUpperCase() }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="fw-bold">{{ usuario.nome }}</div>
+                      <small class="text-muted">{{ usuario.email }}</small>
+                      <div *ngIf="usuario.telefone">
+                        <small class="text-muted">
+                          <i class="fas fa-phone me-1"></i>
+                          {{ usuario.telefone }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span [class]="getStatusClass(usuario.status)">
+                    <i [class]="getStatusIcon(usuario.status)" class="me-1"></i>
+                    {{ getStatusText(usuario.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    <span *ngFor="let role of usuario.roles" [class]="getRoleClass(role)">
+                      {{ getRoleText(role) }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex flex-column gap-1">
+                    <span class="badge" [class]="usuario.emailVerificado ? 'bg-success' : 'bg-secondary'">
+                      <i class="fas fa-envelope me-1"></i>
+                      {{ usuario.emailVerificado ? 'Email OK' : 'Email Pendente' }}
+                    </span>
+                    <span *ngIf="usuario.telefone" class="badge" [class]="usuario.telefoneVerificado ? 'bg-success' : 'bg-secondary'">
+                      <i class="fas fa-phone me-1"></i>
+                      {{ usuario.telefoneVerificado ? 'Tel OK' : 'Tel Pendente' }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <small class="text-muted">
+                    {{ formatarData(usuario.ultimoLogin) }}
+                  </small>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <button 
+                      class="btn btn-outline-primary btn-sm"
+                      (click)="toggleDetalhes(usuario.id)"
+                      title="Ver detalhes">
+                      <i [class]="isExpanded(usuario.id) ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                    </button>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button 
+                        type="button" 
+                        class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-cog"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <button class="dropdown-item" (click)="editarUsuario(usuario)" [disabled]="!canEdit(usuario)">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li *ngIf="canActivate(usuario)">
+                          <button class="dropdown-item text-success" (click)="ativarUsuario(usuario)">
+                            <i class="fas fa-check me-2"></i>
+                            Ativar
+                          </button>
+                        </li>
+                        <li *ngIf="canDeactivate(usuario)">
+                          <button class="dropdown-item text-warning" (click)="desativarUsuario(usuario)">
+                            <i class="fas fa-pause me-2"></i>
+                            Desativar
+                          </button>
+                        </li>
+                        <li *ngIf="canBlock(usuario)">
+                          <button class="dropdown-item text-danger" (click)="bloquearUsuario(usuario)">
+                            <i class="fas fa-ban me-2"></i>
+                            Suspender
+                          </button>
+                        </li>
+                        <li *ngIf="canUnblock(usuario)">
+                          <button class="dropdown-item text-success" (click)="desbloquearUsuario(usuario)">
+                            <i class="fas fa-unlock me-2"></i>
+                            Remover Suspensão
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li *ngIf="!usuario.emailVerificado">
+                          <button class="dropdown-item" (click)="verificarEmail(usuario)">
+                            <i class="fas fa-envelope-check me-2"></i>
+                            Verificar Email
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item text-warning" (click)="redefinirSenha(usuario)">
+                            <i class="fas fa-key me-2"></i>
+                            Redefinir Senha
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Linha de detalhes expandida -->
+              <tr *ngIf="isExpanded(usuario.id)" class="table-info">
+                <td colspan="7">
+                  <div class="p-3">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <h6 class="text-primary mb-3">
+                          <i class="fas fa-info-circle me-2"></i>
+                          Informações Detalhadas
+                        </h6>
+                        <dl class="row">
+                          <dt class="col-sm-4">ID:</dt>
+                          <dd class="col-sm-8"><code>{{ usuario.id }}</code></dd>
+                          
+                          <dt class="col-sm-4">Criado em:</dt>
+                          <dd class="col-sm-8">{{ formatarData(usuario.createdAt) }}</dd>
+                          
+                          <dt class="col-sm-4">Atualizado em:</dt>
+                          <dd class="col-sm-8">{{ formatarData(usuario.updatedAt) }}</dd>
+                          
+                          <dt class="col-sm-4">É Vendedor:</dt>
+                          <dd class="col-sm-8">
+                            <span class="badge" [class]="usuario.isVendedor ? 'bg-info' : 'bg-secondary'">
+                              {{ usuario.isVendedor ? 'Sim' : 'Não' }}
+                            </span>
+                          </dd>
+                          
+                          <dt class="col-sm-4" *ngIf="usuario.isVendedor">Contrato Ativo:</dt>
+                          <dd class="col-sm-8" *ngIf="usuario.isVendedor">
+                            <span class="badge" [class]="usuario.temContratoAtivo ? 'bg-success' : 'bg-warning'">
+                              {{ usuario.temContratoAtivo ? 'Sim' : 'Não' }}
+                            </span>
+                          </dd>
+                          
+                          <dt class="col-sm-4" *ngIf="usuario.totalContratos">Total Contratos:</dt>
+                          <dd class="col-sm-8" *ngIf="usuario.totalContratos">{{ usuario.totalContratos }}</dd>
+                        </dl>
+                      </div>
+                      <div class="col-md-6">
+                        <h6 class="text-primary mb-3">
+                          <i class="fas fa-shield-alt me-2"></i>
+                          Status e Permissões
+                        </h6>
+                        <dl class="row">
+                          <dt class="col-sm-4">Status Conta:</dt>
+                          <dd class="col-sm-8">
+                            <span [class]="getStatusClass(usuario.status)">
+                              <i [class]="getStatusIcon(usuario.status)" class="me-1"></i>
+                              {{ getStatusText(usuario.status) }}
+                            </span>
+                          </dd>
+                          
+                          <dt class="col-sm-4">Perfis:</dt>
+                          <dd class="col-sm-8">
+                            <div class="d-flex flex-wrap gap-1">
+                              <span *ngFor="let role of usuario.roles" [class]="getRoleClass(role)">
+                                {{ getRoleText(role) }}
+                              </span>
+                            </div>
+                          </dd>
+                          
+                          <dt class="col-sm-4">Verificações:</dt>
+                          <dd class="col-sm-8">
+                            <div class="d-flex flex-column gap-1">
+                              <span class="badge" [class]="usuario.emailVerificado ? 'bg-success' : 'bg-secondary'">
+                                <i class="fas fa-envelope me-1"></i>
+                                Email {{ usuario.emailVerificado ? 'Verificado' : 'Não Verificado' }}
+                              </span>
+                              <span *ngIf="usuario.telefone" class="badge" [class]="usuario.telefoneVerificado ? 'bg-success' : 'bg-secondary'">
+                                <i class="fas fa-phone me-1"></i>
+                                Telefone {{ usuario.telefoneVerificado ? 'Verificado' : 'Não Verificado' }}
+                              </span>
+                            </div>
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginação -->
+    <div *ngIf="totalPaginas > 1" class="card-footer">
+      <nav>
+        <ul class="pagination justify-content-center mb-0">
+          <li class="page-item" [class.disabled]="paginaAtual === 0">
+            <button class="page-link" (click)="paginaAnterior()" [disabled]="paginaAtual === 0">
+              <i class="fas fa-chevron-left"></i>
+              Anterior
+            </button>
+          </li>
+          <li *ngFor="let page of getPaginationPages()" 
+              class="page-item" 
+              [class.active]="page === paginaAtual">
+            <button class="page-link" (click)="irParaPagina(page)">
+              {{ page + 1 }}
+            </button>
+          </li>
+          <li class="page-item" [class.disabled]="paginaAtual === totalPaginas - 1">
+            <button class="page-link" (click)="proximaPagina()" [disabled]="paginaAtual === totalPaginas - 1">
+              Próxima
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>

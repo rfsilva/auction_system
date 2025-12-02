@@ -105,6 +105,12 @@ export const routes: Routes = [
         path: 'admin/contratos/:id/editar',
         loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
         canActivate: [authGuard]
+      },
+      // Rotas de usuários para administradores
+      {
+        path: 'admin/usuarios',
+        loadComponent: () => import('./pages/admin/usuario-list.component').then(m => m.UsuarioListComponent),
+        canActivate: [authGuard]
       }
     ]
   },
