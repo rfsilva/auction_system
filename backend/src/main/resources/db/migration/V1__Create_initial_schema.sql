@@ -1,7 +1,8 @@
 -- =====================================================
--- Sistema de Leilão Eletrônico - Schema Inicial MySQL
--- Versão: 1.4 - UUID como STRING
--- Data: 2024-11-26
+-- Sistema de Leilão Eletrônico - Schema Completo MySQL
+-- Versão: 1.0 - Consolidado
+-- Data: 2024-12-19
+-- Descrição: Schema completo com todas as tabelas e ajustes consolidados
 -- =====================================================
 
 -- =====================================================
@@ -48,11 +49,16 @@ CREATE INDEX idx_tb_usuario_role_role ON tb_usuario_role(role);
 CREATE TABLE tb_contrato (
     id VARCHAR(36) PRIMARY KEY,
     seller_id VARCHAR(36) NOT NULL,
-    fee_rate DECIMAL(5,4) NOT NULL,
-    terms TEXT NOT NULL,
-    valid_from TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    valid_to TIMESTAMP NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE,
+    fee_rate DECIMAL(5,4) NOT NULL COMMENT 'Taxa de comissão (0.0001 = 0.01% até 0.5000 = 50%)',
+    terms TEXT NOT NULL COMMENT 'Termos e condições do contrato',
+    valid_from TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Data de início da vigência',
+    valid_to TIMESTAMP NULL COMMENT 'Data de fim da vigência (NULL = sem expiração)',
+    active BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Indica se o contrato está ativo (usado junto com status)',
+    categoria VARCHAR(100) NULL COMMENT 'Categoria específica do contrato (opcional)',
+    status ENUM('DRAFT', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'SUSPENDED') NOT NULL DEFAULT 'DRAFT' COMMENT 'Status do contrato',
+    created_by VARCHAR(36) NULL COMMENT 'Admin que criou o contrato',
+    approved_by VARCHAR(36) NULL COMMENT 'Admin que aprovou o contrato',
+    approved_at TIMESTAMP NULL COMMENT 'Data de aprovação do contrato',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -61,6 +67,15 @@ CREATE TABLE tb_contrato (
 CREATE INDEX idx_tb_contrato_seller_id ON tb_contrato(seller_id);
 CREATE INDEX idx_tb_contrato_active ON tb_contrato(active);
 CREATE INDEX idx_tb_contrato_valid_period ON tb_contrato(valid_from, valid_to);
+CREATE INDEX idx_tb_contrato_categoria ON tb_contrato(categoria);
+CREATE INDEX idx_tb_contrato_status ON tb_contrato(status);
+CREATE INDEX idx_tb_contrato_created_by ON tb_contrato(created_by);
+CREATE INDEX idx_tb_contrato_approved_by ON tb_contrato(approved_by);
+
+-- Foreign keys para tb_contrato
+ALTER TABLE tb_contrato 
+ADD CONSTRAINT fk_tb_contrato_created_by FOREIGN KEY (created_by) REFERENCES tb_usuario(id),
+ADD CONSTRAINT fk_tb_contrato_approved_by FOREIGN KEY (approved_by) REFERENCES tb_usuario(id);
 
 -- =====================================================
 -- TABELA: TB_VENDEDOR
@@ -68,12 +83,16 @@ CREATE INDEX idx_tb_contrato_valid_period ON tb_contrato(valid_from, valid_to);
 CREATE TABLE tb_vendedor (
     id VARCHAR(36) PRIMARY KEY,
     usuario_id VARCHAR(36) NOT NULL UNIQUE,
-    company_name VARCHAR(255),
-    tax_id VARCHAR(50) UNIQUE,
-    contract_id VARCHAR(36),
-    fee_rate DECIMAL(5,4) NOT NULL DEFAULT 0.05,
-    documents TEXT, -- JSON como TEXT para compatibilidade
-    verificado BOOLEAN NOT NULL DEFAULT FALSE,
+    company_name VARCHAR(255) NULL COMMENT 'Nome da empresa/razão social',
+    tax_id VARCHAR(50) NULL COMMENT 'CNPJ ou CPF do vendedor',
+    contact_email VARCHAR(255) NULL COMMENT 'Email de contato do vendedor',
+    contact_phone VARCHAR(20) NULL COMMENT 'Telefone de contato do vendedor',
+    description TEXT NULL COMMENT 'Descrição do vendedor/empresa',
+    contract_id VARCHAR(36) NULL COMMENT 'ID do contrato ativo (pode ser NULL)',
+    fee_rate DECIMAL(5,4) NOT NULL DEFAULT 0.05 COMMENT 'Taxa de comissão padrão (deprecated - usar contrato)',
+    documents TEXT NULL COMMENT 'Documentos do vendedor em formato JSON',
+    active BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Indica se o vendedor está ativo',
+    verificado BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Indica se o vendedor foi verificado',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -85,6 +104,8 @@ CREATE TABLE tb_vendedor (
 CREATE INDEX idx_tb_vendedor_usuario_id ON tb_vendedor(usuario_id);
 CREATE INDEX idx_tb_vendedor_contract_id ON tb_vendedor(contract_id);
 CREATE INDEX idx_tb_vendedor_verificado ON tb_vendedor(verificado);
+CREATE INDEX idx_tb_vendedor_contact_email ON tb_vendedor(contact_email);
+CREATE INDEX idx_tb_vendedor_active ON tb_vendedor(active);
 
 -- =====================================================
 -- TABELA: TB_COMPRADOR
@@ -111,6 +132,7 @@ CREATE INDEX idx_tb_comprador_kyc_status ON tb_comprador(kyc_status);
 CREATE TABLE tb_lote (
     id VARCHAR(36) PRIMARY KEY,
     seller_id VARCHAR(36) NOT NULL,
+    contract_id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     lote_end_datetime TIMESTAMP NOT NULL,
@@ -118,11 +140,13 @@ CREATE TABLE tb_lote (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (seller_id) REFERENCES tb_vendedor(id) ON DELETE CASCADE
-);
+    FOREIGN KEY (seller_id) REFERENCES tb_vendedor(id) ON DELETE CASCADE,
+    FOREIGN KEY (contract_id) REFERENCES tb_contrato(id)
+) COMMENT = 'Tabela de lotes - vinculada a contratos';
 
 -- Índices para tb_lote
 CREATE INDEX idx_tb_lote_seller_id ON tb_lote(seller_id);
+CREATE INDEX idx_tb_lote_contract_id ON tb_lote(contract_id);
 CREATE INDEX idx_tb_lote_status ON tb_lote(status);
 CREATE INDEX idx_tb_lote_end_datetime ON tb_lote(lote_end_datetime);
 
@@ -396,5 +420,24 @@ CREATE INDEX idx_tb_historico_produto_performed_by ON tb_historico_produto(perfo
 CREATE INDEX idx_tb_historico_produto_timestamp ON tb_historico_produto(timestamp);
 
 -- =====================================================
--- FIM DO SCRIPT
+-- INSERIR USUÁRIO ADMINISTRADOR PADRÃO
+-- =====================================================
+
+-- Usuário administrador padrão
+INSERT INTO tb_usuario (id, nome, email, senha_hash, status, email_verificado) 
+VALUES (
+    '550e8400-e29b-41d4-a716-446655440000',
+    'Administrador do Sistema',
+    'admin@leilao.com',
+    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- password
+    'ACTIVE',
+    TRUE
+);
+
+-- Role de admin para o usuário administrador
+INSERT INTO tb_usuario_role (usuario_id, role) VALUES 
+    ('550e8400-e29b-41d4-a716-446655440000', 'ADMIN');
+
+-- =====================================================
+-- FIM DO SCRIPT V1
 -- =====================================================

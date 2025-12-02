@@ -13,6 +13,7 @@ import java.util.UUID;
 
 /**
  * Entidade Lote - Representa um lote de produtos para leilão
+ * Agora vinculado a um contrato ao invés de diretamente a um vendedor
  */
 @Entity
 @Table(name = "tb_lote")
@@ -27,7 +28,11 @@ public class Lote {
     @Column(name = "id", length = 36)
     private String id;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
+    @Column(name = "contract_id", nullable = false, length = 36)
+    private String contractId;
+
+    // Manter sellerId temporariamente para compatibilidade durante migração
+    @Column(name = "seller_id", length = 36)
     private String sellerId;
 
     @Column(name = "title", nullable = false)

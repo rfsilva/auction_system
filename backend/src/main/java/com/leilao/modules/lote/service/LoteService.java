@@ -1,5 +1,7 @@
 package com.leilao.modules.lote.service;
 
+import com.leilao.modules.contrato.entity.Contrato;
+import com.leilao.modules.contrato.repository.ContratoRepository;
 import com.leilao.modules.lote.dto.LoteCreateRequest;
 import com.leilao.modules.lote.dto.LoteDto;
 import com.leilao.modules.lote.dto.LoteUpdateRequest;
@@ -7,7 +9,11 @@ import com.leilao.modules.lote.entity.Lote;
 import com.leilao.modules.lote.repository.LoteRepository;
 import com.leilao.modules.produto.entity.Produto;
 import com.leilao.modules.produto.repository.ProdutoRepository;
+import com.leilao.modules.vendedor.entity.Vendedor;
+import com.leilao.modules.vendedor.repository.VendedorRepository;
 import com.leilao.modules.vendedor.service.VendedorService;
+import com.leilao.modules.auth.entity.Usuario;
+import com.leilao.modules.auth.repository.UsuarioRepository;
 import com.leilao.shared.enums.LoteStatus;
 import com.leilao.shared.enums.ProdutoStatus;
 import com.leilao.shared.exception.BusinessException;
@@ -26,6 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service para operações de Lote
+ * Atualizado para usar contratos ao invés de vendedores diretamente
  */
 @Service
 @RequiredArgsConstructor
@@ -35,6 +42,9 @@ public class LoteService {
     private final LoteRepository loteRepository;
     private final ProdutoRepository produtoRepository;
     private final VendedorService vendedorService;
+    private final ContratoRepository contratoRepository;
+    private final VendedorRepository vendedorRepository;
+    private final UsuarioRepository usuarioRepository;
 
     /**
      * Cria um novo lote
@@ -46,13 +56,17 @@ public class LoteService {
         // Obter ID do vendedor a partir do ID do usuário
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
+        // Buscar contrato ativo do vendedor
+        Contrato contratoAtivo = buscarContratoAtivoDoVendedor(vendedorId, request.getCategoria());
+        
         validarCriacaoLote(request);
         
         Lote lote = Lote.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .loteEndDateTime(request.getLoteEndDateTime())
-                .sellerId(vendedorId)
+                .contractId(contratoAtivo.getId())
+                .sellerId(vendedorId) // Manter temporariamente para compatibilidade
                 .status(LoteStatus.DRAFT)
                 .build();
         
@@ -63,7 +77,7 @@ public class LoteService {
             associarProdutosAoLote(lote.getId(), request.getProdutoIds(), usuarioId);
         }
         
-        log.info("Lote criado com sucesso: {}", lote.getId());
+        log.info("Lote criado com sucesso: {} para contrato: {}", lote.getId(), contratoAtivo.getId());
         return convertToDto(lote);
     }
 
@@ -79,9 +93,15 @@ public class LoteService {
         
         Lote lote = buscarLotePorId(loteId);
         
-        // Verificar se o vendedor é o proprietário
-        if (!lote.getSellerId().equals(vendedorId)) {
+        // Verificar se o vendedor é o proprietário através do contrato
+        Contrato contrato = buscarContratoPorId(lote.getContractId());
+        if (!contrato.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para editar este lote");
+        }
+        
+        // Verificar se o contrato ainda está ativo
+        if (!contrato.isActive()) {
+            throw new BusinessException("Não é possível editar lote com contrato inativo");
         }
         
         validarEdicaoLote(lote);
@@ -126,7 +146,7 @@ public class LoteService {
         // Obter ID do vendedor a partir do ID do usuário
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
-        Page<Lote> lotes = loteRepository.findBySellerId(vendedorId, pageable);
+        Page<Lote> lotes = loteRepository.findByVendedorId(vendedorId, pageable);
         return lotes.map(this::convertToDto);
     }
 
@@ -156,9 +176,15 @@ public class LoteService {
         
         Lote lote = buscarLotePorId(loteId);
         
-        // Verificar se o vendedor é o proprietário
-        if (!lote.getSellerId().equals(vendedorId)) {
+        // Verificar se o vendedor é o proprietário através do contrato
+        Contrato contrato = buscarContratoPorId(lote.getContractId());
+        if (!contrato.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para ativar este lote");
+        }
+        
+        // Verificar se o contrato ainda está ativo
+        if (!contrato.isActive()) {
+            throw new BusinessException("Não é possível ativar lote com contrato inativo");
         }
         
         validarAtivacaoLote(lote);
@@ -185,8 +211,9 @@ public class LoteService {
         
         Lote lote = buscarLotePorId(loteId);
         
-        // Verificar se o vendedor é o proprietário
-        if (!lote.getSellerId().equals(vendedorId)) {
+        // Verificar se o vendedor é o proprietário através do contrato
+        Contrato contrato = buscarContratoPorId(lote.getContractId());
+        if (!contrato.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para cancelar este lote");
         }
         
@@ -212,8 +239,9 @@ public class LoteService {
         
         Lote lote = buscarLotePorId(loteId);
         
-        // Verificar se o vendedor é o proprietário
-        if (!lote.getSellerId().equals(vendedorId)) {
+        // Verificar se o vendedor é o proprietário através do contrato
+        Contrato contrato = buscarContratoPorId(lote.getContractId());
+        if (!contrato.getSellerId().equals(vendedorId)) {
             throw new BusinessException("Você não tem permissão para excluir este lote");
         }
         
@@ -246,6 +274,18 @@ public class LoteService {
     private Lote buscarLotePorId(String loteId) {
         return loteRepository.findById(loteId)
                 .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado: " + loteId));
+    }
+
+    private Contrato buscarContratoPorId(String contratoId) {
+        return contratoRepository.findById(contratoId)
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado: " + contratoId));
+    }
+
+    private Contrato buscarContratoAtivoDoVendedor(String vendedorId, String categoria) {
+        return contratoRepository.findContratoAtivoParaCategoria(vendedorId, categoria, LocalDateTime.now())
+                .orElseThrow(() -> new BusinessException(
+                    "Vendedor não possui contrato ativo" + 
+                    (categoria != null ? " para a categoria " + categoria : "")));
     }
 
     private void validarCriacaoLote(LoteCreateRequest request) {
@@ -361,9 +401,37 @@ public class LoteService {
             timeRemaining = Math.max(0, duration.getSeconds());
         }
         
+        // Buscar informações do contrato e vendedor
+        String sellerId = null;
+        String sellerName = null;
+        String sellerCompanyName = null;
+        String contractStatus = null;
+        String categoria = null;
+        
+        try {
+            Contrato contrato = buscarContratoPorId(lote.getContractId());
+            sellerId = contrato.getSellerId();
+            contractStatus = contrato.getStatus().getDisplayName();
+            categoria = contrato.getCategoria();
+            
+            // Buscar informações do vendedor
+            Vendedor vendedor = vendedorRepository.findById(contrato.getSellerId()).orElse(null);
+            if (vendedor != null) {
+                sellerCompanyName = vendedor.getCompanyName();
+                
+                // Buscar nome do usuário
+                Usuario usuario = usuarioRepository.findById(vendedor.getUsuarioId()).orElse(null);
+                if (usuario != null) {
+                    sellerName = usuario.getNome();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao buscar informações do contrato/vendedor para lote: {}", lote.getId(), e);
+        }
+        
         return LoteDto.builder()
                 .id(lote.getId())
-                .sellerId(lote.getSellerId())
+                .contractId(lote.getContractId())
                 .title(lote.getTitle())
                 .description(lote.getDescription())
                 .loteEndDateTime(lote.getLoteEndDateTime())
@@ -378,6 +446,12 @@ public class LoteService {
                 .timeRemaining(timeRemaining)
                 .produtoIds(produtoIds)
                 .totalProdutos(produtos.size())
+                // Informações do contrato e vendedor
+                .sellerId(sellerId)
+                .sellerName(sellerName)
+                .sellerCompanyName(sellerCompanyName)
+                .contractStatus(contractStatus)
+                .categoria(categoria)
                 .build();
     }
 }

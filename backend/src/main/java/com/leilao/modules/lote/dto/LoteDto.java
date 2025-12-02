@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * DTO para representação de Lote
+ * Atualizado para usar contractId ao invés de sellerId
  */
 @Data
 @NoArgsConstructor
@@ -19,7 +20,7 @@ import java.util.List;
 public class LoteDto {
     
     private String id;
-    private String sellerId;
+    private String contractId;
     private String title;
     private String description;
     private LocalDateTime loteEndDateTime;
@@ -38,4 +39,11 @@ public class LoteDto {
     // Lista de produtos associados (opcional)
     private List<String> produtoIds;
     private int totalProdutos;
+    
+    // Informações do contrato e vendedor (para exibição)
+    private String sellerId; // Obtido através do contrato
+    private String sellerName; // Nome do vendedor
+    private String sellerCompanyName; // Nome da empresa do vendedor
+    private String contractStatus; // Status do contrato
+    private String categoria; // Categoria do contrato
 }

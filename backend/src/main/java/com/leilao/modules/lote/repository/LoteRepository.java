@@ -14,19 +14,32 @@ import java.util.List;
 
 /**
  * Repository para Lote
+ * Atualizado para usar contractId ao invés de sellerId
  */
 @Repository
 public interface LoteRepository extends JpaRepository<Lote, String> {
 
     /**
-     * Busca lotes por vendedor
+     * Busca lotes por contrato
      */
-    List<Lote> findBySellerId(String sellerId);
+    List<Lote> findByContractId(String contractId);
 
     /**
-     * Busca lotes por vendedor com paginação
+     * Busca lotes por contrato com paginação
      */
-    Page<Lote> findBySellerId(String sellerId, Pageable pageable);
+    Page<Lote> findByContractId(String contractId, Pageable pageable);
+
+    /**
+     * Busca lotes por vendedor (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId")
+    List<Lote> findByVendedorId(@Param("sellerId") String sellerId);
+
+    /**
+     * Busca lotes por vendedor com paginação (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId")
+    Page<Lote> findByVendedorId(@Param("sellerId") String sellerId, Pageable pageable);
 
     /**
      * Busca lotes por status
@@ -39,14 +52,26 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
     Page<Lote> findByStatus(LoteStatus status, Pageable pageable);
 
     /**
-     * Busca lotes por vendedor e status
+     * Busca lotes por contrato e status
      */
-    List<Lote> findBySellerIdAndStatus(String sellerId, LoteStatus status);
+    List<Lote> findByContractIdAndStatus(String contractId, LoteStatus status);
 
     /**
-     * Busca lotes por vendedor e status com paginação
+     * Busca lotes por contrato e status com paginação
      */
-    Page<Lote> findBySellerIdAndStatus(String sellerId, LoteStatus status, Pageable pageable);
+    Page<Lote> findByContractIdAndStatus(String contractId, LoteStatus status, Pageable pageable);
+
+    /**
+     * Busca lotes por vendedor e status (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId AND l.status = :status")
+    List<Lote> findByVendedorIdAndStatus(@Param("sellerId") String sellerId, @Param("status") LoteStatus status);
+
+    /**
+     * Busca lotes por vendedor e status com paginação (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId AND l.status = :status")
+    Page<Lote> findByVendedorIdAndStatus(@Param("sellerId") String sellerId, @Param("status") LoteStatus status, Pageable pageable);
 
     /**
      * Busca lotes que encerram em um período específico
@@ -98,14 +123,26 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
     long countByStatus(LoteStatus status);
 
     /**
-     * Conta lotes por vendedor
+     * Conta lotes por contrato
      */
-    long countBySellerId(String sellerId);
+    long countByContractId(String contractId);
 
     /**
-     * Conta lotes por vendedor e status
+     * Conta lotes por vendedor (através do contrato)
      */
-    long countBySellerIdAndStatus(String sellerId, LoteStatus status);
+    @Query("SELECT COUNT(l) FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId")
+    long countByVendedorId(@Param("sellerId") String sellerId);
+
+    /**
+     * Conta lotes por contrato e status
+     */
+    long countByContractIdAndStatus(String contractId, LoteStatus status);
+
+    /**
+     * Conta lotes por vendedor e status (através do contrato)
+     */
+    @Query("SELECT COUNT(l) FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId AND l.status = :status")
+    long countByVendedorIdAndStatus(@Param("sellerId") String sellerId, @Param("status") LoteStatus status);
 
     /**
      * Busca lotes criados após uma data específica
@@ -118,19 +155,64 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
     List<Lote> findByUpdatedAtAfter(LocalDateTime data);
 
     /**
-     * Verifica se existe lote ativo para um vendedor
+     * Verifica se existe lote ativo para um contrato específico
      */
-    @Query("SELECT COUNT(l) > 0 FROM Lote l WHERE l.sellerId = :sellerId AND l.status = 'ACTIVE'")
+    @Query("SELECT COUNT(l) > 0 FROM Lote l WHERE l.contractId = :contractId AND l.status = 'ACTIVE'")
+    boolean existsLoteAtivoParaContrato(@Param("contractId") String contractId);
+
+    /**
+     * Verifica se existe lote ativo para um vendedor (através do contrato)
+     */
+    @Query("SELECT COUNT(l) > 0 FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId AND l.status = 'ACTIVE'")
     boolean existsLoteAtivoParaVendedor(@Param("sellerId") String sellerId);
 
     /**
-     * Busca lotes ordenados por data de criação
+     * Busca lotes por contrato ordenados por data de criação
      */
-    List<Lote> findBySellerIdOrderByCreatedAtDesc(String sellerId);
+    List<Lote> findByContractIdOrderByCreatedAtDesc(String contractId);
+
+    /**
+     * Busca lotes por vendedor ordenados por data de criação (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.sellerId = :sellerId ORDER BY l.createdAt DESC")
+    List<Lote> findByVendedorIdOrderByCreatedAtDesc(@Param("sellerId") String sellerId);
 
     /**
      * Busca lotes ordenados por data de encerramento
      */
     @Query("SELECT l FROM Lote l WHERE l.status = 'ACTIVE' ORDER BY l.loteEndDateTime ASC")
     List<Lote> findLotesAtivosOrdenadosPorEncerramento();
+
+    /**
+     * Busca lotes com contratos ativos
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.status = 'ACTIVE' AND c.active = true")
+    List<Lote> findLotesComContratosAtivos();
+
+    /**
+     * Busca lotes por categoria (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.categoria = :categoria")
+    List<Lote> findByCategoria(@Param("categoria") String categoria);
+
+    /**
+     * Busca lotes por categoria com paginação (através do contrato)
+     */
+    @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.categoria = :categoria")
+    Page<Lote> findByCategoria(@Param("categoria") String categoria, Pageable pageable);
+
+    // Métodos de compatibilidade temporária (manter durante migração)
+    /**
+     * @deprecated Usar findByVendedorId ao invés
+     */
+    @Deprecated
+    @Query("SELECT l FROM Lote l WHERE l.sellerId = :sellerId")
+    List<Lote> findBySellerId(@Param("sellerId") String sellerId);
+
+    /**
+     * @deprecated Usar findByVendedorId ao invés
+     */
+    @Deprecated
+    @Query("SELECT l FROM Lote l WHERE l.sellerId = :sellerId")
+    Page<Lote> findBySellerId(@Param("sellerId") String sellerId, Pageable pageable);
 }

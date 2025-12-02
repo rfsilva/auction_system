@@ -1,5 +1,6 @@
 /**
  * Enums e interfaces para Lote
+ * Atualizado para usar contractId ao invés de sellerId
  */
 
 export enum LoteStatus {
@@ -11,7 +12,7 @@ export enum LoteStatus {
 
 export interface Lote {
   id: string;
-  sellerId: string;
+  contractId: string;
   title: string;
   description: string;
   loteEndDateTime: string;
@@ -30,6 +31,13 @@ export interface Lote {
   // Lista de produtos associados
   produtoIds: string[];
   totalProdutos: number;
+  
+  // Informações do contrato e vendedor (para exibição)
+  sellerId?: string; // Obtido através do contrato
+  sellerName?: string; // Nome do vendedor
+  sellerCompanyName?: string; // Nome da empresa do vendedor
+  contractStatus?: string; // Status do contrato
+  categoria?: string; // Categoria do contrato
 }
 
 export interface LoteCreateRequest {
@@ -37,6 +45,7 @@ export interface LoteCreateRequest {
   description: string;
   loteEndDateTime: string;
   produtoIds?: string[];
+  categoria?: string; // Para buscar o contrato correto
 }
 
 export interface LoteUpdateRequest {
@@ -48,6 +57,9 @@ export interface LoteUpdateRequest {
 
 export interface LoteFiltro {
   termo?: string;
+  categoria?: string;
+  contractId?: string;
+  sellerId?: string; // Para compatibilidade
   page?: number;
   size?: number;
 }

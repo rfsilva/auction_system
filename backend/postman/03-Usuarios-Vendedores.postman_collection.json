@@ -1,0 +1,148 @@
+{
+	"info": {
+		"_postman_id": "usuarios-vendedores-collection-id",
+		"name": "03 - Usuários e Vendedores",
+		"description": "Collection para testes de usuários e vendedores",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Usuários",
+			"item": [
+				{
+					"name": "Buscar Usuários (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/usuarios/buscar?termo=silva&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "usuarios", "buscar"],
+							"query": [
+								{
+									"key": "termo",
+									"value": "silva"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verificar se Pode Ser Vendedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/usuarios/{{participante_user_id}}/pode-ser-vendedor",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "usuarios", "{{participante_user_id}}", "pode-ser-vendedor"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vendedores",
+			"item": [
+				{
+					"name": "Listar Todos os Vendedores",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/vendedores?page=0&size=20&sort=companyName&direction=asc",
+							"host": ["{{base_url}}"],
+							"path": ["vendedores"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "companyName"
+								},
+								{
+									"key": "direction",
+									"value": "asc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Vendedores Ativos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/vendedores/ativos",
+							"host": ["{{base_url}}"],
+							"path": ["vendedores", "ativos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Vendedor por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/vendedores/{{vendedor1_seller_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["vendedores", "{{vendedor1_seller_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{admin_token}}",
+				"type": "string"
+			}
+		]
+	}
+}

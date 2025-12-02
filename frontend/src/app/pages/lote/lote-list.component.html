@@ -9,7 +9,7 @@
             <i class="fas fa-boxes me-2 text-primary"></i>
             Meus Lotes
           </h2>
-          <p class="text-muted mb-0">Gerencie seus lotes de produtos</p>
+          <p class="text-muted mb-0">Gerencie seus lotes de produtos vinculados aos seus contratos</p>
         </div>
         <a routerLink="/lotes/novo" class="btn btn-primary">
           <i class="fas fa-plus me-2"></i>
@@ -63,10 +63,10 @@
                   <th width="5%"></th>
                   <th>Título</th>
                   <th>Status</th>
+                  <th>Contrato</th>
                   <th>Produtos</th>
                   <th>Encerramento</th>
                   <th>Tempo Restante</th>
-                  <th>Criado em</th>
                   <th class="text-center">Ações</th>
                 </tr>
               </thead>
@@ -96,6 +96,12 @@
                       </span>
                     </td>
                     <td>
+                      <div>
+                        <small class="text-muted d-block">{{ loteService.getContractInfo(lote) }}</small>
+                        <small class="text-primary">{{ loteService.getSellerInfo(lote) }}</small>
+                      </div>
+                    </td>
+                    <td>
                       <span class="badge bg-info">{{ lote.totalProdutos }} produto(s)</span>
                     </td>
                     <td>
@@ -105,9 +111,6 @@
                       <span [ngClass]="lote.isExpired ? 'text-danger' : 'text-success'">
                         {{ formatarTempoRestante(lote.timeRemaining) }}
                       </span>
-                    </td>
-                    <td>
-                      <small class="text-muted">{{ formatarData(lote.createdAt) }}</small>
                     </td>
                     <td class="text-center">
                       <div class="btn-group btn-group-sm" role="group">
@@ -156,7 +159,7 @@
                     <td colspan="8">
                       <div class="p-3">
                         <div class="row">
-                          <div class="col-md-8">
+                          <div class="col-md-6">
                             <h6 class="text-primary mb-2">
                               <i class="fas fa-info-circle me-2"></i>
                               Detalhes do Lote
@@ -172,13 +175,43 @@
                                 <p class="text-muted small">{{ lote.id }}</p>
                               </div>
                               <div class="col-sm-6">
-                                <strong>Vendedor ID:</strong>
-                                <p class="text-muted small">{{ lote.sellerId }}</p>
+                                <strong>Criado em:</strong>
+                                <p class="text-muted small">{{ formatarData(lote.createdAt) }}</p>
                               </div>
                             </div>
                           </div>
                           
-                          <div class="col-md-4">
+                          <div class="col-md-6">
+                            <h6 class="text-primary mb-2">
+                              <i class="fas fa-file-contract me-2"></i>
+                              Informações do Contrato
+                            </h6>
+                            
+                            <div class="mb-2">
+                              <strong>ID do Contrato:</strong>
+                              <p class="text-muted small">{{ lote.contractId }}</p>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Status do Contrato:</strong>
+                              <span class="ms-2 badge bg-secondary">{{ lote.contractStatus || 'N/A' }}</span>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Categoria:</strong>
+                              <span class="ms-2">{{ lote.categoria || 'Geral' }}</span>
+                            </div>
+                            
+                            <div class="mb-2">
+                              <strong>Vendedor:</strong>
+                              <p class="mb-1">{{ lote.sellerName || 'N/A' }}</p>
+                              <small class="text-muted">{{ lote.sellerCompanyName || 'N/A' }}</small>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                          <div class="col-md-6">
                             <h6 class="text-primary mb-2">
                               <i class="fas fa-cog me-2"></i>
                               Configurações
@@ -199,15 +232,6 @@
                                 <i class="fas" [class.fa-check-circle]="lote.canBeActivated" [class.fa-times-circle]="!lote.canBeActivated" 
                                    [class.text-success]="lote.canBeActivated" [class.text-danger]="!lote.canBeActivated"></i>
                                 {{ lote.canBeActivated ? 'Sim' : 'Não' }}
-                              </span>
-                            </div>
-                            
-                            <div class="mb-2">
-                              <strong>Pode ser cancelado:</strong>
-                              <span class="ms-2">
-                                <i class="fas" [class.fa-check-circle]="lote.canBeCancelled" [class.fa-times-circle]="!lote.canBeCancelled" 
-                                   [class.text-success]="lote.canBeCancelled" [class.text-danger]="!lote.canBeCancelled"></i>
-                                {{ lote.canBeCancelled ? 'Sim' : 'Não' }}
                               </span>
                             </div>
                             
@@ -281,6 +305,13 @@
                   {{ lote.description | slice:0:100 }}{{ lote.description && lote.description.length > 100 ? '...' : '' }}
                 </p>
                 
+                <!-- Informações do contrato -->
+                <div class="mb-2">
+                  <small class="text-muted">Contrato:</small>
+                  <div class="small">{{ loteService.getContractInfo(lote) }}</div>
+                  <div class="small text-primary">{{ loteService.getSellerInfo(lote) }}</div>
+                </div>
+                
                 <div class="row text-center mb-3">
                   <div class="col-4">
                     <small class="text-muted d-block">Produtos</small>
@@ -342,8 +373,18 @@
                   </div>
                   
                   <div class="mb-2">
-                    <strong>ID:</strong>
+                    <strong>ID do Lote:</strong>
                     <small class="text-muted d-block">{{ lote.id }}</small>
+                  </div>
+                  
+                  <div class="mb-2">
+                    <strong>ID do Contrato:</strong>
+                    <small class="text-muted d-block">{{ lote.contractId }}</small>
+                  </div>
+                  
+                  <div class="mb-2">
+                    <strong>Categoria:</strong>
+                    <span class="ms-2">{{ lote.categoria || 'Geral' }}</span>
                   </div>
                   
                   <div class="mb-2">
@@ -372,11 +413,17 @@
           <div *ngIf="lotes.length === 0 && !loading" class="text-center py-5">
             <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
             <h5 class="text-muted">Nenhum lote encontrado</h5>
-            <p class="text-muted">Você ainda não criou nenhum lote.</p>
-            <a routerLink="/lotes/novo" class="btn btn-primary">
-              <i class="fas fa-plus me-2"></i>
-              Criar Primeiro Lote
-            </a>
+            <p class="text-muted">Você ainda não criou nenhum lote. Certifique-se de ter um contrato ativo antes de criar lotes.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <a routerLink="/contratos" class="btn btn-outline-primary">
+                <i class="fas fa-file-contract me-2"></i>
+                Ver Contratos
+              </a>
+              <a routerLink="/lotes/novo" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Criar Primeiro Lote
+              </a>
+            </div>
           </div>
         </div>
 

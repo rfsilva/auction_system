@@ -29,7 +29,7 @@ export class LoteListComponent implements OnInit {
   expandedLoteId: string | null = null;
   
   constructor(
-    private loteService: LoteService,
+    public loteService: LoteService, // Tornar público para usar no template
     public authService: AuthService
   ) {}
 

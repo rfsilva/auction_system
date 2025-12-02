@@ -20,6 +20,7 @@ interface ApiResponse<T> {
 
 /**
  * Service para operações de Lote
+ * Atualizado para trabalhar com contratos ao invés de vendedores diretamente
  */
 @Injectable({
   providedIn: 'root'
@@ -78,6 +79,15 @@ export class LoteService {
     
     if (filtros.termo) {
       params = params.set('termo', filtros.termo);
+    }
+    if (filtros.categoria) {
+      params = params.set('categoria', filtros.categoria);
+    }
+    if (filtros.contractId) {
+      params = params.set('contractId', filtros.contractId);
+    }
+    if (filtros.sellerId) {
+      params = params.set('sellerId', filtros.sellerId);
     }
     if (filtros.page !== undefined) {
       params = params.set('page', filtros.page.toString());
@@ -187,5 +197,33 @@ export class LoteService {
       default:
         return false;
     }
+  }
+
+  /**
+   * Obtém informações do contrato do lote
+   */
+  getContractInfo(lote: Lote): string {
+    if (lote.contractStatus && lote.categoria) {
+      return `${lote.contractStatus} - ${lote.categoria}`;
+    } else if (lote.contractStatus) {
+      return lote.contractStatus;
+    } else if (lote.categoria) {
+      return lote.categoria;
+    }
+    return 'Contrato não informado';
+  }
+
+  /**
+   * Obtém informações do vendedor do lote
+   */
+  getSellerInfo(lote: Lote): string {
+    if (lote.sellerCompanyName && lote.sellerName) {
+      return `${lote.sellerCompanyName} (${lote.sellerName})`;
+    } else if (lote.sellerCompanyName) {
+      return lote.sellerCompanyName;
+    } else if (lote.sellerName) {
+      return lote.sellerName;
+    }
+    return 'Vendedor não informado';
   }
 }

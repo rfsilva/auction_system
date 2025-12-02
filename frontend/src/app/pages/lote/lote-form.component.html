@@ -85,7 +85,7 @@
               </div>
             </div>
 
-            <!-- Data de Encerramento -->
+            <!-- Data de Encerramento e Categoria -->
             <div class="row mb-4">
               <div class="col-md-6">
                 <label for="loteEndDateTime" class="form-label">
@@ -102,6 +102,27 @@
                 </div>
                 <div class="form-text">
                   O lote será encerrado automaticamente nesta data
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <label for="categoria" class="form-label">Categoria</label>
+                <select
+                  id="categoria"
+                  class="form-select"
+                  [class.is-invalid]="isFieldInvalid('categoria')"
+                  formControlName="categoria"
+                  [disabled]="loadingCategorias">
+                  <option value="">Selecione uma categoria (opcional)</option>
+                  <option *ngFor="let categoria of categorias" [value]="categoria">
+                    {{ categoria }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  {{ getFieldError('categoria') }}
+                </div>
+                <div class="form-text">
+                  A categoria determina qual contrato será usado para este lote
                 </div>
               </div>
             </div>
@@ -183,6 +204,22 @@
                       {{ produto.title }} - R$ {{ produto.initialPrice | number:'1.2-2' }}
                     </li>
                   </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Informação sobre Contrato -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <h6 class="alert-heading">
+                    <i class="fas fa-file-contract me-2"></i>
+                    Informação sobre Contrato
+                  </h6>
+                  <p class="mb-0">
+                    Este lote será vinculado ao seu contrato ativo{{ loteForm.get('categoria')?.value ? ' para a categoria ' + loteForm.get('categoria')?.value : '' }}.
+                    Certifique-se de que você possui um contrato ativo antes de criar o lote.
+                  </p>
                 </div>
               </div>
             </div>

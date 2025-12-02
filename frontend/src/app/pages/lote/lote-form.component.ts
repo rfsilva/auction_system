@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } fr
 import { Router, ActivatedRoute } from '@angular/router';
 import { LoteService } from '../../core/services/lote.service';
 import { ProdutoService } from '../../core/services/produto.service';
+import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Lote, LoteCreateRequest, LoteUpdateRequest } from '../../core/models/lote.model';
 import { Produto } from '../../core/models/produto.model';
@@ -28,11 +29,16 @@ export class LoteFormComponent implements OnInit {
   produtosDisponiveis: Produto[] = [];
   produtosSelecionados: Produto[] = [];
   loadingProdutos = false;
+  
+  // Categorias disponíveis
+  categorias: string[] = [];
+  loadingCategorias = false;
 
   constructor(
     private fb: FormBuilder,
     private loteService: LoteService,
     private produtoService: ProdutoService,
+    private contratoService: ContratoService,
     public authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
@@ -44,6 +50,7 @@ export class LoteFormComponent implements OnInit {
     this.loteId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEditMode = !!this.loteId;
     
+    this.carregarCategorias();
     this.carregarProdutosDisponiveis();
     
     if (this.isEditMode && this.loteId) {
@@ -60,12 +67,30 @@ export class LoteFormComponent implements OnInit {
       title: ['', [Validators.required, Validators.maxLength(255)]],
       description: ['', [Validators.maxLength(5000)]],
       loteEndDateTime: [tomorrow.toISOString().slice(0, 16), [Validators.required]],
+      categoria: [''], // Categoria para buscar o contrato correto
       produtoIds: this.fb.array([])
     });
   }
 
   get produtoIdsArray(): FormArray {
     return this.loteForm.get('produtoIds') as FormArray;
+  }
+
+  private carregarCategorias(): void {
+    this.loadingCategorias = true;
+    
+    this.contratoService.listarCategorias().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.categorias = response.data;
+        }
+        this.loadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar categorias:', error);
+        this.loadingCategorias = false;
+      }
+    });
   }
 
   private carregarProdutosDisponiveis(): void {
@@ -117,7 +142,8 @@ export class LoteFormComponent implements OnInit {
     this.loteForm.patchValue({
       title: lote.title,
       description: lote.description,
-      loteEndDateTime: formattedDateTime
+      loteEndDateTime: formattedDateTime,
+      categoria: lote.categoria || ''
     });
 
     // Preencher produtos selecionados
@@ -147,7 +173,8 @@ export class LoteFormComponent implements OnInit {
     const loteData = {
       ...formValue,
       loteEndDateTime: endDateTime,
-      produtoIds: this.produtoIdsArray.value
+      produtoIds: this.produtoIdsArray.value,
+      categoria: formValue.categoria || undefined // Não enviar string vazia
     };
 
     if (this.isEditMode && this.loteId) {
@@ -254,7 +281,8 @@ export class LoteFormComponent implements OnInit {
     const labels: { [key: string]: string } = {
       'title': 'Título',
       'description': 'Descrição',
-      'loteEndDateTime': 'Data de encerramento'
+      'loteEndDateTime': 'Data de encerramento',
+      'categoria': 'Categoria'
     };
     return labels[fieldName] || fieldName;
   }

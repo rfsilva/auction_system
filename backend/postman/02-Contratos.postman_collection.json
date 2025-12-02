@@ -1,0 +1,421 @@
+{
+	"info": {
+		"_postman_id": "contratos-collection-id",
+		"name": "02 - Contratos",
+		"description": "Collection para testes de contratos e ativação de vendedores",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Contratos",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos?page=0&size=20&sort=createdAt&direction=desc",
+					"host": ["{{base_url}}"],
+					"path": ["contratos"],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "20"
+						},
+						{
+							"key": "sort",
+							"value": "createdAt"
+						},
+						{
+							"key": "direction",
+							"value": "desc"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Contratos com Filtros",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos?status=ACTIVE&categoria=Eletrônicos&active=true",
+					"host": ["{{base_url}}"],
+					"path": ["contratos"],
+					"query": [
+						{
+							"key": "status",
+							"value": "ACTIVE"
+						},
+						{
+							"key": "categoria",
+							"value": "Eletrônicos"
+						},
+						{
+							"key": "active",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Contrato por ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/{{contrato1_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{contrato1_id}}"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Contrato Ativo por Vendedor",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/vendedor/{{vendedor1_user_id}}/ativo?categoria=Eletrônicos",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "vendedor", "{{vendedor1_user_id}}", "ativo"],
+					"query": [
+						{
+							"key": "categoria",
+							"value": "Eletrônicos"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Contratos por Vendedor",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/vendedor/{{vendedor1_user_id}}?page=0&size=10",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "vendedor", "{{vendedor1_user_id}}"],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verificar se Vendedor tem Contrato Ativo",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/vendedor/{{vendedor1_user_id}}/tem-ativo",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "vendedor", "{{vendedor1_user_id}}", "tem-ativo"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Categorias",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/categorias",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "categorias"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar Contrato Tradicional",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    if (response.success && response.data) {",
+							"        pm.environment.set('new_contrato_id', response.data.id);",
+							"        console.log('Contrato criado com ID: ' + response.data.id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sellerId\": \"{{vendedor1_user_id}}\",\n    \"feeRate\": 0.07,\n    \"terms\": \"Contrato de teste criado via Postman. Taxa de 7% sobre vendas.\",\n    \"validFrom\": \"2024-12-19T10:00:00\",\n    \"validTo\": \"2025-12-19T10:00:00\",\n    \"categoria\": \"Informática\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/contratos",
+					"host": ["{{base_url}}"],
+					"path": ["contratos"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ativar Vendedor (Novo Fluxo)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    if (response.success && response.data) {",
+							"        pm.environment.set('new_contrato_vendedor_id', response.data.id);",
+							"        console.log('Vendedor ativado com contrato ID: ' + response.data.id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"usuarioId\": \"{{participante_user_id}}\",\n    \"feeRate\": 0.06,\n    \"terms\": \"Contrato de ativação de vendedor via Postman. Taxa de 6% sobre vendas de livros.\",\n    \"validFrom\": \"2024-12-19T10:00:00\",\n    \"validTo\": \"2025-12-19T10:00:00\",\n    \"categoria\": \"Livros\",\n    \"ativarImediatamente\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/contratos/ativar-vendedor",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "ativar-vendedor"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar Contrato de Usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    if (response.success && response.data) {",
+							"        pm.environment.set('contrato_usuario_id', response.data.id);",
+							"        console.log('Contrato de usuário criado com ID: ' + response.data.id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"usuarioId\": \"{{new_user_id}}\",\n    \"feeRate\": 0.05,\n    \"terms\": \"Contrato padrão para novo vendedor. Taxa de 5% sobre vendas gerais.\",\n    \"validFrom\": \"2024-12-19T10:00:00\",\n    \"categoria\": \"Geral\",\n    \"ativarImediatamente\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/contratos/usuario",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "usuario"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualizar Contrato",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"feeRate\": 0.055,\n    \"terms\": \"Contrato atualizado via Postman. Taxa ajustada para 5.5%.\",\n    \"validTo\": \"2026-12-19T10:00:00\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/contratos/{{contrato1_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{contrato1_id}}"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ativar Contrato",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/{{contrato1_id}}/ativar",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{contrato1_id}}", "ativar"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Suspender Contrato",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/{{contrato1_id}}/suspender",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{contrato1_id}}", "suspender"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancelar Contrato",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/{{contrato1_id}}/cancelar",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{contrato1_id}}", "cancelar"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Excluir Contrato",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{admin_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/contratos/{{new_contrato_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["contratos", "{{new_contrato_id}}"]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{admin_token}}",
+				"type": "string"
+			}
+		]
+	}
+}
