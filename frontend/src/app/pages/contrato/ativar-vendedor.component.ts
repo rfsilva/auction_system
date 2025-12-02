@@ -4,7 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
-import { AtivarVendedorRequest } from '../../core/models/ativar-vendedor.model';
+// ✅ CORRIGIDO: Import da interface consolidada
+import { AtivarVendedorRequest } from '../../core/models/contrato.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
