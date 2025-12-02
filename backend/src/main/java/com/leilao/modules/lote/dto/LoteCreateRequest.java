@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * DTO para criação de Lote
- * Atualizado para incluir categoria (para buscar contrato apropriado)
+ * Atualizado para incluir contractId (ID do contrato escolhido pelo vendedor)
  */
 @Data
 @NoArgsConstructor
@@ -33,7 +33,11 @@ public class LoteCreateRequest {
     @Future(message = "Data de encerramento deve ser no futuro")
     private LocalDateTime loteEndDateTime;
 
-    // Categoria para buscar o contrato apropriado (opcional)
+    // ID do contrato escolhido pelo vendedor (prioritário)
+    @Size(max = 36, message = "ID do contrato inválido")
+    private String contractId;
+
+    // Categoria para buscar o contrato apropriado (alternativa ao contractId)
     @Size(max = 100, message = "Categoria deve ter no máximo 100 caracteres")
     private String categoria;
 

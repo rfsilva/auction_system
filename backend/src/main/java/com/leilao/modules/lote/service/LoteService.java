@@ -57,7 +57,27 @@ public class LoteService {
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         // Buscar contrato ativo do vendedor
-        Contrato contratoAtivo = buscarContratoAtivoDoVendedor(vendedorId, request.getCategoria());
+        Contrato contratoAtivo;
+        if (request.getContractId() != null && !request.getContractId().trim().isEmpty()) {
+            // Usar contrato específico escolhido pelo vendedor
+            contratoAtivo = buscarContratoPorId(request.getContractId());
+            
+            // Verificar se o contrato pertence ao vendedor
+            if (!contratoAtivo.getSellerId().equals(vendedorId)) {
+                throw new BusinessException("Contrato selecionado não pertence ao vendedor");
+            }
+            
+            // Verificar se o contrato está ativo
+            if (!contratoAtivo.isActive()) {
+                throw new BusinessException("Contrato selecionado não está ativo");
+            }
+            
+            log.info("Usando contrato específico escolhido pelo vendedor: {}", contratoAtivo.getId());
+        } else {
+            // Buscar contrato ativo automaticamente por categoria
+            contratoAtivo = buscarContratoAtivoDoVendedor(vendedorId, request.getCategoria());
+            log.info("Contrato encontrado automaticamente por categoria: {}", contratoAtivo.getId());
+        }
         
         validarCriacaoLote(request);
         
@@ -146,7 +166,7 @@ public class LoteService {
         // Obter ID do vendedor a partir do ID do usuário
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
-        Page<Lote> lotes = loteRepository.findByVendedorId(vendedorId, pageable);
+        Page<Lote> lotes = loteRepository.findBySellerId(vendedorId, pageable);
         return lotes.map(this::convertToDto);
     }
 

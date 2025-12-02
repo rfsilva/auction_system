@@ -109,6 +109,18 @@ export class ContratoService {
   }
 
   /**
+   * Lista contratos ativos do vendedor atual (para seleção em lotes)
+   */
+  listarMeusContratosAtivos(): Observable<ApiResponse<Contrato[]>> {
+    const params = new HttpParams()
+      .set('active', 'true')
+      .set('status', 'ACTIVE')
+      .set('size', '100'); // Buscar todos os contratos ativos
+
+    return this.http.get<ApiResponse<Contrato[]>>(`${this.baseUrl}/meus-ativos`, { params });
+  }
+
+  /**
    * Ativa um contrato
    */
   ativarContrato(contratoId: string): Observable<ApiResponse<Contrato>> {
@@ -255,5 +267,16 @@ export class ContratoService {
     
     const diasRestantes = this.calcularDiasAteExpiracao(contrato.validTo);
     return diasRestantes !== null && diasRestantes <= dias && diasRestantes > 0;
+  }
+
+  /**
+   * Formata informações do contrato para exibição
+   */
+  formatarContratoParaSelecao(contrato: Contrato): string {
+    const categoria = contrato.categoria ? ` - ${contrato.categoria}` : ' - Geral';
+    const taxa = this.formatarTaxa(contrato.feeRate);
+    const validTo = contrato.validTo ? ` (válido até ${this.formatarData(contrato.validTo)})` : '';
+    
+    return `${categoria} - Taxa: ${taxa}${validTo}`;
   }
 }

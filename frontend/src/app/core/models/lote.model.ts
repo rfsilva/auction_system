@@ -45,7 +45,8 @@ export interface LoteCreateRequest {
   description: string;
   loteEndDateTime: string;
   produtoIds?: string[];
-  categoria?: string; // Para buscar o contrato correto
+  contractId?: string; // ID do contrato escolhido pelo vendedor
+  categoria?: string; // Para buscar o contrato correto (alternativa ao contractId)
 }
 
 export interface LoteUpdateRequest {

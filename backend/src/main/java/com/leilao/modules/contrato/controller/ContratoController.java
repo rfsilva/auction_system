@@ -27,16 +27,32 @@ import java.util.List;
 @RequestMapping("/contratos")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('ADMIN')")
 public class ContratoController {
 
     private final ContratoService contratoService;
+
+    /**
+     * Lista contratos ativos do vendedor atual (para seleção em lotes)
+     * Endpoint acessível por vendedores
+     */
+    @GetMapping("/meus-ativos")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<List<ContratoDto>>> listarMeusContratosAtivos(
+            @AuthenticationPrincipal Usuario usuario) {
+        
+        log.info("Vendedor {} listando seus contratos ativos", usuario.getId());
+        
+        List<ContratoDto> contratos = contratoService.listarContratosAtivosDoVendedor(usuario.getId());
+        
+        return ResponseEntity.ok(ApiResponse.success(contratos));
+    }
 
     /**
      * Cria um novo contrato a partir de usuário (novo fluxo)
      * Promove automaticamente o usuário a vendedor se necessário
      */
     @PostMapping("/criar-de-usuario")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> criarContratoDeUsuario(
             @Valid @RequestBody ContratoCreateFromUserRequest request,
             @AuthenticationPrincipal Usuario admin) {
@@ -56,6 +72,7 @@ public class ContratoController {
      * Cria um novo contrato (fluxo antigo - para vendedores existentes)
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> criarContrato(
             @Valid @RequestBody ContratoCreateRequest request,
             @AuthenticationPrincipal Usuario admin) {
@@ -72,6 +89,7 @@ public class ContratoController {
      * História 2: Processo de Contratação de Vendedores
      */
     @PostMapping("/ativar-vendedor")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> ativarVendedor(
             @Valid @RequestBody AtivarVendedorRequest request,
             @AuthenticationPrincipal Usuario admin) {
@@ -91,6 +109,7 @@ public class ContratoController {
      * Atualiza um contrato existente
      */
     @PutMapping("/{contratoId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> atualizarContrato(
             @PathVariable String contratoId,
             @Valid @RequestBody ContratoUpdateRequest request,
@@ -107,6 +126,7 @@ public class ContratoController {
      * Busca contrato por ID
      */
     @GetMapping("/{contratoId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> buscarContrato(
             @PathVariable String contratoId) {
         
@@ -119,6 +139,7 @@ public class ContratoController {
      * Lista contratos com filtros
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<ContratoDto>>> listarContratos(
             @RequestParam(required = false) String sellerId,
             @RequestParam(required = false) String sellerName,
@@ -174,6 +195,7 @@ public class ContratoController {
      * Lista contratos por vendedor
      */
     @GetMapping("/vendedor/{sellerId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<ContratoDto>>> listarContratosPorVendedor(
             @PathVariable String sellerId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -187,6 +209,7 @@ public class ContratoController {
      * Ativa um contrato
      */
     @PostMapping("/{contratoId}/ativar")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> ativarContrato(
             @PathVariable String contratoId,
             @AuthenticationPrincipal Usuario admin) {
@@ -202,6 +225,7 @@ public class ContratoController {
      * Cancela um contrato
      */
     @PostMapping("/{contratoId}/cancelar")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> cancelarContrato(
             @PathVariable String contratoId,
             @AuthenticationPrincipal Usuario admin) {
@@ -217,6 +241,7 @@ public class ContratoController {
      * Suspende um contrato
      */
     @PostMapping("/{contratoId}/suspender")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> suspenderContrato(
             @PathVariable String contratoId,
             @AuthenticationPrincipal Usuario admin) {
@@ -232,6 +257,7 @@ public class ContratoController {
      * Exclui um contrato (apenas rascunhos)
      */
     @DeleteMapping("/{contratoId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> excluirContrato(
             @PathVariable String contratoId,
             @AuthenticationPrincipal Usuario admin) {
@@ -247,6 +273,7 @@ public class ContratoController {
      * Busca contrato ativo para vendedor e categoria
      */
     @GetMapping("/vendedor/{sellerId}/ativo")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoDto>> buscarContratoAtivo(
             @PathVariable String sellerId,
             @RequestParam(required = false) String categoria) {
@@ -273,6 +300,7 @@ public class ContratoController {
      * Verifica se vendedor tem contrato ativo
      */
     @GetMapping("/vendedor/{sellerId}/tem-ativo")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> vendedorTemContratoAtivo(@PathVariable String sellerId) {
         boolean temAtivo = contratoService.vendedorTemContratoAtivo(sellerId);
         return ResponseEntity.ok(ApiResponse.success(temAtivo));

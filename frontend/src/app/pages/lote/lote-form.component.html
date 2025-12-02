@@ -85,7 +85,7 @@
               </div>
             </div>
 
-            <!-- Data de Encerramento e Categoria -->
+            <!-- Data de Encerramento -->
             <div class="row mb-4">
               <div class="col-md-6">
                 <label for="loteEndDateTime" class="form-label">
@@ -106,14 +106,14 @@
               </div>
               
               <div class="col-md-6">
-                <label for="categoria" class="form-label">Categoria</label>
+                <label for="categoria" class="form-label">Filtrar por Categoria</label>
                 <select
                   id="categoria"
                   class="form-select"
                   [class.is-invalid]="isFieldInvalid('categoria')"
                   formControlName="categoria"
                   [disabled]="loadingCategorias">
-                  <option value="">Selecione uma categoria (opcional)</option>
+                  <option value="">Todas as categorias</option>
                   <option *ngFor="let categoria of categorias" [value]="categoria">
                     {{ categoria }}
                   </option>
@@ -122,7 +122,82 @@
                   {{ getFieldError('categoria') }}
                 </div>
                 <div class="form-text">
-                  A categoria determina qual contrato será usado para este lote
+                  Filtra os contratos disponíveis por categoria
+                </div>
+              </div>
+            </div>
+
+            <!-- Seleção de Contrato -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="fas fa-file-contract me-2"></i>
+                  Contrato para o Lote
+                </h5>
+              </div>
+            </div>
+
+            <!-- Loading Contratos -->
+            <div *ngIf="loadingContratos" class="text-center py-3 mb-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Carregando contratos...</span>
+              </div>
+              <span class="ms-2">Carregando contratos ativos...</span>
+            </div>
+
+            <!-- Seleção de Contrato -->
+            <div *ngIf="!loadingContratos" class="row mb-4">
+              <div class="col-12">
+                <div *ngIf="contratosAtivos.length === 0" class="alert alert-warning">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  Você não possui contratos ativos. 
+                  <a routerLink="/contratos/novo" class="alert-link">Criar novo contrato</a>
+                </div>
+
+                <div *ngIf="contratosAtivos.length > 0">
+                  <label for="contractId" class="form-label">
+                    Selecione o Contrato <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    id="contractId"
+                    class="form-select"
+                    [class.is-invalid]="isFieldInvalid('contractId')"
+                    formControlName="contractId">
+                    <option value="">Selecione um contrato</option>
+                    <option *ngFor="let contrato of getContratosFiltrados()" [value]="contrato.id">
+                      {{ formatarContrato(contrato) }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback">
+                    {{ getFieldError('contractId') }}
+                  </div>
+                  <div class="form-text">
+                    Este contrato será usado para definir as condições comerciais do lote
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Informações do Contrato Selecionado -->
+            <div *ngIf="getContratoSelecionado()" class="row mb-4">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Contrato Selecionado
+                  </h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <strong>Categoria:</strong> {{ getContratoSelecionado()?.categoria || 'Geral' }}<br>
+                      <strong>Taxa de Comissão:</strong> {{ formatarTaxa(getContratoSelecionado()?.feeRate || 0) }}
+                    </div>
+                    <div class="col-md-6">
+                      <strong>Válido até:</strong> 
+                      {{ getContratoSelecionado()?.validTo ? formatarData(getContratoSelecionado()!.validTo!) : 'Sem data de expiração' }}<br>
+                      <strong>Status:</strong> 
+                      <span class="badge bg-success">{{ getStatusText(getContratoSelecionado()?.status!) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -208,22 +283,6 @@
               </div>
             </div>
 
-            <!-- Informação sobre Contrato -->
-            <div class="row mb-4">
-              <div class="col-12">
-                <div class="alert alert-info">
-                  <h6 class="alert-heading">
-                    <i class="fas fa-file-contract me-2"></i>
-                    Informação sobre Contrato
-                  </h6>
-                  <p class="mb-0">
-                    Este lote será vinculado ao seu contrato ativo{{ loteForm.get('categoria')?.value ? ' para a categoria ' + loteForm.get('categoria')?.value : '' }}.
-                    Certifique-se de que você possui um contrato ativo antes de criar o lote.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <!-- Botões de Ação -->
             <div class="row">
               <div class="col-12">
@@ -240,7 +299,7 @@
                   <button
                     type="submit"
                     class="btn btn-primary"
-                    [disabled]="loading || loteForm.invalid">
+                    [disabled]="loading || loteForm.invalid || contratosAtivos.length === 0">
                     <i class="fas fa-save me-2"></i>
                     {{ isEditMode ? 'Atualizar Lote' : 'Criar Lote' }}
                   </button>

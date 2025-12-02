@@ -8,6 +8,7 @@ import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Lote, LoteCreateRequest, LoteUpdateRequest } from '../../core/models/lote.model';
 import { Produto } from '../../core/models/produto.model';
+import { Contrato } from '../../core/models/contrato.model';
 
 @Component({
   selector: 'app-lote-form',
@@ -30,6 +31,10 @@ export class LoteFormComponent implements OnInit {
   produtosSelecionados: Produto[] = [];
   loadingProdutos = false;
   
+  // Contratos ativos do vendedor
+  contratosAtivos: Contrato[] = [];
+  loadingContratos = false;
+  
   // Categorias disponíveis
   categorias: string[] = [];
   loadingCategorias = false;
@@ -38,7 +43,7 @@ export class LoteFormComponent implements OnInit {
     private fb: FormBuilder,
     private loteService: LoteService,
     private produtoService: ProdutoService,
-    private contratoService: ContratoService,
+    public contratoService: ContratoService, // Tornado público para uso no template
     public authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
@@ -50,6 +55,7 @@ export class LoteFormComponent implements OnInit {
     this.loteId = this.route.snapshot.paramMap.get('id') || undefined;
     this.isEditMode = !!this.loteId;
     
+    this.carregarContratosAtivos();
     this.carregarCategorias();
     this.carregarProdutosDisponiveis();
     
@@ -67,13 +73,39 @@ export class LoteFormComponent implements OnInit {
       title: ['', [Validators.required, Validators.maxLength(255)]],
       description: ['', [Validators.maxLength(5000)]],
       loteEndDateTime: [tomorrow.toISOString().slice(0, 16), [Validators.required]],
-      categoria: [''], // Categoria para buscar o contrato correto
+      contractId: ['', [Validators.required]], // Campo obrigatório para seleção do contrato
+      categoria: [''], // Categoria para filtrar contratos (opcional)
       produtoIds: this.fb.array([])
     });
   }
 
   get produtoIdsArray(): FormArray {
     return this.loteForm.get('produtoIds') as FormArray;
+  }
+
+  private carregarContratosAtivos(): void {
+    this.loadingContratos = true;
+    
+    this.contratoService.listarMeusContratosAtivos().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.contratosAtivos = response.data;
+          
+          // Se há apenas um contrato ativo, selecionar automaticamente
+          if (this.contratosAtivos.length === 1 && !this.isEditMode) {
+            this.loteForm.patchValue({
+              contractId: this.contratosAtivos[0].id
+            });
+          }
+        }
+        this.loadingContratos = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar contratos ativos:', error);
+        this.error = 'Erro ao carregar contratos ativos. Verifique se você possui contratos ativos.';
+        this.loadingContratos = false;
+      }
+    });
   }
 
   private carregarCategorias(): void {
@@ -143,6 +175,7 @@ export class LoteFormComponent implements OnInit {
       title: lote.title,
       description: lote.description,
       loteEndDateTime: formattedDateTime,
+      contractId: lote.contractId,
       categoria: lote.categoria || ''
     });
 
@@ -174,6 +207,7 @@ export class LoteFormComponent implements OnInit {
       ...formValue,
       loteEndDateTime: endDateTime,
       produtoIds: this.produtoIdsArray.value,
+      contractId: formValue.contractId, // Incluir o ID do contrato selecionado
       categoria: formValue.categoria || undefined // Não enviar string vazia
     };
 
@@ -254,6 +288,43 @@ export class LoteFormComponent implements OnInit {
     return this.produtoIdsArray.value.includes(produtoId);
   }
 
+  // Filtrar contratos por categoria selecionada
+  getContratosFiltrados(): Contrato[] {
+    const categoriaSelecionada = this.loteForm.get('categoria')?.value;
+    
+    if (!categoriaSelecionada) {
+      return this.contratosAtivos;
+    }
+    
+    return this.contratosAtivos.filter(contrato => 
+      contrato.categoria === categoriaSelecionada || !contrato.categoria
+    );
+  }
+
+  // Obter contrato selecionado
+  getContratoSelecionado(): Contrato | null {
+    const contractId = this.loteForm.get('contractId')?.value;
+    return this.contratosAtivos.find(c => c.id === contractId) || null;
+  }
+
+  // Formatar contrato para exibição
+  formatarContrato(contrato: Contrato): string {
+    return this.contratoService.formatarContratoParaSelecao(contrato);
+  }
+
+  // Métodos públicos para uso no template
+  formatarTaxa(taxa: number): string {
+    return this.contratoService.formatarTaxa(taxa);
+  }
+
+  formatarData(dataString: string): string {
+    return this.contratoService.formatarData(dataString);
+  }
+
+  getStatusText(status: any): string {
+    return this.contratoService.getStatusText(status);
+  }
+
   cancelar(): void {
     this.router.navigate(['/lotes']);
   }
@@ -282,6 +353,7 @@ export class LoteFormComponent implements OnInit {
       'title': 'Título',
       'description': 'Descrição',
       'loteEndDateTime': 'Data de encerramento',
+      'contractId': 'Contrato',
       'categoria': 'Categoria'
     };
     return labels[fieldName] || fieldName;

@@ -7,6 +7,7 @@ import com.leilao.modules.contrato.entity.Contrato;
 import com.leilao.modules.contrato.repository.ContratoRepository;
 import com.leilao.modules.vendedor.entity.Vendedor;
 import com.leilao.modules.vendedor.repository.VendedorRepository;
+import com.leilao.modules.vendedor.service.VendedorService;
 import com.leilao.shared.enums.ContractStatus;
 import com.leilao.shared.enums.UserRole;
 import com.leilao.shared.enums.UserStatus;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service para operações com contratos
@@ -37,6 +39,24 @@ public class ContratoService {
     private final ContratoRepository contratoRepository;
     private final VendedorRepository vendedorRepository;
     private final UsuarioRepository usuarioRepository;
+    private final VendedorService vendedorService;
+
+    /**
+     * Lista contratos ativos do vendedor atual (para seleção em lotes)
+     */
+    public List<ContratoDto> listarContratosAtivosDoVendedor(String usuarioId) {
+        log.info("Listando contratos ativos para usuário: {}", usuarioId);
+        
+        // Obter ID do vendedor a partir do ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        // Buscar contratos ativos
+        List<Contrato> contratos = contratoRepository.findContratosAtivos(vendedorId, LocalDateTime.now());
+        
+        return contratos.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Cria um novo contrato a partir de usuário (novo fluxo)
