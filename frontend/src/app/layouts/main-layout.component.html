@@ -29,6 +29,24 @@
                 <a routerLink="/lotes/novo" class="dropdown-item">Novo Lote</a>
               </div>
             </div>
+            <div class="nav-dropdown">
+              <button class="nav-link dropdown-toggle">Vendedor</button>
+              <div class="dropdown-menu">
+                <a routerLink="/contratos/meus-contratos" class="dropdown-item">
+                  <i class="fas fa-file-contract me-2"></i>
+                  Meus Contratos
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item">
+                  <i class="fas fa-chart-line me-2"></i>
+                  Relatórios de Vendas
+                </a>
+                <a href="#" class="dropdown-item">
+                  <i class="fas fa-cog me-2"></i>
+                  Configurações
+                </a>
+              </div>
+            </div>
           }
           @if (authService.isAdmin()) {
             <div class="nav-dropdown">

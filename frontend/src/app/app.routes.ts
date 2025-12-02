@@ -79,6 +79,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
         canActivate: [authGuard]
       },
+      // Rotas de contratos para vendedores
+      {
+        path: 'contratos/meus-contratos',
+        loadComponent: () => import('./pages/contrato/meus-contratos.component').then(m => m.MeusContratosComponent),
+        canActivate: [authGuard]
+      },
       // Rotas de contratos para administradores
       {
         path: 'admin/contratos',

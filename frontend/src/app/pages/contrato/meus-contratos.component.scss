@@ -1,0 +1,169 @@
+// Estilos para o componente Meus Contratos
+
+.card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.border-start {
+  border-left-width: 4px !important;
+}
+
+.badge {
+  &.badge-success {
+    background-color: #198754 !important;
+    color: white;
+  }
+  
+  &.badge-warning {
+    background-color: #ffc107 !important;
+    color: #000;
+  }
+  
+  &.badge-secondary {
+    background-color: #6c757d !important;
+    color: white;
+  }
+  
+  &.badge-danger {
+    background-color: #dc3545 !important;
+    color: white;
+  }
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+// Animação para o ícone de loading
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .card-body .row .col-6 {
+    margin-bottom: 1rem;
+  }
+  
+  .card-footer .row .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+// Estilo para os cards de informações principais
+.bg-light.rounded {
+  border: 1px solid #e9ecef;
+  
+  .h4, .h6 {
+    margin-bottom: 0.25rem;
+  }
+}
+
+// Estilo para a seção de termos do contrato
+.bg-white.rounded.border {
+  max-height: 150px;
+  overflow-y: auto;
+  
+  p {
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+}
+
+// Estilo para os indicadores de status
+.fas.fa-circle {
+  opacity: 0.8;
+}
+
+// Hover effects para botões
+.btn {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Estilo para alertas
+.alert {
+  border-radius: 0.5rem;
+  
+  &.alert-info {
+    background-color: #cff4fc;
+    border-color: #b6effb;
+    color: #055160;
+  }
+  
+  &.alert-light {
+    background-color: #fefefe;
+    border-color: #e9ecef;
+    color: #495057;
+  }
+}
+
+// Estilo para o header do card
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  
+  h6 {
+    font-weight: 600;
+  }
+  
+  small {
+    font-size: 0.75rem;
+  }
+}
+
+// Estilo para o footer do card
+.card-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  
+  h6 {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  ul {
+    li {
+      margin-bottom: 0.25rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
