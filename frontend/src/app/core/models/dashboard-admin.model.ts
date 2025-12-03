@@ -33,9 +33,9 @@ export interface ComissaoDto {
   vendedorNome: string;
   categoria: string;
   taxaComissao: number;
-  vendas: number;
-  comissoes: number;
-  transacoes: number;
+  totalVendas: number;      // CORRIGIDO: era 'vendas'
+  totalComissoes: number;   // CORRIGIDO: era 'comissoes'
+  numeroTransacoes: number; // CORRIGIDO: era 'transacoes'
 }
 
 export interface ComissaoRelatorio {

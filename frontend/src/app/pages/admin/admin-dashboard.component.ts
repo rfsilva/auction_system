@@ -437,12 +437,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
 
   /**
    * Atualiza gráfico de comissões
+   * CORRIGIDO: Usa os nomes corretos dos campos do DTO
    */
   private atualizarGraficoComissoes(): void {
     if (!this.chartComissoesPorMes || !this.comissoes) return;
     
     const labels = this.comissoes.porContrato.map(c => c.vendedorNome);
-    const data = this.comissoes.porContrato.map(c => c.comissoes);
+    const data = this.comissoes.porContrato.map(c => c.totalComissoes); // CORRIGIDO: era c.comissoes
     
     this.chartComissoesPorMes.data.labels = labels;
     this.chartComissoesPorMes.data.datasets[0].data = data;
@@ -484,40 +485,77 @@ export class AdminDashboardComponent implements OnInit, OnDestroy, AfterViewInit
 
   /**
    * Exporta contratos vencendo em CSV
+   * CORRIGIDO: Previne comportamento padrão do link e redirecionamento
    */
-  exportarCSV(): void {
+  exportarCSV(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    console.log('Iniciando exportação CSV...');
+    
     this.dashboardService.exportarContratosVencendoCSV().subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `contratos-vencendo-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+        console.log('CSV recebido, iniciando download...');
+        this.downloadFile(blob, 'csv');
       },
       error: (error) => {
         console.error('Erro ao exportar CSV:', error);
+        // Aqui você pode adicionar uma notificação de erro para o usuário
       }
     });
   }
 
   /**
    * Exporta contratos vencendo em PDF
+   * CORRIGIDO: Previne comportamento padrão do link e redirecionamento
    */
-  exportarPDF(): void {
+  exportarPDF(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    console.log('Iniciando exportação PDF...');
+    
     this.dashboardService.exportarContratosVencendoPDF().subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `contratos-vencendo-${new Date().toISOString().split('T')[0]}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+        console.log('PDF recebido, iniciando download...');
+        this.downloadFile(blob, 'pdf');
       },
       error: (error) => {
         console.error('Erro ao exportar PDF:', error);
+        // Aqui você pode adicionar uma notificação de erro para o usuário
       }
     });
+  }
+
+  /**
+   * NOVO: Método utilitário para fazer download de arquivos
+   */
+  private downloadFile(blob: Blob, tipo: 'csv' | 'pdf'): void {
+    try {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const dataAtual = new Date().toISOString().split('T')[0];
+      const extensao = tipo === 'csv' ? 'csv' : 'pdf';
+      link.download = `contratos-vencendo-${dataAtual}.${extensao}`;
+      
+      // Adicionar ao DOM temporariamente para funcionar em todos os navegadores
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log(`Download do arquivo ${tipo.toUpperCase()} iniciado com sucesso`);
+    } catch (error) {
+      console.error(`Erro ao fazer download do arquivo ${tipo.toUpperCase()}:`, error);
+    }
   }
 
   /**

@@ -50,20 +50,30 @@
             Atualizar
           </button>
           
+          <!-- CORRIGIDO: Dropdown de exportar -->
           <div class="dropdown">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
                     type="button" 
-                    data-bs-toggle="dropdown">
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
               <i class="fas fa-download"></i>
               Exportar
             </button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" (click)="exportarCSV()">
-                <i class="fas fa-file-csv"></i> CSV
-              </a></li>
-              <li><a class="dropdown-item" href="#" (click)="exportarPDF()">
-                <i class="fas fa-file-pdf"></i> PDF
-              </a></li>
+              <li>
+                <button class="dropdown-item" 
+                        type="button"
+                        (click)="exportarCSV($event)">
+                  <i class="fas fa-file-csv"></i> CSV
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" 
+                        type="button"
+                        (click)="exportarPDF($event)">
+                  <i class="fas fa-file-pdf"></i> PDF
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -152,10 +162,23 @@
   <!-- Conteúdo Principal -->
   <div class="dashboard-content" *ngIf="!dashboardStatus.carregando">
     
-    <!-- Cards de Métricas -->
+    <!-- Cards de Métricas - Layout Melhorado -->
     <div class="metrics-section" *ngIf="metricas.length > 0">
-      <div class="row g-3">
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6" *ngFor="let metrica of metricas">
+      <h3 class="section-title">
+        <i class="fas fa-chart-pie me-2"></i>
+        Métricas Principais
+      </h3>
+      
+      <!-- Primeira linha: 3 cards principais -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6" *ngFor="let metrica of metricas.slice(0, 3)">
+          <app-metric-card [metrica]="metrica"></app-metric-card>
+        </div>
+      </div>
+      
+      <!-- Segunda linha: 3 cards restantes -->
+      <div class="row g-4" *ngIf="metricas.length > 3">
+        <div class="col-lg-4 col-md-6" *ngFor="let metrica of metricas.slice(3, 6)">
           <app-metric-card [metrica]="metrica"></app-metric-card>
         </div>
       </div>
@@ -163,6 +186,11 @@
 
     <!-- Gráficos -->
     <div class="charts-section" *ngIf="temDados()">
+      <h3 class="section-title">
+        <i class="fas fa-chart-bar me-2"></i>
+        Análises Visuais
+      </h3>
+      
       <div class="row g-4">
         <!-- Gráfico de Contratos por Status -->
         <div class="col-lg-4">
@@ -315,11 +343,11 @@
                 <span class="badge bg-secondary">{{ item.categoria || 'Geral' }}</span>
               </td>
               <td>{{ formatarValor(item.taxaComissao * 100, 'percentual') }}</td>
-              <td>{{ formatarValor(item.vendas, 'moeda') }}</td>
+              <td>{{ formatarValor(item.totalVendas, 'moeda') }}</td>
               <td>
-                <strong class="text-success">{{ formatarValor(item.comissoes, 'moeda') }}</strong>
+                <strong class="text-success">{{ formatarValor(item.totalComissoes, 'moeda') }}</strong>
               </td>
-              <td>{{ item.transacoes }}</td>
+              <td>{{ item.numeroTransacoes }}</td>
             </tr>
           </tbody>
         </table>

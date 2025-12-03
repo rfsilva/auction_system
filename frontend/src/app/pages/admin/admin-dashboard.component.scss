@@ -14,7 +14,7 @@
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
-    overflow: hidden;
+    overflow: visible; // CORRIGIDO: permite que dropdown seja visível
 
     .header-content {
       padding: 1.5rem;
@@ -80,10 +80,61 @@
         .action-buttons {
           display: flex;
           gap: 0.5rem;
+          position: relative; // ADICIONADO: para posicionamento do dropdown
 
           .btn.active {
             background-color: #007bff;
             color: white;
+          }
+
+          // CORRIGIDO: Estilos específicos para o dropdown de exportar
+          .dropdown {
+            position: relative;
+
+            .dropdown-menu {
+              position: absolute;
+              top: 100%;
+              right: 0; // Alinha à direita para não sair da tela
+              left: auto;
+              z-index: 1050; // CORRIGIDO: z-index alto para ficar acima de outros elementos
+              min-width: 120px;
+              padding: 0.5rem 0;
+              margin: 0.125rem 0 0;
+              background-color: #fff;
+              border: 1px solid rgba(0, 0, 0, 0.15);
+              border-radius: 0.375rem;
+              box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+
+              .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                color: #212529;
+                text-decoration: none;
+                background-color: transparent;
+                border: 0;
+                width: 100%;
+                text-align: left;
+                font-size: 0.875rem;
+
+                &:hover,
+                &:focus {
+                  background-color: #f8f9fa;
+                  color: #1e2125;
+                }
+
+                &:active {
+                  background-color: #e9ecef;
+                  color: #1e2125;
+                }
+
+                i {
+                  width: 1rem;
+                  text-align: center;
+                }
+              }
+            }
           }
         }
       }
@@ -121,7 +172,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1050;
+    z-index: 1060; // CORRIGIDO: z-index maior que dropdown
 
     .loading-content {
       text-align: center;
@@ -453,6 +504,12 @@
 
         .header-actions {
           justify-content: space-between;
+
+          // CORRIGIDO: Ajuste do dropdown em mobile
+          .action-buttons .dropdown .dropdown-menu {
+            right: auto;
+            left: 0;
+          }
         }
       }
 
