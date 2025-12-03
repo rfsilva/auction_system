@@ -1,0 +1,85 @@
+<div class="contratos-vencendo-table">
+  <!-- Tabela -->
+  <div class="table-responsive" *ngIf="contratos && contratos.length > 0">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th>Categoria</th>
+          <th>Vencimento</th>
+          <th>Tempo Restante</th>
+          <th>Urgência</th>
+          <th>Status</th>
+          <th>Notificado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let contrato of contratos; trackBy: trackByContratoId">
+          <td>
+            <strong>{{ contrato.vendedorNome }}</strong>
+          </td>
+          <td>
+            <span class="badge bg-secondary">{{ contrato.categoria || 'Geral' }}</span>
+          </td>
+          <td>{{ formatarData(contrato.validTo) }}</td>
+          <td>
+            <span class="badge" [ngClass]="getTempoRestanteClass(contrato.diasRestantes)">
+              {{ calcularTempoVencimento(contrato.diasRestantes) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getUrgenciaClass(contrato.urgencia)">
+              {{ getUrgenciaText(contrato.urgencia) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(contrato.status)">
+              {{ getStatusText(contrato.status) }}
+            </span>
+          </td>
+          <td class="text-center">
+            <i class="fas fa-check-circle text-success" 
+               *ngIf="contrato.notificado" 
+               title="Notificado"></i>
+            <i class="fas fa-times-circle text-muted" 
+               *ngIf="!contrato.notificado" 
+               title="Não notificado"></i>
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button type="button" 
+                      class="btn btn-outline-primary"
+                      [routerLink]="['/admin/contratos', contrato.id]"
+                      title="Ver detalhes">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button type="button" 
+                      class="btn btn-outline-warning"
+                      (click)="onRenovarContrato(contrato)"
+                      title="Renovar contrato">
+                <i class="fas fa-redo"></i>
+              </button>
+              <button type="button" 
+                      class="btn btn-outline-info"
+                      (click)="onNotificarContrato(contrato)"
+                      [disabled]="contrato.notificado"
+                      title="Enviar notificação">
+                <i class="fas fa-bell"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Estado vazio -->
+  <div class="empty-state" *ngIf="!contratos || contratos.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-check-circle text-success"></i>
+    </div>
+    <h5>Nenhum contrato próximo ao vencimento</h5>
+    <p class="text-muted">Todos os contratos estão dentro do prazo de validade.</p>
+  </div>
+</div>

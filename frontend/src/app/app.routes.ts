@@ -85,7 +85,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/contrato/meus-contratos.component').then(m => m.MeusContratosComponent),
         canActivate: [authGuard]
       },
-      // Rotas de contratos para administradores
+      // Rotas administrativas
+      {
+        path: 'admin/dashboard',
+        loadComponent: () => import('./pages/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+        canActivate: [authGuard]
+      },
       {
         path: 'admin/contratos',
         loadComponent: () => import('./pages/contrato/contrato-list.component').then(m => m.ContratoListComponent),
@@ -110,6 +115,12 @@ export const routes: Routes = [
       {
         path: 'admin/usuarios',
         loadComponent: () => import('./pages/admin/usuario-list.component').then(m => m.UsuarioListComponent),
+        canActivate: [authGuard]
+      },
+      // Rota para ativar vendedor
+      {
+        path: 'admin/ativar-vendedor',
+        loadComponent: () => import('./pages/contrato/ativar-vendedor.component').then(m => m.AtivarVendedorComponent),
         canActivate: [authGuard]
       }
     ]

@@ -1,0 +1,21 @@
+<div class="metric-card" [ngClass]="getCardClass()">
+  <div class="metric-icon">
+    <i [class]="metrica.icone"></i>
+  </div>
+  <div class="metric-content">
+    <div class="metric-value">
+      {{ formatarValor() }}
+    </div>
+    <div class="metric-title">{{ metrica.titulo }}</div>
+    <div class="metric-trend" *ngIf="metrica.tendencia">
+      <i class="fas" 
+         [class.fa-arrow-up]="metrica.tendencia.tipo === 'alta'"
+         [class.fa-arrow-down]="metrica.tendencia.tipo === 'baixa'"
+         [class.fa-minus]="metrica.tendencia.tipo === 'estavel'"
+         [class.text-success]="metrica.tendencia.tipo === 'alta'"
+         [class.text-danger]="metrica.tendencia.tipo === 'baixa'"
+         [class.text-muted]="metrica.tendencia.tipo === 'estavel'"></i>
+      <span>{{ metrica.tendencia.valor }}%</span>
+    </div>
+  </div>
+</div>

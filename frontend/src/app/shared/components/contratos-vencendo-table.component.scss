@@ -1,0 +1,90 @@
+.contratos-vencendo-table {
+  .table {
+    margin: 0;
+
+    th {
+      background: #f8f9fa;
+      border-top: none;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    td {
+      vertical-align: middle;
+      font-size: 0.875rem;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.5rem;
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 3rem;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    h5 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    
+    &.bg-urgencia-alta {
+      background-color: #dc3545 !important;
+    }
+
+    &.bg-urgencia-media {
+      background-color: #ffc107 !important;
+      color: #212529 !important;
+    }
+
+    &.bg-urgencia-baixa {
+      background-color: #17a2b8 !important;
+    }
+
+    &.bg-tempo-critico {
+      background-color: #dc3545 !important;
+    }
+
+    &.bg-tempo-atencao {
+      background-color: #ffc107 !important;
+      color: #212529 !important;
+    }
+
+    &.bg-tempo-normal {
+      background-color: #17a2b8 !important;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .contratos-vencendo-table {
+    .table-responsive {
+      font-size: 0.8rem;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.125rem 0.25rem;
+      font-size: 0.75rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.25rem;
+    }
+  }
+}
