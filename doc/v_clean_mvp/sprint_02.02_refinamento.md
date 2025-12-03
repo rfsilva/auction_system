@@ -23,7 +23,7 @@ Implementar a camada de visibilidade administrativa que estava pendente da Sprin
 - Migrations (somente se necessário; primeiro valide se existe na V1)
 - Regras de validação (negócio e campos)
 - Mensagens de erro claras	
-- I18N estruturado - novas mensagens devem ser catalogadas corretamente e traduzidas por MessageSourceAccessor
+- I18N estruturado para Português, Inglês, Espanhol e Italiano - Manter equalizado e atualizado em todos os idiomas
 
 ### 🎨 Frontend: 
 - Angular 18 (standalone) + HttpClient com fetch + Reactive Forms + rotas

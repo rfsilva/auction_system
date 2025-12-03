@@ -20,6 +20,7 @@ Implementar funcionalidades básicas de catálogo, produtos e leilões estático
 - Migrations (somente se necessário; primeiro valide se existe na V1)
 - Regras de validação (negócio e campos)
 - Mensagens de erro claras	
+- I18N estruturado para Português, Inglês, Espanhol e Italiano
 
 ### 🎨 Frontend: 
 - Angular 18 (standalone) + HttpClient com fetch + Reactive Forms + rotas

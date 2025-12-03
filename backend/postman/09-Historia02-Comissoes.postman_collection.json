@@ -1,0 +1,712 @@
+{
+	"info": {
+		"_postman_id": "historia02-comissoes-collection",
+		"name": "História 02 - Sistema de Cálculo de Comissões",
+		"description": "Collection para testar os endpoints da História 2: Sistema de Cálculo de Comissões - Sprint S2.2\n\nEndpoints implementados:\n- Cálculo de comissões por período\n- Comissões agrupadas por vendedor\n- Projeções de receita\n- Breakdown detalhado por vendedor\n- Comparação entre períodos\n- Contratos vencendo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Estatísticas de Contratos",
+			"item": [
+				{
+					"name": "Obter Estatísticas Consolidadas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/estatisticas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"estatisticas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Projeções de Receita",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/projecoes-receita",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"projecoes-receita"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Relatórios de Comissões",
+			"item": [
+				{
+					"name": "Relatório Básico de Comissões",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes?inicio=2024-01-01&fim=2024-01-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Relatório com Filtros",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes?inicio=2024-01-01&fim=2024-01-31&vendedor={{seller_id}}&categoria=Eletrônicos&status=ACTIVE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								},
+								{
+									"key": "vendedor",
+									"value": "{{seller_id}}"
+								},
+								{
+									"key": "categoria",
+									"value": "Eletrônicos"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cálculo Detalhado de Comissões",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/detalhado?inicio=2024-01-01&fim=2024-01-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"detalhado"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Comissões por Vendedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/por-vendedor?inicio=2024-01-01&fim=2024-01-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"por-vendedor"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Breakdown de Vendedor Específico",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/breakdown/{{seller_id}}?inicio=2024-01-01&fim=2024-01-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"breakdown",
+								"{{seller_id}}"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projeções de Receita",
+			"item": [
+				{
+					"name": "Projeção para 3 Meses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/projecao?meses=3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"projecao"
+							],
+							"query": [
+								{
+									"key": "meses",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Projeção por Categoria",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/projecao?meses=6&categoria=Eletrônicos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"projecao"
+							],
+							"query": [
+								{
+									"key": "meses",
+									"value": "6"
+								},
+								{
+									"key": "categoria",
+									"value": "Eletrônicos"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Comparações e Análises",
+			"item": [
+				{
+					"name": "Comparação entre Períodos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes/comparacao?periodo1Inicio=2024-01-01&periodo1Fim=2024-01-31&periodo2Inicio=2024-02-01&periodo2Fim=2024-02-29",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes",
+								"comparacao"
+							],
+							"query": [
+								{
+									"key": "periodo1Inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "periodo1Fim",
+									"value": "2024-01-31"
+								},
+								{
+									"key": "periodo2Inicio",
+									"value": "2024-02-01"
+								},
+								{
+									"key": "periodo2Fim",
+									"value": "2024-02-29"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contratos Vencendo",
+			"item": [
+				{
+					"name": "Contratos Vencendo em 30 Dias",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/vencendo?dias=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "30"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Contratos com Urgência Alta",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/vencendo?dias=7&urgencia=ALTA&incluirNotificados=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "7"
+								},
+								{
+									"key": "urgencia",
+									"value": "ALTA"
+								},
+								{
+									"key": "incluirNotificados",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enviar Notificações Manuais",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/vencendo/notificar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"notificar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testes de Validação",
+			"item": [
+				{
+					"name": "Teste - Data Inválida",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes?inicio=2024-01-31&fim=2024-01-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-31"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Teste - Período Muito Longo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes?inicio=2023-01-01&fim=2025-01-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2023-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2025-01-01"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Teste - Status Inválido",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "pt-BR",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/contratos/comissoes?inicio=2024-01-01&fim=2024-01-31&status=INVALID_STATUS",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contratos",
+								"comissoes"
+							],
+							"query": [
+								{
+									"key": "inicio",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "fim",
+									"value": "2024-01-31"
+								},
+								{
+									"key": "status",
+									"value": "INVALID_STATUS"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se o token existe",
+					"if (!pm.environment.get('access_token')) {",
+					"    console.log('Token não encontrado. Execute primeiro o login.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Testes globais para todas as requisições",
+					"pm.test('Status code should be successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response should have success field', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"pm.test('Response time should be less than 2000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"// Log da resposta para debug",
+					"console.log('Response:', pm.response.json());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "seller_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
