@@ -13,6 +13,8 @@ import com.leilao.shared.enums.UserStatus;
 import com.leilao.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Service para operações administrativas com usuários
+ * Service para operações administrativas com usuários com suporte a i18n usando MessageSourceAccessor
  * História 2: Processo de Contratação de Vendedores
  */
 @Service
@@ -38,6 +40,7 @@ public class AdminUsuarioService {
     private final VendedorRepository vendedorRepository;
     private final ContratoService contratoService;
     private final PasswordEncoder passwordEncoder;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Lista todos os usuários com paginação e filtros (para gestão administrativa)
@@ -155,7 +158,8 @@ public class AdminUsuarioService {
      */
     public AdminUsuarioDto buscarUsuarioPorId(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
         
         return convertToAdminDto(usuario);
     }
@@ -166,7 +170,8 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto atualizarUsuario(String usuarioId, AdminUsuarioUpdateRequest request) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (request.getNome() != null) {
             usuario.setNome(request.getNome());
@@ -175,7 +180,8 @@ public class AdminUsuarioService {
             // Verificar se email já existe
             if (!usuario.getEmail().equals(request.getEmail()) && 
                 usuarioRepository.existsByEmail(request.getEmail())) {
-                throw new BusinessException("Email já está em uso por outro usuário");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.register.email.exists", LocaleContextHolder.getLocale()));
             }
             usuario.setEmail(request.getEmail());
         }
@@ -207,10 +213,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto ativarUsuario(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() == UserStatus.ACTIVE) {
-            throw new BusinessException("Usuário já está ativo");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.already.active", LocaleContextHolder.getLocale()));
         }
 
         usuario.setStatus(UserStatus.ACTIVE);
@@ -226,10 +234,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto desativarUsuario(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() != UserStatus.ACTIVE) {
-            throw new BusinessException("Usuário não está ativo");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.not.active", LocaleContextHolder.getLocale()));
         }
 
         usuario.setStatus(UserStatus.INACTIVE);
@@ -245,10 +255,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto bloquearUsuario(String usuarioId, String motivo) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() == UserStatus.SUSPENDED) {
-            throw new BusinessException("Usuário já está suspenso");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.already.blocked", LocaleContextHolder.getLocale()));
         }
 
         usuario.setStatus(UserStatus.SUSPENDED);
@@ -265,10 +277,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto desbloquearUsuario(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() != UserStatus.SUSPENDED) {
-            throw new BusinessException("Usuário não está suspenso");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.not.blocked", LocaleContextHolder.getLocale()));
         }
 
         usuario.setStatus(UserStatus.ACTIVE);
@@ -284,10 +298,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto verificarEmail(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getEmailVerificado()) {
-            throw new BusinessException("Email já está verificado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.email.already.verified", LocaleContextHolder.getLocale()));
         }
 
         usuario.setEmailVerificado(true);
@@ -303,10 +319,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto verificarTelefone(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getTelefoneVerificado()) {
-            throw new BusinessException("Telefone já está verificado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.phone.already.verified", LocaleContextHolder.getLocale()));
         }
 
         usuario.setTelefoneVerificado(true);
@@ -322,10 +340,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto adicionarRole(String usuarioId, UserRole role) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.hasRole(role)) {
-            throw new BusinessException("Usuário já possui esta role");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.role.already.exists", LocaleContextHolder.getLocale()));
         }
 
         usuario.addRole(role);
@@ -341,10 +361,12 @@ public class AdminUsuarioService {
     @Transactional
     public AdminUsuarioDto removerRole(String usuarioId, UserRole role) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (!usuario.hasRole(role)) {
-            throw new BusinessException("Usuário não possui esta role");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.role.not.exists", LocaleContextHolder.getLocale()));
         }
 
         usuario.removeRole(role);
@@ -360,7 +382,8 @@ public class AdminUsuarioService {
     @Transactional
     public String redefinirSenha(String usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         // Gerar nova senha aleatória
         String novaSenha = gerarSenhaAleatoria();
@@ -381,7 +404,7 @@ public class AdminUsuarioService {
         long usuariosAtivos = usuarioRepository.countByStatus(UserStatus.ACTIVE);
         long usuariosInativos = usuarioRepository.countByStatus(UserStatus.INACTIVE);
         long usuariosSuspensos = usuarioRepository.countByStatus(UserStatus.SUSPENDED);
-        long usuariosPendentes = usuarioRepository.countByStatus(UserStatus.PENDING_VERIFICATION);
+        long usuariosPendentes = usuarioRepository.countByStatus(UserStatus.PENDING);
         
         List<Usuario> vendedores = usuarioRepository.findUsuariosByRole(UserRole.SELLER.name());
         long totalVendedores = vendedores.size();

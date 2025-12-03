@@ -1,6 +1,7 @@
 package com.leilao.modules.lote.entity;
 
 import com.leilao.shared.enums.LoteStatus;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Entidade Lote - Representa um lote de produtos para leilão
+ * Entidade Lote - Representa um lote de produtos para leilão com suporte a i18n
  * Agora vinculado a um contrato ao invés de diretamente a um vendedor
  */
 @Entity
@@ -102,23 +103,24 @@ public class Lote {
         return loteEndDateTime != null && loteEndDateTime.isBefore(LocalDateTime.now());
     }
 
+    // Métodos de negócio com mensagens internacionalizadas
     public void activate() {
         if (!canBeActivated()) {
-            throw new IllegalStateException("Lote não pode ser ativado no status atual: " + status);
+            throw new IllegalStateException(MessageUtils.getMessage("lot.cannot.activate"));
         }
         this.status = LoteStatus.ACTIVE;
     }
 
     public void cancel() {
         if (!canBeCancelled()) {
-            throw new IllegalStateException("Lote não pode ser cancelado no status atual: " + status);
+            throw new IllegalStateException(MessageUtils.getMessage("lot.cannot.cancel"));
         }
         this.status = LoteStatus.CANCELLED;
     }
 
     public void close() {
         if (!isActive()) {
-            throw new IllegalStateException("Apenas lotes ativos podem ser fechados");
+            throw new IllegalStateException(MessageUtils.getMessage("lot.cannot.close"));
         }
         this.status = LoteStatus.CLOSED;
     }

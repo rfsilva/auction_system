@@ -5,6 +5,8 @@ import com.leilao.modules.realtime.dto.PingMessage;
 import com.leilao.modules.realtime.dto.WebSocketMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controller WebSocket para comunicação bidirecional (bidders)
+ * Controller WebSocket para comunicação bidirecional (bidders) com suporte a i18n usando MessageSourceAccessor
  */
 @Controller
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ import java.util.Map;
 public class WebSocketController {
     
     private final SimpMessagingTemplate messagingTemplate;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Endpoint WebSocket para receber mensagens de teste
@@ -60,7 +63,8 @@ public class WebSocketController {
         try {
             // Validações básicas
             if (bidMessage.getProductId() == null || bidMessage.getAmount() == null) {
-                throw new IllegalArgumentException("ProductId e Amount são obrigatórios");
+                throw new IllegalArgumentException(
+                        messageSourceAccessor.getMessage("websocket.bid.required.fields", LocaleContextHolder.getLocale()));
             }
             
             Map<String, Object> response = new HashMap<>();
@@ -73,7 +77,7 @@ public class WebSocketController {
             response.put("currency", bidMessage.getCurrency());
             response.put("serverTimestamp", System.currentTimeMillis());
             response.put("serverTime", LocalDateTime.now().toString());
-            response.put("message", "Lance processado com sucesso");
+            response.put("message", messageSourceAccessor.getMessage("websocket.bid.success", LocaleContextHolder.getLocale()));
             response.put("clientId", bidMessage.getClientId());
             response.put("clientTimestamp", bidMessage.getTimestamp());
             
@@ -179,7 +183,7 @@ public class WebSocketController {
         response.put("clientId", message.getClientId());
         response.put("clientTimestamp", message.getTimestamp());
         response.put("originalMessage", message.getMessage());
-        response.put("echo", "Servidor recebeu: " + message.getMessage());
+        response.put("echo", messageSourceAccessor.getMessage("websocket.message.received", LocaleContextHolder.getLocale()) + ": " + message.getMessage());
         
         if (message.getTimestamp() != null) {
             response.put("processingTime", System.currentTimeMillis() - message.getTimestamp());

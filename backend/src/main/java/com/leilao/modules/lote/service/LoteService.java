@@ -20,6 +20,8 @@ import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service para operações de Lote
+ * Service para operações de Lote com suporte a i18n usando MessageSourceAccessor
  * Atualizado para usar contratos ao invés de vendedores diretamente
  */
 @Service
@@ -45,6 +47,7 @@ public class LoteService {
     private final ContratoRepository contratoRepository;
     private final VendedorRepository vendedorRepository;
     private final UsuarioRepository usuarioRepository;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Cria um novo lote
@@ -64,12 +67,14 @@ public class LoteService {
             
             // Verificar se o contrato pertence ao vendedor
             if (!contratoAtivo.getSellerId().equals(vendedorId)) {
-                throw new BusinessException("Contrato selecionado não pertence ao vendedor");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
             }
             
             // Verificar se o contrato está ativo
             if (!contratoAtivo.isActive()) {
-                throw new BusinessException("Contrato selecionado não está ativo");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("contract.cannot.activate", LocaleContextHolder.getLocale()));
             }
             
             log.info("Usando contrato específico escolhido pelo vendedor: {}", contratoAtivo.getId());
@@ -116,12 +121,14 @@ public class LoteService {
         // Verificar se o vendedor é o proprietário através do contrato
         Contrato contrato = buscarContratoPorId(lote.getContractId());
         if (!contrato.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para editar este lote");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Verificar se o contrato ainda está ativo
         if (!contrato.isActive()) {
-            throw new BusinessException("Não é possível editar lote com contrato inativo");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.cannot.edit", LocaleContextHolder.getLocale()));
         }
         
         validarEdicaoLote(lote);
@@ -199,12 +206,14 @@ public class LoteService {
         // Verificar se o vendedor é o proprietário através do contrato
         Contrato contrato = buscarContratoPorId(lote.getContractId());
         if (!contrato.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para ativar este lote");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Verificar se o contrato ainda está ativo
         if (!contrato.isActive()) {
-            throw new BusinessException("Não é possível ativar lote com contrato inativo");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.cannot.activate", LocaleContextHolder.getLocale()));
         }
         
         validarAtivacaoLote(lote);
@@ -234,7 +243,8 @@ public class LoteService {
         // Verificar se o vendedor é o proprietário através do contrato
         Contrato contrato = buscarContratoPorId(lote.getContractId());
         if (!contrato.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para cancelar este lote");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         lote.cancel();
@@ -262,7 +272,8 @@ public class LoteService {
         // Verificar se o vendedor é o proprietário através do contrato
         Contrato contrato = buscarContratoPorId(lote.getContractId());
         if (!contrato.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para excluir este lote");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         validarExclusaoLote(lote);
@@ -293,52 +304,70 @@ public class LoteService {
 
     private Lote buscarLotePorId(String loteId) {
         return loteRepository.findById(loteId)
-                .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado: " + loteId));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("lot.not.found", LocaleContextHolder.getLocale())));
     }
 
     private Contrato buscarContratoPorId(String contratoId) {
         return contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado: " + contratoId));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("contract.not.found", LocaleContextHolder.getLocale())));
     }
 
     private Contrato buscarContratoAtivoDoVendedor(String vendedorId, String categoria) {
         return contratoRepository.findContratoAtivoParaCategoria(vendedorId, categoria, LocalDateTime.now())
                 .orElseThrow(() -> new BusinessException(
-                    "Vendedor não possui contrato ativo" + 
-                    (categoria != null ? " para a categoria " + categoria : "")));
+                        messageSourceAccessor.getMessage("seller.contract.required", LocaleContextHolder.getLocale())));
     }
 
     private void validarCriacaoLote(LoteCreateRequest request) {
+        // Validar título
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.title.required", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar descrição
+        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.description.required", LocaleContextHolder.getLocale()));
+        }
+        
         validarDataEncerramento(request.getLoteEndDateTime());
     }
 
     private void validarDataEncerramento(LocalDateTime dataEncerramento) {
-        if (dataEncerramento.isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+        if (dataEncerramento == null || dataEncerramento.isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.date.invalid", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarEdicaoLote(Lote lote) {
         if (!lote.canBeEdited()) {
-            throw new BusinessException("Lote não pode ser editado no status atual: " + lote.getStatus());
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.cannot.edit", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarAtivacaoLote(Lote lote) {
         if (!lote.canBeActivated()) {
-            throw new BusinessException("Lote não pode ser ativado no status atual: " + lote.getStatus());
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.cannot.activate", LocaleContextHolder.getLocale()));
         }
         
         // Verificar se há produtos associados
         List<Produto> produtos = produtoRepository.findByLoteId(lote.getId());
         if (produtos.isEmpty()) {
-            throw new BusinessException("Lote deve ter pelo menos um produto para ser ativado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.products.required", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarExclusaoLote(Lote lote) {
         if (!lote.isDraft()) {
-            throw new BusinessException("Apenas lotes em rascunho podem ser excluídos");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("lot.cannot.delete", LocaleContextHolder.getLocale()));
         }
     }
 
@@ -348,16 +377,19 @@ public class LoteService {
         
         for (String produtoId : produtoIds) {
             Produto produto = produtoRepository.findById(produtoId)
-                    .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            messageSourceAccessor.getMessage("product.not.found", LocaleContextHolder.getLocale())));
             
             // Verificar se o produto pertence ao vendedor
             if (!produto.getSellerId().equals(vendedorId)) {
-                throw new BusinessException("Produto " + produtoId + " não pertence ao vendedor");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
             }
             
             // Verificar se o produto pode ser associado a um lote
             if (!produto.isDraft()) {
-                throw new BusinessException("Produto " + produtoId + " não pode ser associado ao lote no status atual");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("product.cannot.edit", LocaleContextHolder.getLocale()));
             }
             
             produto.setLoteId(loteId);
@@ -431,7 +463,7 @@ public class LoteService {
         try {
             Contrato contrato = buscarContratoPorId(lote.getContractId());
             sellerId = contrato.getSellerId();
-            contractStatus = contrato.getStatus().getDisplayName();
+            contractStatus = messageSourceAccessor.getMessage(contrato.getStatus().getDisplayName(), LocaleContextHolder.getLocale());
             categoria = contrato.getCategoria();
             
             // Buscar informações do vendedor

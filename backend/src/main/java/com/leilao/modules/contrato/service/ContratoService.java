@@ -15,6 +15,8 @@ import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service para operações com contratos
+ * Service para operações com contratos com suporte a i18n usando MessageSourceAccessor
  * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
  */
 @Service
@@ -40,6 +42,7 @@ public class ContratoService {
     private final VendedorRepository vendedorRepository;
     private final UsuarioRepository usuarioRepository;
     private final VendedorService vendedorService;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Lista contratos ativos do vendedor atual (para seleção em lotes)
@@ -68,10 +71,12 @@ public class ContratoService {
 
         // Validar se o usuário existe e está ativo
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() != UserStatus.ACTIVE) {
-            throw new BusinessException("Usuário deve estar ativo para ter um contrato");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.must.be.active", LocaleContextHolder.getLocale()));
         }
 
         // Verificar se já é vendedor
@@ -124,7 +129,8 @@ public class ContratoService {
 
         // Validar se o vendedor existe
         Vendedor vendedor = vendedorRepository.findById(request.getSellerId())
-                .orElseThrow(() -> new EntityNotFoundException("Vendedor não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("seller.not.found", LocaleContextHolder.getLocale())));
 
         // Validar se não há conflito com contratos existentes
         validarConflitosContrato(request.getSellerId(), null, request.getCategoria(), 
@@ -161,16 +167,19 @@ public class ContratoService {
 
         // Validar se o usuário existe e está ativo
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
         if (usuario.getStatus() != UserStatus.ACTIVE) {
-            throw new BusinessException("Usuário deve estar ativo para ser transformado em vendedor");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("user.must.be.active", LocaleContextHolder.getLocale()));
         }
 
         // Verificar se já é vendedor com contrato ativo
         Vendedor vendedorExistente = vendedorRepository.findByUsuarioId(request.getUsuarioId()).orElse(null);
         if (vendedorExistente != null && vendedorTemContratoAtivo(vendedorExistente.getId())) {
-            throw new BusinessException("Usuário já é um vendedor ativo com contrato vigente");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("seller.already.exists", LocaleContextHolder.getLocale()));
         }
 
         // Criar vendedor se não existir
@@ -358,7 +367,8 @@ public class ContratoService {
         Contrato contrato = buscarContratoPorId(contratoId);
         
         if (contrato.getStatus() != ContractStatus.DRAFT) {
-            throw new BusinessException("Apenas contratos em rascunho podem ser excluídos");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.draft.only.delete", LocaleContextHolder.getLocale()));
         }
 
         contratoRepository.delete(contrato);
@@ -410,7 +420,8 @@ public class ContratoService {
 
     private Contrato buscarContratoPorId(String contratoId) {
         return contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        messageSourceAccessor.getMessage("contract.not.found", LocaleContextHolder.getLocale())));
     }
 
     /**
@@ -436,13 +447,15 @@ public class ContratoService {
     private void validarCriacaoContrato(ContratoCreateRequest request) {
         // Validar taxa
         if (request.getFeeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("Taxa deve ser maior que zero");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.fee.invalid", LocaleContextHolder.getLocale()));
         }
 
         // Validar datas
         if (request.getValidTo() != null && request.getValidFrom() != null) {
             if (request.getValidTo().isBefore(request.getValidFrom())) {
-                throw new BusinessException("Data de fim deve ser posterior à data de início");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("contract.date.invalid", LocaleContextHolder.getLocale()));
             }
         }
     }
@@ -450,37 +463,43 @@ public class ContratoService {
     private void validarCriacaoContratoFromUser(ContratoCreateFromUserRequest request) {
         // Validar taxa
         if (request.getFeeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("Taxa deve ser maior que zero");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.fee.invalid", LocaleContextHolder.getLocale()));
         }
 
         // Validar datas
         if (request.getValidTo() != null && request.getValidFrom() != null) {
             if (request.getValidTo().isBefore(request.getValidFrom())) {
-                throw new BusinessException("Data de fim deve ser posterior à data de início");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("contract.date.invalid", LocaleContextHolder.getLocale()));
             }
         }
     }
 
     private void validarEdicaoContrato(Contrato contrato) {
         if (!contrato.canBeEdited()) {
-            throw new BusinessException("Contrato não pode ser editado no status atual: " + contrato.getStatus());
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.cannot.edit", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarConflitosContrato(String sellerId, String contratoId, String categoria, 
                                         LocalDateTime validFrom, LocalDateTime validTo) {
         if (contratoRepository.existsContratoConflitante(sellerId, contratoId, categoria, validFrom, validTo)) {
-            throw new BusinessException("Já existe um contrato ativo conflitante para este vendedor e categoria no período especificado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("contract.conflict.exists", LocaleContextHolder.getLocale()));
         }
     }
 
     private void atualizarRoleVendedor(String sellerId) {
         try {
             Vendedor vendedor = vendedorRepository.findById(sellerId)
-                    .orElseThrow(() -> new EntityNotFoundException("Vendedor não encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            messageSourceAccessor.getMessage("seller.not.found", LocaleContextHolder.getLocale())));
 
             Usuario usuario = usuarioRepository.findById(vendedor.getUsuarioId())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            messageSourceAccessor.getMessage("user.not.found", LocaleContextHolder.getLocale())));
 
             boolean temContratoAtivo = vendedorTemContratoAtivo(sellerId);
 
@@ -528,7 +547,9 @@ public class ContratoService {
         dto.setCanBeActivated(contrato.canBeActivated());
         dto.setCanBeCancelled(contrato.canBeCancelled());
         dto.setCanBeEdited(contrato.canBeEdited());
-        dto.setStatusDisplayName(contrato.getStatus().getDisplayName());
+        
+        // Usar MessageSourceAccessor para resolver o display name do status
+        dto.setStatusDisplayName(messageSourceAccessor.getMessage(contrato.getStatus().getDisplayName(), LocaleContextHolder.getLocale()));
 
         // Calcular dias até expiração
         if (contrato.getValidTo() != null) {

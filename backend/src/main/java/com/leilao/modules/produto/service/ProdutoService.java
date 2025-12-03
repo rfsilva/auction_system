@@ -9,6 +9,8 @@ import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Service para operações com Produto
+ * Service para operações com Produto com suporte a i18n usando MessageSourceAccessor
  */
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
     private final VendedorService vendedorService;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Cria um novo produto
@@ -83,7 +86,8 @@ public class ProdutoService {
         
         // Verificar se o vendedor é o dono do produto
         if (!produto.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para editar este produto");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser editado
@@ -175,7 +179,8 @@ public class ProdutoService {
         
         // Verificar se o vendedor é o dono do produto
         if (!produto.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para excluir este produto");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser excluído
@@ -200,7 +205,8 @@ public class ProdutoService {
         
         // Verificar se o vendedor é o dono do produto
         if (!produto.getSellerId().equals(vendedorId)) {
-            throw new BusinessException("Você não tem permissão para publicar este produto");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser publicado
@@ -261,53 +267,83 @@ public class ProdutoService {
 
     private Produto buscarProdutoPorId(String produtoId) {
         return produtoRepository.findById(produtoId)
-            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId));
+            .orElseThrow(() -> new EntityNotFoundException(
+                    messageSourceAccessor.getMessage("product.not.found", LocaleContextHolder.getLocale())));
     }
 
     private void validarCriacaoProduto(ProdutoCreateRequest request) {
+        // Validar título
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.title.required", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar descrição
+        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.description.required", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar preço inicial
+        if (request.getInitialPrice() == null || request.getInitialPrice().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.price.invalid", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar incremento mínimo
+        if (request.getIncrementMin() == null || request.getIncrementMin().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.increment.invalid", LocaleContextHolder.getLocale()));
+        }
+        
         // Validar data de encerramento
-        if (request.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+        if (request.getEndDateTime() == null || request.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.date.invalid", LocaleContextHolder.getLocale()));
         }
         
         // Validar preço de reserva
         if (request.getReservePrice() != null && 
             request.getReservePrice().compareTo(request.getInitialPrice()) < 0) {
-            throw new BusinessException("Preço de reserva não pode ser menor que o preço inicial");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.price.invalid", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarEdicaoProduto(Produto produto) {
         if (produto.isActive() && produto.getCurrentPrice().compareTo(produto.getInitialPrice()) > 0) {
-            throw new BusinessException("Produto com lances não pode ser editado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.edit", LocaleContextHolder.getLocale()));
         }
         
         if (produto.isSold()) {
-            throw new BusinessException("Produto vendido não pode ser editado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.edit", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarExclusaoProduto(Produto produto) {
         if (produto.isActive() && produto.getCurrentPrice().compareTo(produto.getInitialPrice()) > 0) {
-            throw new BusinessException("Produto com lances não pode ser excluído");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.delete", LocaleContextHolder.getLocale()));
         }
         
         if (produto.isSold()) {
-            throw new BusinessException("Produto vendido não pode ser excluído");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.delete", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarPublicacaoProduto(Produto produto) {
         if (!produto.isDraft()) {
-            throw new BusinessException("Apenas produtos em rascunho podem ser publicados");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.publish", LocaleContextHolder.getLocale()));
         }
         
         if (produto.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.date.invalid", LocaleContextHolder.getLocale()));
         }
-        
-        // TODO: Validar se vendedor está ativo e verificado
-        // TODO: Validar se produto tem pelo menos uma imagem
     }
 
     private Pageable criarPageable(CatalogoFiltroRequest filtros) {

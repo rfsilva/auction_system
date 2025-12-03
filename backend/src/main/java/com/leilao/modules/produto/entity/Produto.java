@@ -1,6 +1,7 @@
 package com.leilao.modules.produto.entity;
 
 import com.leilao.shared.enums.ProdutoStatus;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Entidade Produto para o sistema de leilão
+ * Entidade Produto para o sistema de leilão com suporte a i18n
  */
 @Entity
 @Table(name = "tb_produto")
@@ -160,41 +161,41 @@ public class Produto {
         return isActive() && !isExpired();
     }
 
-    // Métodos de negócio
+    // Métodos de negócio com mensagens internacionalizadas
     public void publish() {
         if (!isDraft()) {
-            throw new IllegalStateException("Apenas produtos em rascunho podem ser publicados");
+            throw new IllegalStateException(MessageUtils.getMessage("product.cannot.publish"));
         }
         this.status = ProdutoStatus.ACTIVE;
     }
 
     public void cancel() {
         if (isSold() || status == ProdutoStatus.EXPIRED) {
-            throw new IllegalStateException("Produto não pode ser cancelado no status atual: " + status);
+            throw new IllegalStateException(MessageUtils.getMessage("product.cannot.cancel"));
         }
         this.status = ProdutoStatus.CANCELLED;
     }
 
     public void markAsSold() {
         if (!isActive()) {
-            throw new IllegalStateException("Apenas produtos ativos podem ser marcados como vendidos");
+            throw new IllegalStateException(MessageUtils.getMessage("product.cannot.mark.sold"));
         }
         this.status = ProdutoStatus.SOLD;
     }
 
     public void expire() {
         if (!isActive()) {
-            throw new IllegalStateException("Apenas produtos ativos podem expirar");
+            throw new IllegalStateException(MessageUtils.getMessage("product.cannot.expire"));
         }
         this.status = ProdutoStatus.EXPIRED;
     }
 
     public void updateCurrentPrice(BigDecimal newPrice) {
         if (newPrice == null || newPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Preço deve ser maior que zero");
+            throw new IllegalArgumentException(MessageUtils.getMessage("product.price.invalid"));
         }
         if (this.currentPrice != null && newPrice.compareTo(this.currentPrice) <= 0) {
-            throw new IllegalArgumentException("Novo preço deve ser maior que o preço atual");
+            throw new IllegalArgumentException(MessageUtils.getMessage("product.price.must.be.higher"));
         }
         this.currentPrice = newPrice;
     }

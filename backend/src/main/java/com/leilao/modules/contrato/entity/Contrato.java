@@ -1,6 +1,7 @@
 package com.leilao.modules.contrato.entity;
 
 import com.leilao.shared.enums.ContractStatus;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Entidade que representa um contrato de vendedor na plataforma
+ * Entidade que representa um contrato de vendedor na plataforma com suporte a i18n
  */
 @Entity
 @Table(name = "tb_contrato")
@@ -110,9 +111,10 @@ public class Contrato {
         return status == ContractStatus.DRAFT;
     }
 
+    // Métodos de negócio com mensagens internacionalizadas
     public void activate() {
         if (!canBeActivated()) {
-            throw new IllegalStateException("Contrato não pode ser ativado no status atual: " + status);
+            throw new IllegalStateException(MessageUtils.getMessage("contract.cannot.activate"));
         }
         this.status = ContractStatus.ACTIVE;
         this.active = true;
@@ -120,7 +122,7 @@ public class Contrato {
 
     public void cancel() {
         if (!canBeCancelled()) {
-            throw new IllegalStateException("Contrato não pode ser cancelado no status atual: " + status);
+            throw new IllegalStateException(MessageUtils.getMessage("contract.cannot.cancel"));
         }
         this.status = ContractStatus.CANCELLED;
         this.active = false;
@@ -128,7 +130,7 @@ public class Contrato {
 
     public void suspend() {
         if (status != ContractStatus.ACTIVE) {
-            throw new IllegalStateException("Apenas contratos ativos podem ser suspensos");
+            throw new IllegalStateException(MessageUtils.getMessage("contract.cannot.suspend"));
         }
         this.status = ContractStatus.SUSPENDED;
         this.active = false;
@@ -140,9 +142,8 @@ public class Contrato {
     }
 
     public void approve(String approvedBy) {
-        // ✅ CORREÇÃO: Permitir ativar contratos em DRAFT ou SUSPENDED
         if (status != ContractStatus.DRAFT && status != ContractStatus.SUSPENDED) {
-            throw new IllegalStateException("Apenas contratos em rascunho ou suspensos podem ser ativados");
+            throw new IllegalStateException(MessageUtils.getMessage("contract.cannot.approve"));
         }
         this.status = ContractStatus.ACTIVE;
         this.active = true;

@@ -4,31 +4,30 @@ package com.leilao.shared.enums;
  * Status possíveis para um contrato
  */
 public enum ContractStatus {
-    DRAFT("Rascunho", "Contrato em elaboração"),
-    ACTIVE("Ativo", "Contrato ativo e válido"),
-    EXPIRED("Expirado", "Contrato expirado por data"),
-    CANCELLED("Cancelado", "Contrato cancelado"),
-    SUSPENDED("Suspenso", "Contrato temporariamente suspenso");
+    DRAFT("status.draft"),
+    ACTIVE("status.active"),
+    EXPIRED("status.expired"),
+    CANCELLED("status.cancelled"),
+    SUSPENDED("status.suspended");
 
-    private final String displayName;
-    private final String description;
+    private final String messageKey;
 
-    ContractStatus(String displayName, String description) {
-        this.displayName = displayName;
-        this.description = description;
+    ContractStatus(String messageKey) {
+        this.messageKey = messageKey;
+    }
+
+    public String getMessageKey() {
+        return messageKey;
     }
 
     public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getDescription() {
-        return description;
+        // Retorna a chave para ser resolvida pelo MessageSourceAccessor
+        return messageKey;
     }
 
     @Override
     public String toString() {
-        return displayName;
+        return messageKey;
     }
 
     public boolean isEstadoFinal() {

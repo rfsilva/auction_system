@@ -1,27 +1,32 @@
 package com.leilao.shared.enums;
 
 /**
- * Enum que define os papéis/roles dos usuários no sistema
+ * Roles possíveis para um usuário
  */
 public enum UserRole {
-    VISITOR("Visitante"),
-    PARTICIPANT("Participante"),
-    BUYER("Comprador"),
-    SELLER("Vendedor"),
-    ADMIN("Administrador");
+    ADMIN("role.admin"),
+    SELLER("role.seller"),
+    BUYER("role.buyer"),
+    PARTICIPANT("role.participant"),
+    VISITOR("role.visitor");
 
-    private final String displayName;
+    private final String messageKey;
 
-    UserRole(String displayName) {
-        this.displayName = displayName;
+    UserRole(String messageKey) {
+        this.messageKey = messageKey;
+    }
+
+    public String getMessageKey() {
+        return messageKey;
     }
 
     public String getDisplayName() {
-        return displayName;
+        // Retorna a chave para ser resolvida pelo MessageSourceAccessor
+        return messageKey;
     }
 
     @Override
     public String toString() {
-        return displayName;
+        return messageKey;
     }
 }
