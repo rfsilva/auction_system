@@ -29,6 +29,8 @@
         <springdoc.version>2.2.0</springdoc.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <lombok.version>1.18.30</lombok.version>
+        <itext.version>8.0.2</itext.version>
+        <opencsv.version>5.9</opencsv.version>
     </properties>
     
     <dependencies>
@@ -123,6 +125,34 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
+        </dependency>
+        
+        <!-- Report Generation -->
+        <!-- iText for PDF generation -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext-core</artifactId>
+            <version>${itext.version}</version>
+            <type>pom</type>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>${itext.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>${itext.version}</version>
+        </dependency>
+        
+        <!-- OpenCSV for CSV generation -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>${opencsv.version}</version>
         </dependency>
         
         <!-- Documentation -->

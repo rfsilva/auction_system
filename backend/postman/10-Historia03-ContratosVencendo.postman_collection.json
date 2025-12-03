@@ -1,0 +1,872 @@
+{
+	"info": {
+		"_postman_id": "historia03-contratos-vencendo",
+		"name": "História 03 - Contratos Vencendo",
+		"description": "Testes para História 3: Relatórios de Contratos Vencendo - Sprint S2.2\n\nEndpoints implementados:\n- GET /contratos/vencendo - Obter relatório de contratos vencendo\n- GET /contratos/vencendo/export/csv - Exportar relatório em CSV\n- GET /contratos/vencendo/export/pdf - Exportar relatório em PDF\n- POST /contratos/vencendo/notificar - Enviar notificações manuais",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Relatórios de Contratos Vencendo",
+			"item": [
+				{
+					"name": "Obter Contratos Vencendo - Padrão",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('timestamp');",
+									"});",
+									"",
+									"pm.test(\"Response data has correct structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const data = jsonData.data;",
+									"    ",
+									"    pm.expect(data).to.have.property('contratos');",
+									"    pm.expect(data).to.have.property('resumo');",
+									"    pm.expect(data).to.have.property('filtros');",
+									"    ",
+									"    // Verificar estrutura do resumo",
+									"    pm.expect(data.resumo).to.have.property('total');",
+									"    pm.expect(data.resumo).to.have.property('urgenciaAlta');",
+									"    pm.expect(data.resumo).to.have.property('urgenciaMedia');",
+									"    pm.expect(data.resumo).to.have.property('urgenciaBaixa');",
+									"    pm.expect(data.resumo).to.have.property('notificados');",
+									"    pm.expect(data.resumo).to.have.property('pendentesNotificacao');",
+									"    ",
+									"    // Verificar estrutura dos filtros",
+									"    pm.expect(data.filtros).to.have.property('dias');",
+									"    pm.expect(data.filtros).to.have.property('incluirNotificados');",
+									"});",
+									"",
+									"pm.test(\"Contratos have correct structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const contratos = jsonData.data.contratos;",
+									"    ",
+									"    if (contratos.length > 0) {",
+									"        const contrato = contratos[0];",
+									"        pm.expect(contrato).to.have.property('id');",
+									"        pm.expect(contrato).to.have.property('vendedorNome');",
+									"        pm.expect(contrato).to.have.property('categoria');",
+									"        pm.expect(contrato).to.have.property('validTo');",
+									"        pm.expect(contrato).to.have.property('diasRestantes');",
+									"        pm.expect(contrato).to.have.property('status');",
+									"        pm.expect(contrato).to.have.property('urgencia');",
+									"        pm.expect(contrato).to.have.property('notificado');",
+									"        pm.expect(contrato).to.have.property('taxaComissao');",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Contratos Vencendo - Com Filtros",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Filters are applied correctly\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const filtros = jsonData.data.filtros;",
+									"    ",
+									"    pm.expect(filtros.dias).to.eql(15);",
+									"    pm.expect(filtros.incluirNotificados).to.eql(false);",
+									"    pm.expect(filtros.urgencia).to.eql('ALTA');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo?dias=15&incluirNotificados=false&urgencia=ALTA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "15"
+								},
+								{
+									"key": "incluirNotificados",
+									"value": "false"
+								},
+								{
+									"key": "urgencia",
+									"value": "ALTA"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Contratos Vencendo - Por Categoria",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Category filter is applied\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const filtros = jsonData.data.filtros;",
+									"    ",
+									"    pm.expect(filtros.categoria).to.eql('Eletrônicos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo?categoria=Eletrônicos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "categoria",
+									"value": "Eletrônicos"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Contratos Vencendo - Validação Dias Inválidos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', false);",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo?dias=500",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "500"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Contratos Vencendo - Urgência Inválida",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', false);",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo?urgencia=INVALIDA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "urgencia",
+									"value": "INVALIDA"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Exportação de Relatórios",
+			"item": [
+				{
+					"name": "Exportar Contratos Vencendo - CSV",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is CSV\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+									"});",
+									"",
+									"pm.test(\"Content-Disposition header is present\", function () {",
+									"    const contentDisposition = pm.response.headers.get('Content-Disposition');",
+									"    pm.expect(contentDisposition).to.include('attachment');",
+									"    pm.expect(contentDisposition).to.include('contratos_vencendo_');",
+									"    pm.expect(contentDisposition).to.include('.csv');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", function () {",
+									"    pm.expect(pm.response.text()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"CSV contains expected headers\", function () {",
+									"    const csvContent = pm.response.text();",
+									"    pm.expect(csvContent).to.include('ID do Contrato');",
+									"    pm.expect(csvContent).to.include('Vendedor');",
+									"    pm.expect(csvContent).to.include('Categoria');",
+									"    pm.expect(csvContent).to.include('Data de Vencimento');",
+									"    pm.expect(csvContent).to.include('Urgência');",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/csv",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"csv"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Exportar Contratos Vencendo - CSV com Filtros",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is CSV\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/csv?dias=15&urgencia=ALTA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"csv"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "15"
+								},
+								{
+									"key": "urgencia",
+									"value": "ALTA"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Exportar Contratos Vencendo - PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is PDF\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+									"});",
+									"",
+									"pm.test(\"Content-Disposition header is present\", function () {",
+									"    const contentDisposition = pm.response.headers.get('Content-Disposition');",
+									"    pm.expect(contentDisposition).to.include('attachment');",
+									"    pm.expect(contentDisposition).to.include('contratos_vencendo_');",
+									"    pm.expect(contentDisposition).to.include('.pdf');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", function () {",
+									"    pm.expect(pm.response.stream).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/pdf",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"pdf"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Exportar Contratos Vencendo - PDF com Filtros",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is PDF\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/pdf?dias=7&categoria=Eletrônicos&urgencia=ALTA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"pdf"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "7"
+								},
+								{
+									"key": "categoria",
+									"value": "Eletrônicos"
+								},
+								{
+									"key": "urgencia",
+									"value": "ALTA"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notificações",
+			"item": [
+				{
+					"name": "Enviar Notificações Manuais",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('timestamp');",
+									"});",
+									"",
+									"pm.test(\"Success message is present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/notificar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"notificar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testes de Autorização",
+			"item": [
+				{
+					"name": "Acesso Negado - Sem Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Acesso Negado - Token Inválido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer token-invalido",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testes de Performance",
+			"item": [
+				{
+					"name": "Performance - Relatório Simples",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response time is under 2 seconds\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo?dias=7",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Performance - Exportação CSV",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"CSV export completes in reasonable time\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/csv?dias=30",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"csv"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "30"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Performance - Exportação PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PDF export completes in reasonable time\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contratos/vencendo/export/pdf?dias=30",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contratos",
+								"vencendo",
+								"export",
+								"pdf"
+							],
+							"query": [
+								{
+									"key": "dias",
+									"value": "30"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se o token de autenticação está disponível",
+					"if (!pm.environment.get('authToken')) {",
+					"    console.log('Token de autenticação não encontrado. Execute primeiro a collection de autenticação.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Log global para todas as requisições",
+					"console.log('Request:', pm.request.url.toString());",
+					"console.log('Response Status:', pm.response.status);",
+					"console.log('Response Time:', pm.response.responseTime + 'ms');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "{{apiUrl}}",
+			"type": "string"
+		}
+	]
+}
