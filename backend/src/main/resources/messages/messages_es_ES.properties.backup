@@ -137,38 +137,6 @@ lot.products.activated=Productos del lote activados con éxito
 lot.products.required=El lote debe tener al menos un producto para ser activado
 
 # ========================================
-# ESTADÍSTICAS Y REPORTES
-# Historia 1: Endpoints de Estadísticas de Contratos - Sprint S2.2
-# ========================================
-
-# Estadísticas Generales
-statistics.success=Estadísticas obtenidas con éxito
-statistics.calculation.error=Error al calcular estadísticas de contratos
-statistics.status.invalid=Estado inválido proporcionado: {0}. Ignorando filtro de estado
-statistics.seller.default=Vendedor {0}
-statistics.seller.error=Error al buscar datos del vendedor {0}: {1}
-
-# Reportes de Comisiones
-commission.report.success=Reporte de comisiones generado con éxito
-commission.calculation.error=Error al calcular reporte de comisiones
-commission.no.data=No se encontraron datos para el período especificado
-
-# Proyecciones de Ingresos
-revenue.projections.success=Proyecciones de ingresos obtenidas con éxito
-revenue.calculation.error=Error al calcular proyecciones de ingresos
-
-# Validaciones de Período
-validation.date.start.before.end=La fecha de inicio debe ser anterior a la fecha de fin
-validation.period.max.one.year=El período máximo permitido es de 1 año
-validation.period.invalid=Período inválido especificado
-
-# Formateo de Fechas
-date.range.separator= a 
-date.format.day=dd/MM/yyyy
-date.format.month=MMMM yyyy
-date.format.year=yyyy
-
-# ========================================
 # VALIDACIONES
 # ========================================
 validation.required=Campo obligatorio
