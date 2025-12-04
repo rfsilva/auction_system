@@ -11,11 +11,14 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * Controller público para catálogo de lotes
+ * História 02: Transformação do Catálogo em Catálogo de Lotes
  */
 @RestController
-@RequestMapping("/catalogo/lotes")
+@RequestMapping("/api/lotes")
 @RequiredArgsConstructor
 @Slf4j
 public class CatalogoLoteController {
@@ -23,7 +26,40 @@ public class CatalogoLoteController {
     private final LoteService loteService;
 
     /**
-     * Busca lotes no catálogo público
+     * Endpoint principal para catálogo público de lotes
+     * História 02: GET /api/lotes/catalogo-publico
+     */
+    @GetMapping("/catalogo-publico")
+    public ResponseEntity<ApiResponse<Page<LoteDto>>> buscarCatalogoPublico(
+            @RequestParam(required = false) String termo,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(defaultValue = "proximidade_encerramento") String ordenacao,
+            @PageableDefault(size = 10) Pageable pageable) {
+        
+        log.info("Buscando catálogo público de lotes - termo: {}, categoria: {}, ordenacao: {}", 
+                termo, categoria, ordenacao);
+        
+        Page<LoteDto> lotes = loteService.buscarCatalogoPublico(termo, categoria, ordenacao, pageable);
+        
+        return ResponseEntity.ok(ApiResponse.success(lotes));
+    }
+
+    /**
+     * Endpoint para lotes em destaque (encerrando em 1 semana)
+     * História 02: GET /api/lotes/destaque
+     */
+    @GetMapping("/destaque")
+    public ResponseEntity<ApiResponse<List<LoteDto>>> buscarLotesDestaque() {
+        
+        log.info("Buscando lotes em destaque");
+        
+        List<LoteDto> lotes = loteService.buscarLotesDestaque();
+        
+        return ResponseEntity.ok(ApiResponse.success(lotes));
+    }
+
+    /**
+     * Busca lotes no catálogo público (método original mantido para compatibilidade)
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<LoteDto>>> buscarLotes(

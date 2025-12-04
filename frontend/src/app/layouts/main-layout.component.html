@@ -10,7 +10,8 @@
       
       <div class="nav-menu">
         <a routerLink="/" class="nav-link">Home</a>
-        <a routerLink="/catalogo" class="nav-link">Catálogo</a>
+        <!-- História 02: Catálogo agora é de lotes -->
+        <a routerLink="/catalogo" class="nav-link">Catálogo de Lotes</a>
         
         @if (authService.isAuthenticated()) {
           @if (authService.canSell()) {
@@ -36,12 +37,13 @@
                   Meus Contratos
                 </a>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
+                <!-- História 01: Elementos mockados com identificação visual -->
+                <a href="#" class="dropdown-item mock-item">
                   <i class="fas fa-chart-line me-2"></i>
                   Relatórios de Vendas
                   <span class="badge badge-mock">MOCK</span>
                 </a>
-                <a href="#" class="dropdown-item">
+                <a href="#" class="dropdown-item mock-item">
                   <i class="fas fa-cog me-2"></i>
                   Configurações
                   <span class="badge badge-mock">MOCK</span>
@@ -71,12 +73,13 @@
                   Ativar Vendedor
                 </a>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
+                <!-- História 01: Elementos mockados com identificação visual -->
+                <a href="#" class="dropdown-item mock-item">
                   <i class="fas fa-store me-2"></i>
                   Vendedores
                   <span class="badge badge-mock">MOCK</span>
                 </a>
-                <a href="#" class="dropdown-item">
+                <a href="#" class="dropdown-item mock-item">
                   <i class="fas fa-chart-bar me-2"></i>
                   Relatórios
                   <span class="badge badge-mock">MOCK</span>
@@ -106,9 +109,19 @@
     <div class="footer-content">
       <p>&copy; 2024 Sistema de Leilão Eletrônico. Todos os direitos reservados.</p>
       <div class="footer-links">
-        <a href="#" class="footer-link">Termos de Uso</a>
-        <a href="#" class="footer-link">Privacidade</a>
-        <a href="#" class="footer-link">Suporte</a>
+        <!-- História 01: Elementos mockados com identificação visual -->
+        <a href="#" class="footer-link mock-item">
+          Termos de Uso
+          <span class="badge badge-mock-small">MOCK</span>
+        </a>
+        <a href="#" class="footer-link mock-item">
+          Privacidade
+          <span class="badge badge-mock-small">MOCK</span>
+        </a>
+        <a href="#" class="footer-link mock-item">
+          Suporte
+          <span class="badge badge-mock-small">MOCK</span>
+        </a>
         <a routerLink="/realtime-test" class="footer-link">Teste Realtime</a>
       </div>
     </div>

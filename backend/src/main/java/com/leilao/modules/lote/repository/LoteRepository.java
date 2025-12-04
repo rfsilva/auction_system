@@ -15,6 +15,7 @@ import java.util.List;
 /**
  * Repository para Lote
  * Atualizado para usar contractId ao invés de sellerId
+ * História 02: Adicionados métodos para catálogo público de lotes
  */
 @Repository
 public interface LoteRepository extends JpaRepository<Lote, String> {
@@ -200,6 +201,50 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
      */
     @Query("SELECT l FROM Lote l JOIN Contrato c ON l.contractId = c.id WHERE c.categoria = :categoria")
     Page<Lote> findByCategoria(@Param("categoria") String categoria, Pageable pageable);
+
+    // ========================================
+    // HISTÓRIA 02: Métodos para catálogo público de lotes
+    // ========================================
+
+    /**
+     * Busca lotes ativos com produtos válidos para catálogo público
+     * História 02: Apenas lotes com produtos válidos são exibidos
+     */
+    @Query("""
+        SELECT DISTINCT l FROM Lote l 
+        JOIN Produto p ON p.loteId = l.id 
+        WHERE l.status = 'ACTIVE' 
+        AND l.loteEndDateTime > :now 
+        AND p.status IN ('ACTIVE', 'PUBLISHED')
+        AND (:termo IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :termo, '%')) 
+             OR LOWER(l.description) LIKE LOWER(CONCAT('%', :termo, '%')))
+        AND (:categoria IS NULL OR EXISTS (
+            SELECT 1 FROM Contrato c WHERE c.id = l.contractId AND c.categoria = :categoria
+        ))
+        """)
+    Page<Lote> findLotesCatalogoPublico(
+        @Param("now") LocalDateTime now,
+        @Param("termo") String termo,
+        @Param("categoria") String categoria,
+        Pageable pageable
+    );
+
+    /**
+     * Busca lotes encerrando em 1 semana (para destaque)
+     * História 02: Lotes em destaque com critério de 1 semana
+     */
+    @Query("""
+        SELECT DISTINCT l FROM Lote l 
+        JOIN Produto p ON p.loteId = l.id 
+        WHERE l.status = 'ACTIVE' 
+        AND l.loteEndDateTime BETWEEN :now AND :oneWeekFromNow 
+        AND p.status IN ('ACTIVE', 'PUBLISHED')
+        ORDER BY l.loteEndDateTime ASC
+        """)
+    List<Lote> findLotesEncerrando1Semana(
+        @Param("now") LocalDateTime now, 
+        @Param("oneWeekFromNow") LocalDateTime oneWeekFromNow
+    );
 
     // Métodos de compatibilidade temporária (manter durante migração)
     /**

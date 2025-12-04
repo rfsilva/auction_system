@@ -23,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 /**
  * Service para operações de Lote com suporte a i18n usando MessageSourceAccessor
  * Atualizado para usar contratos ao invés de vendedores diretamente
+ * História 02: Adicionados métodos para catálogo público de lotes
  */
 @Service
 @RequiredArgsConstructor
@@ -191,6 +194,51 @@ public class LoteService {
         return lotes.map(this::convertToDto);
     }
 
+    // ========================================
+    // HISTÓRIA 02: Métodos para catálogo público de lotes
+    // ========================================
+
+    /**
+     * Busca lotes para catálogo público com regras de negócio da História 02
+     * Apenas lotes ativos com produtos válidos são exibidos
+     */
+    @Transactional(readOnly = true)
+    public Page<LoteDto> buscarCatalogoPublico(String termo, String categoria, String ordenacao, Pageable pageable) {
+        log.info("Buscando catálogo público de lotes - termo: {}, categoria: {}, ordenacao: {}", 
+                termo, categoria, ordenacao);
+        
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Criar pageable com ordenação específica
+        Pageable pageableComOrdenacao = criarPageableComOrdenacao(pageable, ordenacao);
+        
+        // Buscar lotes ativos com produtos válidos
+        Page<Lote> lotes = loteRepository.findLotesCatalogoPublico(now, termo, categoria, pageableComOrdenacao);
+        
+        return lotes.map(this::convertToCatalogoDto);
+    }
+
+    /**
+     * Busca lotes encerrando em 1 semana para destaque
+     */
+    @Transactional(readOnly = true)
+    public List<LoteDto> buscarLotesDestaque() {
+        log.info("Buscando lotes em destaque (encerrando em 1 semana)");
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneWeekFromNow = now.plusWeeks(1);
+        
+        List<Lote> lotes = loteRepository.findLotesEncerrando1Semana(now, oneWeekFromNow);
+        
+        return lotes.stream()
+                .map(this::convertToCatalogoDto)
+                .collect(Collectors.toList());
+    }
+
+    // ========================================
+    // Métodos existentes continuam...
+    // ========================================
+
     /**
      * Ativa um lote
      */
@@ -300,7 +348,9 @@ public class LoteService {
         }
     }
 
+    // ========================================
     // Métodos auxiliares
+    // ========================================
 
     private Lote buscarLotePorId(String loteId) {
         return loteRepository.findById(loteId)
@@ -318,6 +368,107 @@ public class LoteService {
         return contratoRepository.findContratoAtivoParaCategoria(vendedorId, categoria, LocalDateTime.now())
                 .orElseThrow(() -> new BusinessException(
                         messageSourceAccessor.getMessage("seller.contract.required", LocaleContextHolder.getLocale())));
+    }
+
+    // História 02: Métodos auxiliares para catálogo público
+    private Pageable criarPageableComOrdenacao(Pageable pageable, String ordenacao) {
+        Sort sort;
+        
+        switch (ordenacao != null ? ordenacao : "proximidade_encerramento") {
+            case "recentes":
+                sort = Sort.by(Sort.Direction.DESC, "createdAt");
+                break;
+            case "alfabetica":
+                sort = Sort.by(Sort.Direction.ASC, "title");
+                break;
+            case "proximidade_encerramento":
+            default:
+                sort = Sort.by(Sort.Direction.ASC, "loteEndDateTime");
+                break;
+        }
+        
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+    }
+
+    private long contarProdutosValidos(String loteId) {
+        return produtoRepository.countProdutosValidosDoLote(loteId);
+    }
+
+    private String obterPrimeiraImagem(String loteId) {
+        return produtoRepository.findPrimeiraImagemLote(loteId)
+                .map(this::extrairPrimeiraImagemDaString)
+                .orElse(null);
+    }
+
+    private String extrairPrimeiraImagemDaString(String images) {
+        if (images == null || images.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Assumindo que images é uma string JSON ou separada por vírgula
+        String cleanImages = images.trim();
+        if (cleanImages.startsWith("[")) {
+            // JSON array - extrair primeira imagem
+            return cleanImages.replaceAll("[\\[\\]\"]", "").split(",")[0].trim();
+        } else {
+            // String simples ou separada por vírgula
+            return cleanImages.split(",")[0].trim();
+        }
+    }
+
+    private LoteDto convertToCatalogoDto(Lote lote) {
+        // Calcular tempo restante
+        long timeRemaining = 0;
+        if (lote.getLoteEndDateTime() != null) {
+            Duration duration = Duration.between(LocalDateTime.now(), lote.getLoteEndDateTime());
+            timeRemaining = Math.max(0, duration.getSeconds());
+        }
+        
+        // Contar produtos válidos
+        long quantidadeProdutosValidos = contarProdutosValidos(lote.getId());
+        
+        // Obter primeira imagem
+        String imagemDestaque = obterPrimeiraImagem(lote.getId());
+        
+        // Buscar informações do vendedor
+        String sellerName = null;
+        String sellerCompanyName = null;
+        String categoria = null;
+        
+        try {
+            Contrato contrato = buscarContratoPorId(lote.getContractId());
+            categoria = contrato.getCategoria();
+            
+            Vendedor vendedor = vendedorRepository.findById(contrato.getSellerId()).orElse(null);
+            if (vendedor != null) {
+                sellerCompanyName = vendedor.getCompanyName();
+                
+                Usuario usuario = usuarioRepository.findById(vendedor.getUsuarioId()).orElse(null);
+                if (usuario != null) {
+                    sellerName = usuario.getNome();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao buscar informações do vendedor para lote: {}", lote.getId(), e);
+        }
+        
+        return LoteDto.builder()
+                .id(lote.getId())
+                .contractId(lote.getContractId())
+                .title(lote.getTitle())
+                .description(lote.getDescription())
+                .loteEndDateTime(lote.getLoteEndDateTime())
+                .status(lote.getStatus())
+                .createdAt(lote.getCreatedAt())
+                .updatedAt(lote.getUpdatedAt())
+                .isActive(lote.isActive())
+                .isExpired(lote.isExpired())
+                .timeRemaining(timeRemaining)
+                .totalProdutos((int) quantidadeProdutosValidos)
+                .sellerName(sellerName)
+                .sellerCompanyName(sellerCompanyName)
+                .categoria(categoria)
+                .build();
     }
 
     private void validarCriacaoLote(LoteCreateRequest request) {

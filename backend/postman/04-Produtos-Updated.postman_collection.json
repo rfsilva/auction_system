@@ -1,0 +1,370 @@
+{
+	"info": {
+		"_postman_id": "produtos-updated-collection-id",
+		"name": "04 - Produtos (Atualizado - Depreciação)",
+		"description": "Collection para testes de produtos com endpoints depreciados marcados\n\n⚠️ ATENÇÃO: Endpoints de catálogo público foram DEPRECIADOS\nUse a collection '05 - Lotes' para navegação pública",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "⚠️ Catálogo Público (DEPRECIADO)",
+			"description": "Endpoints depreciados - use catálogo de lotes",
+			"item": [
+				{
+					"name": "❌ Buscar Produtos no Catálogo (DEPRECIADO)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/produtos?page=0&size=20&ordenacao=recentes",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "produtos"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Página (0-based)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Itens por página"
+								},
+								{
+									"key": "ordenacao",
+									"value": "recentes",
+									"description": "Ordenação: recentes, preco_asc, preco_desc, terminando"
+								}
+							]
+						},
+						"description": "⚠️ DEPRECIADO: Este endpoint retorna redirect (301) para /api/lotes/catalogo-publico\n\nUse o novo endpoint:\nGET /api/lotes/catalogo-publico"
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Buscar Produto Específico no Catálogo (DEPRECIADO)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/produtos/{{produto1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "produtos", "{{produto1_id}}"]
+						},
+						"description": "⚠️ DEPRECIADO: Este endpoint retorna redirect para o lote que contém o produto\n\nUse o novo fluxo:\n1. GET /api/lotes/catalogo-publico (encontrar lotes)\n2. GET /api/lotes/{loteId} (ver produtos do lote)"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Listar Categorias do Catálogo (MANTIDO)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/categorias",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "categorias"]
+						},
+						"description": "✅ MANTIDO: Este endpoint continua ativo pois é usado por lotes e produtos"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "✅ Gestão de Produtos (Vendedor) - ATIVO",
+			"description": "Endpoints para vendedores gerenciarem seus produtos",
+			"item": [
+				{
+					"name": "Listar Meus Produtos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produtos/meus-produtos?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "meus-produtos"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Lista produtos do vendedor logado (área privada)"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Produto por ID (Vendedor)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produtos/{{produto1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "{{produto1_id}}"]
+						},
+						"description": "Busca produto específico (área privada do vendedor)"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Produto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        pm.environment.set('new_produto_id', response.data.id);",
+									"        console.log('Produto criado com ID: ' + response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Samsung Galaxy S24 Ultra 256GB\",\n    \"description\": \"Smartphone Samsung Galaxy S24 Ultra com 256GB de armazenamento, cor Preto Titânio. Estado: Novo na caixa, lacrado. Acompanha todos os acessórios originais: carregador, cabo USB-C, ferramenta para SIM e documentação.\",\n    \"images\": [\n        \"https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400\",\n        \"https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400\"\n    ],\n    \"weight\": 0.232,\n    \"dimensions\": \"{\\\"length\\\": 16.26, \\\"width\\\": 7.90, \\\"height\\\": 0.86}\",\n    \"initialPrice\": 4500.00,\n    \"reservePrice\": 4200.00,\n    \"incrementMin\": 50.00,\n    \"endDateTime\": \"2024-12-25T20:00:00\",\n    \"categoria\": \"Eletrônicos\",\n    \"tags\": [\"smartphone\", \"samsung\", \"galaxy\", \"s24\", \"ultra\", \"novo\"],\n    \"antiSnipeEnabled\": true,\n    \"antiSnipeExtension\": 300\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produtos",
+							"host": ["{{base_url}}"],
+							"path": ["produtos"]
+						},
+						"description": "Cria novo produto (será visível publicamente apenas quando associado a um lote)"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Produto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Samsung Galaxy S24 Ultra 256GB - ATUALIZADO\",\n    \"description\": \"Produto atualizado via Postman. Smartphone Samsung Galaxy S24 Ultra com 256GB, agora com desconto especial!\",\n    \"initialPrice\": 4200.00,\n    \"reservePrice\": 4000.00,\n    \"incrementMin\": 25.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produtos/{{new_produto_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "{{new_produto_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Publicar Produto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produtos/{{produto5_id}}/publicar",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "{{produto5_id}}", "publicar"]
+						},
+						"description": "Publica produto (torna disponível para associação a lotes)"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Produto",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produtos/{{new_produto_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "{{new_produto_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Categorias (Vendedor)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendedor1_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produtos/categorias",
+							"host": ["{{base_url}}"],
+							"path": ["produtos", "categorias"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Testes de Depreciação",
+			"description": "Testes específicos para validar comportamento dos endpoints depreciados",
+			"item": [
+				{
+					"name": "Teste: Redirect de Catálogo de Produtos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status deve ser 301 (Moved Permanently)', function () {",
+									"    pm.response.to.have.status(301);",
+									"});",
+									"",
+									"pm.test('Deve conter header Location', function () {",
+									"    pm.response.to.have.header('Location');",
+									"});",
+									"",
+									"pm.test('Response deve indicar endpoint depreciado', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"    pm.expect(response.message).to.include('depreciado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/produtos",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "produtos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Teste: Redirect de Produto Específico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status deve ser 301 ou 410', function () {",
+									"    pm.expect([301, 410]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test('Response deve indicar migração necessária', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"    pm.expect(response.message).to.include('lote');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/produtos/{{produto1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "produtos", "{{produto1_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Teste: Categorias Ainda Funcionam",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status deve ser 200 (OK)', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Deve retornar lista de categorias', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"    pm.expect(response.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalogo/categorias",
+							"host": ["{{base_url}}"],
+							"path": ["catalogo", "categorias"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{vendedor1_token}}",
+				"type": "string"
+			}
+		]
+	}
+}

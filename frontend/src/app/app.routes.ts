@@ -28,12 +28,27 @@ export const routes: Routes = [
         path: 'realtime-test',
         loadComponent: () => import('./pages/realtime-test/realtime-test.component').then(m => m.RealtimeTestComponent)
       },
-      // Rotas do catálogo público
+      
+      // ========================================
+      // HISTÓRIA 02: Catálogo de Lotes (NOVO PADRÃO)
+      // ========================================
+      
+      // ✅ Catálogo público de lotes (padrão atual)
       {
         path: 'catalogo',
-        loadComponent: () => import('./pages/catalogo/catalogo.component').then(m => m.CatalogoComponent)
+        loadComponent: () => import('./pages/catalogo/catalogo-lotes.component').then(m => m.CatalogoLotesComponent)
       },
-      // Rotas de produtos para vendedores
+      
+      // ⚠️ DEPRECIADO: Redirect do catálogo antigo de produtos
+      {
+        path: 'catalogo-produtos',
+        redirectTo: '/catalogo',
+        pathMatch: 'full'
+      },
+      
+      // ========================================
+      // Rotas de produtos para vendedores (ÁREA PRIVADA)
+      // ========================================
       {
         path: 'produtos/novo',
         loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
@@ -54,7 +69,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
         canActivate: [authGuard]
       },
-      // Rotas de lotes para vendedores
+      
+      // ========================================
+      // Rotas de lotes para vendedores (ÁREA PRIVADA)
+      // ========================================
       {
         path: 'lotes',
         loadComponent: () => import('./pages/lote/lote-list.component').then(m => m.LoteListComponent),
@@ -75,13 +93,19 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
         canActivate: [authGuard]
       },
+      
+      // ========================================
       // Rotas de contratos para vendedores
+      // ========================================
       {
         path: 'contratos/meus-contratos',
         loadComponent: () => import('./pages/contrato/meus-contratos.component').then(m => m.MeusContratosComponent),
         canActivate: [authGuard]
       },
+      
+      // ========================================
       // Rotas administrativas
+      // ========================================
       {
         path: 'admin/dashboard',
         loadComponent: () => import('./pages/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent),
@@ -107,13 +131,19 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
         canActivate: [authGuard]
       },
+      
+      // ========================================
       // Rotas de usuários para administradores
+      // ========================================
       {
         path: 'admin/usuarios',
         loadComponent: () => import('./pages/admin/usuario-list.component').then(m => m.UsuarioListComponent),
         canActivate: [authGuard]
       },
+      
+      // ========================================
       // Rota para ativar vendedor
+      // ========================================
       {
         path: 'admin/ativar-vendedor',
         loadComponent: () => import('./pages/contrato/ativar-vendedor.component').then(m => m.AtivarVendedorComponent),

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { 
   Produto, 
@@ -17,6 +17,12 @@ interface ApiResponse<T> {
   timestamp: string;
 }
 
+/**
+ * Serviço para gerenciamento de produtos
+ * 
+ * ⚠️ ATENÇÃO: Métodos de catálogo público foram depreciados
+ * Use LoteCatalogoService para navegação pública
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -25,7 +31,7 @@ export class ProdutoService {
 
   constructor(private http: HttpClient) {}
 
-  // ===== CRUD para Vendedores =====
+  // ===== CRUD para Vendedores (ÁREA PRIVADA) =====
 
   /**
    * Cria um novo produto
@@ -73,54 +79,78 @@ export class ProdutoService {
     return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}/publicar`, {});
   }
 
-  // ===== Catálogo Público =====
+  // ===== CATÁLOGO PÚBLICO - DEPRECIADO =====
 
   /**
-   * Busca produtos no catálogo público
+   * ⚠️ DEPRECIADO: Busca produtos no catálogo público
+   * 
+   * @deprecated Use LoteCatalogoService.buscarCatalogoPublico() para navegação por lotes
+   * Este método será removido em versão futura.
+   * 
+   * Migração sugerida:
+   * ```typescript
+   * // Antigo
+   * produtoService.buscarCatalogo(filtros)
+   * 
+   * // Novo
+   * loteCatalogoService.buscarCatalogoPublico(filtros)
+   * ```
    */
+  @Deprecated('Use LoteCatalogoService.buscarCatalogoPublico()')
   buscarCatalogo(filtros: CatalogoFiltro = {}): Observable<ApiResponse<PaginatedResponse<Produto>>> {
-    let params = new HttpParams();
-
-    if (filtros.categoria) {
-      params = params.set('categoria', filtros.categoria);
-    }
-    if (filtros.precoMin !== undefined) {
-      params = params.set('precoMin', filtros.precoMin.toString());
-    }
-    if (filtros.precoMax !== undefined) {
-      params = params.set('precoMax', filtros.precoMax.toString());
-    }
-    if (filtros.titulo) {
-      params = params.set('titulo', filtros.titulo);
-    }
-    if (filtros.ordenacao) {
-      params = params.set('ordenacao', filtros.ordenacao);
-    }
-    if (filtros.page !== undefined) {
-      params = params.set('page', filtros.page.toString());
-    }
-    if (filtros.size !== undefined) {
-      params = params.set('size', filtros.size.toString());
-    }
-
-    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(`${this.apiUrl}/catalogo/produtos`, { params });
+    console.warn('⚠️ MÉTODO DEPRECIADO: buscarCatalogo() foi chamado. Use LoteCatalogoService.buscarCatalogoPublico()');
+    
+    // Retornar erro informativo
+    return throwError(() => ({
+      error: {
+        success: false,
+        message: 'Método depreciado. Use LoteCatalogoService para navegação por lotes.',
+        data: null,
+        timestamp: new Date().toISOString()
+      }
+    }));
   }
 
   /**
-   * Busca produto específico no catálogo (público)
+   * ⚠️ DEPRECIADO: Busca produto específico no catálogo (público)
+   * 
+   * @deprecated Produtos agora são acessados através de lotes
+   * Use LoteService.buscarLote() e navegue pelos produtos do lote
+   * 
+   * Migração sugerida:
+   * ```typescript
+   * // Antigo
+   * produtoService.buscarProdutoCatalogo(produtoId)
+   * 
+   * // Novo
+   * loteService.buscarLote(loteId) // e encontrar o produto na lista
+   * ```
    */
+  @Deprecated('Use LoteService.buscarLote() e navegue pelos produtos')
   buscarProdutoCatalogo(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/catalogo/produtos/${produtoId}`);
+    console.warn('⚠️ MÉTODO DEPRECIADO: buscarProdutoCatalogo() foi chamado. Use navegação por lotes.');
+    
+    // Retornar erro informativo
+    return throwError(() => ({
+      error: {
+        success: false,
+        message: 'Método depreciado. Produtos são acessados através de lotes.',
+        data: null,
+        timestamp: new Date().toISOString()
+      }
+    }));
   }
 
   /**
-   * Lista categorias disponíveis
+   * ✅ MANTIDO: Lista categorias disponíveis
+   * 
+   * Este método continua ativo pois é usado tanto por lotes quanto produtos.
    */
   listarCategorias(): Observable<ApiResponse<string[]>> {
     return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/catalogo/categorias`);
   }
 
-  // ===== Métodos Utilitários =====
+  // ===== Métodos Utilitários (MANTIDOS) =====
 
   /**
    * Formata preço para exibição
