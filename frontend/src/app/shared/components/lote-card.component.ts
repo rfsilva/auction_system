@@ -3,36 +3,30 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LoteCatalogo } from '../../core/models/lote-catalogo.model';
 import { LoteCatalogoService } from '../../core/services/lote-catalogo.service';
+import { LoteImageComponent } from './lote-image.component';
 
 /**
  * Componente para exibir card de lote no catálogo
  * História 02: Transformação do Catálogo em Catálogo de Lotes
+ * 
+ * CORRIGIDO: Usar campo 'active' ao invés de 'isActive' com tratamento de tipos
  */
 @Component({
   selector: 'app-lote-card',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, LoteImageComponent],
   template: `
     <div class="lote-card" [class]="getCardClass()">
-      <!-- Imagem do lote -->
-      <div class="lote-image">
-        <img 
-          [src]="getImagemLote()" 
-          [alt]="lote.title"
-          (error)="onImageError($event)"
-          loading="lazy">
-        
-        <!-- Badge de status -->
-        <div class="status-badge" [class]="getStatusClass()">
-          {{ getStatusText() }}
-        </div>
-        
-        <!-- Badge de produtos -->
-        <div class="produtos-badge">
-          {{ lote.quantidadeProdutosValidos }} 
-          {{ lote.quantidadeProdutosValidos === 1 ? 'produto' : 'produtos' }}
-        </div>
-      </div>
+      <!-- Imagem do lote com componente dedicado -->
+      <app-lote-image
+        [src]="getImagemLote()"
+        [alt]="lote.title"
+        [height]="200"
+        [showBadges]="true"
+        [statusClass]="getStatusClass()"
+        [statusText]="getStatusText()"
+        [produtoCount]="getProdutoCount()">
+      </app-lote-image>
 
       <!-- Conteúdo do card -->
       <div class="lote-content">
@@ -48,19 +42,19 @@ import { LoteCatalogoService } from '../../core/services/lote-catalogo.service';
 
         <!-- Informações do vendedor -->
         <div class="seller-info" *ngIf="lote.sellerName || lote.sellerCompanyName">
-          <i class="icon-user"></i>
+          <i class="fas fa-user me-1"></i>
           <span>{{ getVendedorDisplay() }}</span>
         </div>
 
         <!-- Categoria -->
         <div class="categoria-info" *ngIf="lote.categoria">
-          <i class="icon-tag"></i>
+          <i class="fas fa-tag me-1"></i>
           <span>{{ lote.categoria }}</span>
         </div>
 
         <!-- Tempo restante -->
         <div class="tempo-restante" [class]="getTempoClass()">
-          <i class="icon-clock"></i>
+          <i class="fas fa-clock me-1"></i>
           <span>{{ getTempoRestante() }}</span>
         </div>
 
@@ -76,8 +70,8 @@ import { LoteCatalogoService } from '../../core/services/lote-catalogo.service';
         <button 
           *ngIf="showFavoriteButton"
           type="button"
-          class="btn-favorite"
-          [class.favorited]="isFavorito"
+          class="btn btn-sm btn-outline-danger"
+          [class.btn-danger]="isFavorito"
           (click)="onFavoriteClick($event)"
           [title]="isFavorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
           <i [class]="getFavoriteIcon()"></i>
@@ -86,7 +80,8 @@ import { LoteCatalogoService } from '../../core/services/lote-catalogo.service';
         <!-- Botão de ver detalhes -->
         <a 
           [routerLink]="['/lotes', lote.id]"
-          class="btn-details">
+          class="btn btn-primary btn-sm">
+          <i class="fas fa-eye me-1"></i>
           Ver Detalhes
         </a>
       </div>
@@ -104,22 +99,28 @@ export class LoteCardComponent {
 
   constructor(private loteCatalogoService: LoteCatalogoService) {}
 
+  /**
+   * Helper para obter o valor booleano de isActive com fallback
+   */
+  private getIsActive(): boolean {
+    // Usar 'active' (campo real do backend) ou 'isActive' (fallback), padrão false
+    return this.lote.active !== undefined ? this.lote.active : (this.lote.isActive || false);
+  }
+
   getImagemLote(): string {
     return this.loteCatalogoService.getImagemOuPlaceholder(this.lote);
   }
 
-  onImageError(event: any): void {
-    event.target.src = '/assets/images/lote-placeholder.jpg';
-  }
-
   getCardClass(): string {
-    const classes = ['card'];
+    const classes = ['card', 'h-100'];
     
     if (this.loteCatalogoService.isProximoEncerramento(this.lote)) {
       classes.push('ending-soon');
     }
     
-    if (!this.lote.isActive) {
+    // CORRIGIDO: Usar helper para evitar erros de tipo
+    const isActive = this.getIsActive();
+    if (!isActive) {
       classes.push('inactive');
     }
     
@@ -132,6 +133,11 @@ export class LoteCardComponent {
 
   getStatusText(): string {
     return this.loteCatalogoService.getStatusText(this.lote);
+  }
+
+  // Método para obter contagem de produtos com fallback
+  getProdutoCount(): number {
+    return this.lote.totalProdutos || this.lote.quantidadeProdutosValidos || 0;
   }
 
   getDescricaoResumida(): string {
@@ -162,19 +168,22 @@ export class LoteCardComponent {
   }
 
   getTempoClass(): string {
-    if (!this.lote.isActive) {
-      return 'tempo-encerrado';
+    // CORRIGIDO: Usar helper para evitar erros de tipo
+    const isActive = this.getIsActive();
+    
+    if (!isActive) {
+      return 'tempo-encerrado text-muted';
     }
     
     if (this.lote.timeRemaining <= 3600) { // 1 hora
-      return 'tempo-critico';
+      return 'tempo-critico text-danger fw-bold';
     }
     
     if (this.lote.timeRemaining <= 86400) { // 1 dia
-      return 'tempo-urgente';
+      return 'tempo-urgente text-warning fw-bold';
     }
     
-    return 'tempo-normal';
+    return 'tempo-normal text-success';
   }
 
   getDataEncerramento(): string {
@@ -182,7 +191,7 @@ export class LoteCardComponent {
   }
 
   getFavoriteIcon(): string {
-    return this.isFavorito ? 'icon-heart-filled' : 'icon-heart';
+    return this.isFavorito ? 'fas fa-heart' : 'far fa-heart';
   }
 
   onFavoriteClick(event: Event): void {

@@ -19,10 +19,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Controller para operações de Lote
+ * Controller para operações privadas de Lote (área do vendedor)
+ * 
+ * Endpoints para vendedores gerenciarem seus lotes
+ * Separado do CatalogoLoteController para evitar conflitos de mapeamento
  */
 @RestController
-@RequestMapping("/lotes")
+@RequestMapping("/lotes/gerenciar")
 @RequiredArgsConstructor
 @Slf4j
 public class LoteController {
@@ -64,42 +67,35 @@ public class LoteController {
     }
 
     /**
-     * Busca lote por ID
+     * Busca lote por ID (área privada do vendedor)
      */
     @GetMapping("/{loteId}")
-    public ResponseEntity<ApiResponse<LoteDto>> buscarLote(
-            @PathVariable String loteId) {
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<LoteDto>> buscarLotePrivado(
+            @PathVariable String loteId,
+            @AuthenticationPrincipal Usuario usuario) {
+        
+        log.info("Buscando lote privado: {} para vendedor: {}", loteId, usuario.getId());
         
         LoteDto lote = loteService.buscarPorId(loteId);
         
-        return ResponseEntity.ok(ApiResponse.success(lote));
+        return ResponseEntity.ok(ApiResponse.success("Lote encontrado", lote));
     }
 
     /**
      * Lista lotes do vendedor logado
      */
-    @GetMapping("/meus-lotes")
+    @GetMapping
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<Page<LoteDto>>> listarMeusLotes(
             @AuthenticationPrincipal Usuario usuario,
             @PageableDefault(size = 20) Pageable pageable) {
         
+        log.info("Listando lotes do vendedor: {}", usuario.getId());
+        
         Page<LoteDto> lotes = loteService.listarLotesVendedor(usuario.getId(), pageable);
         
-        return ResponseEntity.ok(ApiResponse.success(lotes));
-    }
-
-    /**
-     * Lista lotes públicos (para catálogo)
-     */
-    @GetMapping("/publicos")
-    public ResponseEntity<ApiResponse<Page<LoteDto>>> listarLotesPublicos(
-            @RequestParam(required = false) String termo,
-            @PageableDefault(size = 20) Pageable pageable) {
-        
-        Page<LoteDto> lotes = loteService.listarLotesPublicos(termo, pageable);
-        
-        return ResponseEntity.ok(ApiResponse.success(lotes));
+        return ResponseEntity.ok(ApiResponse.success("Lotes do vendedor", lotes));
     }
 
     /**

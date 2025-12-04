@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { 
   Produto, 
   ProdutoCreateRequest, 
   ProdutoUpdateRequest, 
-  CatalogoFiltro, 
   PaginatedResponse 
 } from '../models/produto.model';
 
@@ -18,10 +17,10 @@ interface ApiResponse<T> {
 }
 
 /**
- * Serviço para gerenciamento de produtos
+ * Serviço para gerenciamento de produtos (área privada - vendedores)
  * 
- * ⚠️ ATENÇÃO: Métodos de catálogo público foram depreciados
- * Use LoteCatalogoService para navegação pública
+ * Nota: Catálogo público foi movido para LoteCatalogoService
+ * Produtos são acessados publicamente apenas através de lotes
  */
 @Injectable({
   providedIn: 'root'
@@ -79,72 +78,9 @@ export class ProdutoService {
     return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}/publicar`, {});
   }
 
-  // ===== CATÁLOGO PÚBLICO - DEPRECIADO =====
-
   /**
-   * ⚠️ DEPRECIADO: Busca produtos no catálogo público
-   * 
-   * @deprecated Use LoteCatalogoService.buscarCatalogoPublico() para navegação por lotes
-   * Este método será removido em versão futura.
-   * 
-   * Migração sugerida:
-   * ```typescript
-   * // Antigo
-   * produtoService.buscarCatalogo(filtros)
-   * 
-   * // Novo
-   * loteCatalogoService.buscarCatalogoPublico(filtros)
-   * ```
-   */
-  @Deprecated('Use LoteCatalogoService.buscarCatalogoPublico()')
-  buscarCatalogo(filtros: CatalogoFiltro = {}): Observable<ApiResponse<PaginatedResponse<Produto>>> {
-    console.warn('⚠️ MÉTODO DEPRECIADO: buscarCatalogo() foi chamado. Use LoteCatalogoService.buscarCatalogoPublico()');
-    
-    // Retornar erro informativo
-    return throwError(() => ({
-      error: {
-        success: false,
-        message: 'Método depreciado. Use LoteCatalogoService para navegação por lotes.',
-        data: null,
-        timestamp: new Date().toISOString()
-      }
-    }));
-  }
-
-  /**
-   * ⚠️ DEPRECIADO: Busca produto específico no catálogo (público)
-   * 
-   * @deprecated Produtos agora são acessados através de lotes
-   * Use LoteService.buscarLote() e navegue pelos produtos do lote
-   * 
-   * Migração sugerida:
-   * ```typescript
-   * // Antigo
-   * produtoService.buscarProdutoCatalogo(produtoId)
-   * 
-   * // Novo
-   * loteService.buscarLote(loteId) // e encontrar o produto na lista
-   * ```
-   */
-  @Deprecated('Use LoteService.buscarLote() e navegue pelos produtos')
-  buscarProdutoCatalogo(produtoId: string): Observable<ApiResponse<Produto>> {
-    console.warn('⚠️ MÉTODO DEPRECIADO: buscarProdutoCatalogo() foi chamado. Use navegação por lotes.');
-    
-    // Retornar erro informativo
-    return throwError(() => ({
-      error: {
-        success: false,
-        message: 'Método depreciado. Produtos são acessados através de lotes.',
-        data: null,
-        timestamp: new Date().toISOString()
-      }
-    }));
-  }
-
-  /**
-   * ✅ MANTIDO: Lista categorias disponíveis
-   * 
-   * Este método continua ativo pois é usado tanto por lotes quanto produtos.
+   * Lista categorias disponíveis (usado por lotes e produtos)
+   * Endpoint: GET /api/catalogo/categorias
    */
   listarCategorias(): Observable<ApiResponse<string[]>> {
     return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/catalogo/categorias`);

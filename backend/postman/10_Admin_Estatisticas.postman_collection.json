@@ -1,0 +1,837 @@
+{
+	"info": {
+		"_postman_id": "admin-estatisticas-collection-id",
+		"name": "10 - Admin - Estatísticas e Relatórios",
+		"description": "Collection para testes das funcionalidades administrativas de estatísticas e relatórios do leilão eletrônico.\n\n**Funcionalidades cobertas:**\n- Estatísticas de contratos\n- Relatórios de comissões\n- Contratos vencendo\n- Projeções de receita\n- Relatórios em CSV e PDF\n- Notificações automáticas\n\n**Endpoints principais:**\n- GET /contratos/estatisticas - Estatísticas gerais\n- GET /contratos/comissoes/relatorio - Relatório de comissões\n- GET /contratos/vencendo - Contratos próximos ao vencimento\n- POST /contratos/vencendo/notificar - Envio de notificações\n\n**Pré-requisitos:**\n- Execute login de administrador antes dos testes\n- Sistema possui contratos de teste na massa de dados",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Estatísticas Gerais de Contratos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Statistics have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const stats = jsonData.data;",
+							"    pm.expect(stats).to.have.property('totalContratos');",
+							"    pm.expect(stats).to.have.property('contratosAtivos');",
+							"    pm.expect(stats).to.have.property('contratosVencendo');",
+							"    pm.expect(stats).to.have.property('receitaProjetada');",
+							"    pm.expect(stats).to.have.property('comissaoMedia');",
+							"    pm.expect(stats).to.have.property('porStatus');",
+							"    pm.expect(stats).to.have.property('porCategoria');",
+							"});",
+							"",
+							"pm.test(\"Numeric values are valid\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const stats = jsonData.data;",
+							"    pm.expect(stats.totalContratos).to.be.a('number');",
+							"    pm.expect(stats.contratosAtivos).to.be.a('number');",
+							"    pm.expect(stats.contratosVencendo).to.be.a('number');",
+							"    pm.expect(stats.receitaProjetada).to.be.a('number');",
+							"    pm.expect(stats.comissaoMedia).to.be.a('number');",
+							"    pm.expect(stats.totalContratos).to.be.at.least(0);",
+							"    pm.expect(stats.contratosAtivos).to.be.at.most(stats.totalContratos);",
+							"});",
+							"",
+							"pm.test(\"Status breakdown is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const porStatus = jsonData.data.porStatus;",
+							"    pm.expect(porStatus).to.be.an('object');",
+							"    pm.expect(porStatus).to.have.property('ACTIVE');",
+							"    pm.expect(porStatus).to.have.property('DRAFT');",
+							"    pm.expect(porStatus).to.have.property('EXPIRED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/estatisticas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"estatisticas"
+					]
+				},
+				"description": "Obtém estatísticas gerais dos contratos do sistema."
+			}
+		},
+		{
+			"name": "Relatório de Comissões",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has commission report structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Commission report has required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const report = jsonData.data;",
+							"    pm.expect(report).to.have.property('periodo');",
+							"    pm.expect(report).to.have.property('totalComissoes');",
+							"    pm.expect(report).to.have.property('comissaoMedia');",
+							"    pm.expect(report).to.have.property('numeroTransacoes');",
+							"    pm.expect(report).to.have.property('porVendedor');",
+							"    pm.expect(report).to.have.property('porCategoria');",
+							"});",
+							"",
+							"pm.test(\"Commission values are valid\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const report = jsonData.data;",
+							"    pm.expect(report.totalComissoes).to.be.a('number');",
+							"    pm.expect(report.comissaoMedia).to.be.a('number');",
+							"    pm.expect(report.numeroTransacoes).to.be.a('number');",
+							"    pm.expect(report.totalComissoes).to.be.at.least(0);",
+							"    pm.expect(report.numeroTransacoes).to.be.at.least(0);",
+							"});",
+							"",
+							"pm.test(\"Period information is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const periodo = jsonData.data.periodo;",
+							"    pm.expect(periodo).to.have.property('inicio');",
+							"    pm.expect(periodo).to.have.property('fim');",
+							"    pm.expect(periodo).to.have.property('descricao');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/comissoes/relatorio?inicio=2024-01-01&fim=2024-12-31",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"comissoes",
+						"relatorio"
+					],
+					"query": [
+						{
+							"key": "inicio",
+							"value": "2024-01-01"
+						},
+						{
+							"key": "fim",
+							"value": "2024-12-31"
+						}
+					]
+				},
+				"description": "Gera relatório de comissões para o período especificado."
+			}
+		},
+		{
+			"name": "Contratos Vencendo - Próximos 30 Dias",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has expiring contracts structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Expiring contracts report has required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const report = jsonData.data;",
+							"    pm.expect(report).to.have.property('contratos');",
+							"    pm.expect(report).to.have.property('resumo');",
+							"    pm.expect(report).to.have.property('filtros');",
+							"    pm.expect(report.contratos).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Summary has urgency breakdown\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const resumo = jsonData.data.resumo;",
+							"    pm.expect(resumo).to.have.property('total');",
+							"    pm.expect(resumo).to.have.property('urgenciaAlta');",
+							"    pm.expect(resumo).to.have.property('urgenciaMedia');",
+							"    pm.expect(resumo).to.have.property('urgenciaBaixa');",
+							"    pm.expect(resumo).to.have.property('notificados');",
+							"    pm.expect(resumo).to.have.property('pendentesNotificacao');",
+							"});",
+							"",
+							"pm.test(\"Contracts have required information\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const contratos = jsonData.data.contratos;",
+							"    if (contratos.length > 0) {",
+							"        const contrato = contratos[0];",
+							"        pm.expect(contrato).to.have.property('id');",
+							"        pm.expect(contrato).to.have.property('vendedor');",
+							"        pm.expect(contrato).to.have.property('validTo');",
+							"        pm.expect(contrato).to.have.property('diasRestantes');",
+							"        pm.expect(contrato).to.have.property('urgencia');",
+							"        pm.expect(contrato).to.have.property('notificado');",
+							"    }",
+							"});",
+							"",
+							"// Salvar dados para próximos testes",
+							"pm.test(\"Save contract data for notifications\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const contratos = jsonData.data.contratos;",
+							"    if (contratos.length > 0) {",
+							"        pm.environment.set('contratoVencendoId', contratos[0].id);",
+							"        pm.environment.set('totalContratosVencendo', contratos.length);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/vencendo?dias=30",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"vencendo"
+					],
+					"query": [
+						{
+							"key": "dias",
+							"value": "30"
+						}
+					]
+				},
+				"description": "Lista contratos que vencem nos próximos 30 dias."
+			}
+		},
+		{
+			"name": "Contratos Vencendo - Urgência Alta (7 dias)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts are high urgency\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const contratos = jsonData.data.contratos;",
+							"    contratos.forEach(contrato => {",
+							"        pm.expect(contrato.urgencia).to.equal('ALTA');",
+							"        pm.expect(contrato.diasRestantes).to.be.at.most(7);",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"High urgency summary is correct\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const resumo = jsonData.data.resumo;",
+							"    pm.expect(resumo.urgenciaAlta).to.equal(jsonData.data.contratos.length);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/vencendo?dias=7&urgencia=ALTA",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"vencendo"
+					],
+					"query": [
+						{
+							"key": "dias",
+							"value": "7"
+						},
+						{
+							"key": "urgencia",
+							"value": "ALTA"
+						}
+					]
+				},
+				"description": "Lista apenas contratos de urgência alta (vencendo em até 7 dias)."
+			}
+		},
+		{
+			"name": "Enviar Notificações - Contratos Vencendo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Notification sending response is valid\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Notification results have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const result = jsonData.data;",
+							"    pm.expect(result).to.have.property('totalProcessados');",
+							"    pm.expect(result).to.have.property('notificacoesEnviadas');",
+							"    pm.expect(result).to.have.property('falhas');",
+							"    pm.expect(result).to.have.property('jaNotificados');",
+							"    pm.expect(result).to.have.property('detalhes');",
+							"});",
+							"",
+							"pm.test(\"Notification counts are valid\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const result = jsonData.data;",
+							"    pm.expect(result.totalProcessados).to.be.a('number');",
+							"    pm.expect(result.notificacoesEnviadas).to.be.a('number');",
+							"    pm.expect(result.falhas).to.be.a('number');",
+							"    pm.expect(result.jaNotificados).to.be.a('number');",
+							"    pm.expect(result.totalProcessados).to.equal(",
+							"        result.notificacoesEnviadas + result.falhas + result.jaNotificados",
+							"    );",
+							"});",
+							"",
+							"pm.test(\"Details array is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const detalhes = jsonData.data.detalhes;",
+							"    pm.expect(detalhes).to.be.an('array');",
+							"    if (detalhes.length > 0) {",
+							"        const detalhe = detalhes[0];",
+							"        pm.expect(detalhe).to.have.property('contratoId');",
+							"        pm.expect(detalhe).to.have.property('vendedor');",
+							"        pm.expect(detalhe).to.have.property('status');",
+							"        pm.expect(detalhe).to.have.property('mensagem');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"dias\": 15,\n    \"urgencia\": \"MEDIA\",\n    \"forcarReenvio\": false,\n    \"template\": \"VENCIMENTO_PADRAO\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/contratos/vencendo/notificar",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"vencendo",
+						"notificar"
+					]
+				},
+				"description": "Envia notificações para vendedores de contratos vencendo."
+			}
+		},
+		{
+			"name": "Projeções de Receita",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Revenue projections have required structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Projections have financial data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const projections = jsonData.data;",
+							"    pm.expect(projections).to.have.property('receitaProjetada');",
+							"    pm.expect(projections).to.have.property('receitaRealizada');",
+							"    pm.expect(projections).to.have.property('metaMensal');",
+							"    pm.expect(projections).to.have.property('percentualMeta');",
+							"    pm.expect(projections).to.have.property('tendencia');",
+							"});",
+							"",
+							"pm.test(\"Financial values are valid numbers\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const projections = jsonData.data;",
+							"    pm.expect(projections.receitaProjetada).to.be.a('number');",
+							"    pm.expect(projections.receitaRealizada).to.be.a('number');",
+							"    pm.expect(projections.metaMensal).to.be.a('number');",
+							"    pm.expect(projections.percentualMeta).to.be.a('number');",
+							"    pm.expect(projections.receitaProjetada).to.be.at.least(0);",
+							"    pm.expect(projections.receitaRealizada).to.be.at.least(0);",
+							"});",
+							"",
+							"pm.test(\"Trend analysis is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const tendencia = jsonData.data.tendencia;",
+							"    pm.expect(tendencia).to.have.property('direcao');",
+							"    pm.expect(tendencia).to.have.property('percentual');",
+							"    pm.expect(tendencia).to.have.property('periodo');",
+							"    pm.expect(['CRESCIMENTO', 'DECLINIO', 'ESTAVEL']).to.include(tendencia.direcao);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/estatisticas/projecoes",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"estatisticas",
+						"projecoes"
+					]
+				},
+				"description": "Obtém projeções de receita baseadas nos contratos ativos."
+			}
+		},
+		{
+			"name": "Exportar Relatório CSV - Comissões",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is CSV format\", function () {",
+							"    const contentType = pm.response.headers.get('Content-Type');",
+							"    pm.expect(contentType).to.include('text/csv');",
+							"});",
+							"",
+							"pm.test(\"CSV has content\", function () {",
+							"    const responseText = pm.response.text();",
+							"    pm.expect(responseText).to.not.be.empty;",
+							"    pm.expect(responseText).to.include('Vendedor'); // Header esperado",
+							"    pm.expect(responseText).to.include('Comissao'); // Header esperado",
+							"});",
+							"",
+							"pm.test(\"Content-Disposition header is present\", function () {",
+							"    const disposition = pm.response.headers.get('Content-Disposition');",
+							"    pm.expect(disposition).to.not.be.null;",
+							"    pm.expect(disposition).to.include('attachment');",
+							"    pm.expect(disposition).to.include('comissoes');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/comissoes/relatorio/csv?inicio=2024-01-01&fim=2024-12-31",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"comissoes",
+						"relatorio",
+						"csv"
+					],
+					"query": [
+						{
+							"key": "inicio",
+							"value": "2024-01-01"
+						},
+						{
+							"key": "fim",
+							"value": "2024-12-31"
+						}
+					]
+				},
+				"description": "Exporta relatório de comissões em formato CSV."
+			}
+		},
+		{
+			"name": "Exportar Relatório PDF - Contratos Vencendo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is PDF format\", function () {",
+							"    const contentType = pm.response.headers.get('Content-Type');",
+							"    pm.expect(contentType).to.include('application/pdf');",
+							"});",
+							"",
+							"pm.test(\"PDF has content\", function () {",
+							"    const responseSize = pm.response.responseSize;",
+							"    pm.expect(responseSize).to.be.above(1000); // PDF mínimo",
+							"});",
+							"",
+							"pm.test(\"Content-Disposition header is present\", function () {",
+							"    const disposition = pm.response.headers.get('Content-Disposition');",
+							"    pm.expect(disposition).to.not.be.null;",
+							"    pm.expect(disposition).to.include('attachment');",
+							"    pm.expect(disposition).to.include('contratos-vencendo');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/vencendo/relatorio/pdf?dias=30",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"vencendo",
+						"relatorio",
+						"pdf"
+					],
+					"query": [
+						{
+							"key": "dias",
+							"value": "30"
+						}
+					]
+				},
+				"description": "Exporta relatório de contratos vencendo em formato PDF."
+			}
+		},
+		{
+			"name": "Dashboard - Métricas em Tempo Real",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dashboard metrics have required structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Real-time metrics are present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const metrics = jsonData.data;",
+							"    pm.expect(metrics).to.have.property('contratosAtivos');",
+							"    pm.expect(metrics).to.have.property('receitaHoje');",
+							"    pm.expect(metrics).to.have.property('receitaMes');",
+							"    pm.expect(metrics).to.have.property('alertasAtivos');",
+							"    pm.expect(metrics).to.have.property('ultimaAtualizacao');",
+							"});",
+							"",
+							"pm.test(\"Alert information is detailed\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const alertas = jsonData.data.alertasAtivos;",
+							"    pm.expect(alertas).to.have.property('total');",
+							"    pm.expect(alertas).to.have.property('urgenciaAlta');",
+							"    pm.expect(alertas).to.have.property('pendentesNotificacao');",
+							"    pm.expect(alertas).to.have.property('detalhes');",
+							"    pm.expect(alertas.detalhes).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Timestamp is recent\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const ultimaAtualizacao = new Date(jsonData.data.ultimaAtualizacao);",
+							"    const agora = new Date();",
+							"    const diffMinutos = (agora - ultimaAtualizacao) / (1000 * 60);",
+							"    pm.expect(diffMinutos).to.be.below(5); // Atualizado nos últimos 5 minutos",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/dashboard/metricas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"dashboard",
+						"metricas"
+					]
+				},
+				"description": "Obtém métricas em tempo real para o dashboard administrativo."
+			}
+		},
+		{
+			"name": "Histórico de Notificações Enviadas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Notification history has paginated structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('content');",
+							"    pm.expect(jsonData.data).to.have.property('totalElements');",
+							"    pm.expect(jsonData.data).to.have.property('totalPages');",
+							"});",
+							"",
+							"pm.test(\"Notifications have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const notifications = jsonData.data.content;",
+							"    if (notifications.length > 0) {",
+							"        const notification = notifications[0];",
+							"        pm.expect(notification).to.have.property('id');",
+							"        pm.expect(notification).to.have.property('contratoId');",
+							"        pm.expect(notification).to.have.property('vendedor');",
+							"        pm.expect(notification).to.have.property('tipo');",
+							"        pm.expect(notification).to.have.property('status');",
+							"        pm.expect(notification).to.have.property('enviadoEm');",
+							"        pm.expect(notification).to.have.property('template');",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Notification statuses are valid\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const notifications = jsonData.data.content;",
+							"    const validStatuses = ['ENVIADO', 'FALHA', 'PENDENTE', 'ENTREGUE'];",
+							"    notifications.forEach(notification => {",
+							"        pm.expect(validStatuses).to.include(notification.status);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/contratos/notificacoes/historico?page=0&size=20&tipo=VENCIMENTO",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"contratos",
+						"notificacoes",
+						"historico"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "20"
+						},
+						{
+							"key": "tipo",
+							"value": "VENCIMENTO"
+						}
+					]
+				},
+				"description": "Lista histórico de notificações enviadas para contratos."
+			}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado antes de cada requisição",
+					"console.log('Executando requisição administrativa:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado após cada requisição",
+					"console.log('Resposta recebida com status:', pm.response.code);"
+				]
+			}
+		}
+	]
+}

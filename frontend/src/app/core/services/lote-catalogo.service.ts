@@ -14,18 +14,21 @@ import { PaginatedResponse } from '../models/lote.model';
 /**
  * Service para catálogo público de lotes
  * História 02: Transformação do Catálogo em Catálogo de Lotes
+ * 
+ * CORRIGIDO: Usar campo 'active' ao invés de 'isActive' com tratamento de tipos
  */
 @Injectable({
   providedIn: 'root'
 })
 export class LoteCatalogoService {
 
-  private readonly apiUrl = `${environment.apiUrl}/api/lotes`;
+  private readonly apiUrl = `${environment.apiUrl}/catalogo`;
 
   constructor(private http: HttpClient) {}
 
   /**
    * Busca lotes no catálogo público
+   * Endpoint: GET /api/catalogo/lotes
    */
   buscarCatalogoPublico(filtros: LoteCatalogoFiltro = {}): Observable<ApiResponse<PaginatedResponse<LoteCatalogo>>> {
     let params = new HttpParams();
@@ -46,23 +49,25 @@ export class LoteCatalogoService {
     params = params.set('size', (filtros.size || PAGINACAO_CONFIG.padraoLotes).toString());
     
     return this.http.get<ApiResponse<PaginatedResponse<LoteCatalogo>>>(
-      `${this.apiUrl}/catalogo-publico`,
+      `${this.apiUrl}/lotes`,
       { params }
     );
   }
 
   /**
    * Busca lotes em destaque (encerrando em 1 semana)
+   * Endpoint: GET /api/catalogo/lotes/destaque
    */
   buscarLotesDestaque(): Observable<ApiResponse<LoteDestaque[]>> {
-    return this.http.get<ApiResponse<LoteDestaque[]>>(`${this.apiUrl}/destaque`);
+    return this.http.get<ApiResponse<LoteDestaque[]>>(`${this.apiUrl}/lotes/destaque`);
   }
 
   /**
    * Busca lote específico no catálogo
+   * Endpoint: GET /api/catalogo/lotes/{loteId}
    */
   buscarLoteCatalogo(loteId: string): Observable<ApiResponse<LoteCatalogo>> {
-    return this.http.get<ApiResponse<LoteCatalogo>>(`${this.apiUrl}/${loteId}`);
+    return this.http.get<ApiResponse<LoteCatalogo>>(`${this.apiUrl}/lotes/${loteId}`);
   }
 
   // Métodos utilitários
@@ -119,10 +124,21 @@ export class LoteCatalogoService {
   }
 
   /**
+   * Helper para obter o valor booleano de isActive com fallback
+   */
+  private getIsActive(lote: LoteCatalogo): boolean {
+    // Usar 'active' (campo real do backend) ou 'isActive' (fallback), padrão false
+    return lote.active !== undefined ? lote.active : (lote.isActive || false);
+  }
+
+  /**
    * Obtém classe CSS do status
+   * CORRIGIDO: Usar helper para evitar erros de tipo
    */
   getStatusClass(lote: LoteCatalogo): string {
-    if (!lote.isActive) {
+    const isActive = this.getIsActive(lote);
+    
+    if (!isActive) {
       return 'status-inactive';
     }
     
@@ -139,9 +155,12 @@ export class LoteCatalogoService {
 
   /**
    * Obtém texto do status
+   * CORRIGIDO: Usar helper para evitar erros de tipo
    */
   getStatusText(lote: LoteCatalogo): string {
-    if (!lote.isActive) {
+    const isActive = this.getIsActive(lote);
+    
+    if (!isActive) {
       return 'Encerrado';
     }
     
@@ -158,9 +177,11 @@ export class LoteCatalogoService {
 
   /**
    * Verifica se o lote está próximo do encerramento
+   * CORRIGIDO: Usar helper para evitar erros de tipo
    */
   isProximoEncerramento(lote: LoteCatalogo): boolean {
-    return lote.isActive && lote.timeRemaining <= 86400; // 24 horas
+    const isActive = this.getIsActive(lote);
+    return isActive && lote.timeRemaining <= 86400; // 24 horas
   }
 
   /**

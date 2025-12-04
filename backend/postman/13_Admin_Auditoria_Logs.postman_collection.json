@@ -1,0 +1,712 @@
+{
+	"info": {
+		"_postman_id": "admin-audit-collection-id",
+		"name": "13 - Administração - Auditoria e Logs",
+		"description": "Collection para auditoria e análise de logs do sistema de leilão.\n\n**Funcionalidades cobertas:**\n- Visualizar logs de auditoria\n- Filtrar logs por entidade\n- Filtrar logs por ação\n- Filtrar logs por usuário\n- Filtrar logs por período\n- Exportar logs\n- Estatísticas de auditoria\n\n**Tipos de logs disponíveis:**\n- USUARIO: Criação, atualização, suspensão\n- CONTRATO: Criação, aprovação, cancelamento\n- PRODUTO: Criação, moderação, atualização\n- LANCE: Criação de lances importantes\n- LOGIN: Tentativas de login\n\n**Requer autenticação:** Admin",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Todos os Logs",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has audit logs\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Logs have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.length > 0) {",
+							"        const firstLog = jsonData.data[0];",
+							"        pm.expect(firstLog).to.have.property('id');",
+							"        pm.expect(firstLog).to.have.property('entity_type');",
+							"        pm.expect(firstLog).to.have.property('entity_id');",
+							"        pm.expect(firstLog).to.have.property('action');",
+							"        pm.expect(firstLog).to.have.property('timestamp');",
+							"        pm.expect(firstLog).to.have.property('performed_by');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?page=0&size=50",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "50"
+						}
+					]
+				},
+				"description": "Lista todos os logs de auditoria com paginação."
+			}
+		},
+		{
+			"name": "Filtrar Logs por Entidade",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs are for USUARIO entity\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(log => {",
+							"        pm.expect(log.entity_type).to.equal('USUARIO');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?entity_type=USUARIO",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "entity_type",
+							"value": "USUARIO"
+						}
+					]
+				},
+				"description": "Filtra logs por tipo de entidade específica."
+			}
+		},
+		{
+			"name": "Filtrar Logs por Ação",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs are CREATE actions\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(log => {",
+							"        pm.expect(log.action).to.equal('CREATE');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?action=CREATE",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "action",
+							"value": "CREATE"
+						}
+					]
+				},
+				"description": "Filtra logs por ação específica."
+			}
+		},
+		{
+			"name": "Filtrar Logs por Usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs performed by admin\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(log => {",
+							"        pm.expect(log.performed_by).to.equal('550e8400-e29b-41d4-a716-446655440000');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?performed_by=550e8400-e29b-41d4-a716-446655440000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "performed_by",
+							"value": "550e8400-e29b-41d4-a716-446655440000"
+						}
+					]
+				},
+				"description": "Filtra logs por usuário que executou a ação."
+			}
+		},
+		{
+			"name": "Filtrar Logs por Período",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Logs within date range\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    ",
+							"    const startDate = new Date('2024-12-01');",
+							"    const endDate = new Date('2024-12-31');",
+							"    ",
+							"    jsonData.data.forEach(log => {",
+							"        const logDate = new Date(log.timestamp);",
+							"        pm.expect(logDate).to.be.at.least(startDate);",
+							"        pm.expect(logDate).to.be.at.most(endDate);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?start_date=2024-12-01&end_date=2024-12-31",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "2024-12-01"
+						},
+						{
+							"key": "end_date",
+							"value": "2024-12-31"
+						}
+					]
+				},
+				"description": "Filtra logs por período específico."
+			}
+		},
+		{
+			"name": "Logs de Entidade Específica",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs for specific entity\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(log => {",
+							"        pm.expect(log.entity_id).to.equal('770e8400-e29b-41d4-a716-446655440010');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?entity_id=770e8400-e29b-41d4-a716-446655440010",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "entity_id",
+							"value": "770e8400-e29b-41d4-a716-446655440010"
+						}
+					]
+				},
+				"description": "Visualiza histórico completo de uma entidade específica."
+			}
+		},
+		{
+			"name": "Logs de Ações Críticas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Critical actions found\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    ",
+							"    const criticalActions = ['SUSPEND', 'DELETE', 'CANCEL', 'REJECT'];",
+							"    jsonData.data.forEach(log => {",
+							"        pm.expect(criticalActions).to.include(log.action);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs?critical=true",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs"
+					],
+					"query": [
+						{
+							"key": "critical",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Lista apenas ações críticas do sistema."
+			}
+		},
+		{
+			"name": "Detalhes do Log",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Log details complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('entity_type');",
+							"    pm.expect(jsonData.data).to.have.property('old_values');",
+							"    pm.expect(jsonData.data).to.have.property('new_values');",
+							"    pm.expect(jsonData.data).to.have.property('metadata');",
+							"    pm.expect(jsonData.data).to.have.property('user_info');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs/ee1e8400-e29b-41d4-a716-446655440001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs",
+						"ee1e8400-e29b-41d4-a716-446655440001"
+					]
+				},
+				"description": "Visualiza detalhes completos de um log específico."
+			}
+		},
+		{
+			"name": "Logs de Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Login logs found\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(log => {",
+							"        const loginActions = ['LOGIN', 'LOGIN_FAILED', 'LOGOUT'];",
+							"        pm.expect(loginActions).to.include(log.action);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs/login-activity?days=7",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs",
+						"login-activity"
+					],
+					"query": [
+						{
+							"key": "days",
+							"value": "7"
+						}
+					]
+				},
+				"description": "Lista atividades de login dos últimos X dias."
+			}
+		},
+		{
+			"name": "Exportar Logs",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Export file generated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('download_url');",
+							"    pm.expect(jsonData.data).to.have.property('filename');",
+							"    pm.expect(jsonData.data).to.have.property('total_records');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"format\": \"CSV\",\n    \"filters\": {\n        \"start_date\": \"2024-12-01\",\n        \"end_date\": \"2024-12-31\",\n        \"entity_type\": \"CONTRATO\"\n    },\n    \"include_details\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs/export",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs",
+						"export"
+					]
+				},
+				"description": "Exporta logs filtrados em formato CSV ou Excel."
+			}
+		},
+		{
+			"name": "Estatísticas de Auditoria",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Audit statistics complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('total_logs');",
+							"    pm.expect(jsonData.data).to.have.property('por_entidade');",
+							"    pm.expect(jsonData.data).to.have.property('por_acao');",
+							"    pm.expect(jsonData.data).to.have.property('atividade_diaria');",
+							"    pm.expect(jsonData.data).to.have.property('usuarios_mais_ativos');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/audit-logs/statistics?period=30",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"audit-logs",
+						"statistics"
+					],
+					"query": [
+						{
+							"key": "period",
+							"value": "30"
+						}
+					]
+				},
+				"description": "Obtém estatísticas de auditoria dos últimos X dias."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se está logado como admin",
+					"const authToken = pm.environment.get('authToken');",
+					"if (!authToken) {",
+					"    console.log('Token de autenticação não encontrado. Execute o login de admin primeiro.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global para verificar autorização",
+					"if (pm.response.code === 403) {",
+					"    console.log('Acesso negado. Certifique-se de estar logado como administrador.');",
+					"}"
+				]
+			}
+		}
+	]
+}

@@ -21,7 +21,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+        format_sql: false
         jdbc:
           time_zone: America/Sao_Paulo
   
@@ -93,7 +93,7 @@ app:
   
   # Configurações de banco específicas
   database:
-    show-sql: true
+    show-sql: false
     generate-ddl: false # Flyway gerencia
     auto-create-schema: false
   

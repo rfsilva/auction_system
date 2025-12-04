@@ -53,6 +53,7 @@ Reestruturar as telas públicas do sistema para focar na experiência baseada em
 - Analise a história. SE a história tiver regra incompleta, liste os "pontos pendentes" no bloco ANOTAÇÕES.
 - Mantenha código limpo e dentro dos padrões fornecidos.
 - Comece lendo o material, identifique entidades e regras, e só então gere tudo.
+- NUNCA realize commits no GIT! Essa etapa será feita por um humano
 
 ---
 

@@ -1,0 +1,789 @@
+{
+	"info": {
+		"_postman_id": "admin-disputes-collection-id",
+		"name": "14 - Administração - Disputas",
+		"description": "Collection para administração de disputas entre compradores e vendedores.\n\n**Funcionalidades cobertas:**\n- Listar disputas abertas\n- Visualizar detalhes de disputa\n- Atribuir disputa a moderador\n- Adicionar evidências\n- Resolver disputas\n- Fechar disputas\n- Estatísticas de disputas\n\n**Status de disputas:**\n- OPEN: Disputa recém-aberta\n- IN_PROGRESS: Em análise por moderador\n- RESOLVED: Resolvida com decisão\n- CLOSED: Fechada definitivamente\n\n**Requer autenticação:** Admin",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Todas as Disputas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has disputes list\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Disputes have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.length > 0) {",
+							"        const firstDispute = jsonData.data[0];",
+							"        pm.expect(firstDispute).to.have.property('id');",
+							"        pm.expect(firstDispute).to.have.property('arremate_id');",
+							"        pm.expect(firstDispute).to.have.property('buyer_id');",
+							"        pm.expect(firstDispute).to.have.property('seller_id');",
+							"        pm.expect(firstDispute).to.have.property('status');",
+							"        pm.expect(firstDispute).to.have.property('reason');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes"
+					]
+				},
+				"description": "Lista todas as disputas do sistema."
+			}
+		},
+		{
+			"name": "Listar Disputas Abertas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All disputes are OPEN\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(dispute => {",
+							"        pm.expect(dispute.status).to.equal('OPEN');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes?status=OPEN",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "OPEN"
+						}
+					]
+				},
+				"description": "Lista apenas disputas com status OPEN."
+			}
+		},
+		{
+			"name": "Listar Disputas em Progresso",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All disputes are IN_PROGRESS\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(dispute => {",
+							"        pm.expect(dispute.status).to.equal('IN_PROGRESS');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes?status=IN_PROGRESS",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "IN_PROGRESS"
+						}
+					]
+				},
+				"description": "Lista disputas que estão sendo analisadas."
+			}
+		},
+		{
+			"name": "Visualizar Detalhes da Disputa",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute details complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('arremate_info');",
+							"    pm.expect(jsonData.data).to.have.property('buyer_info');",
+							"    pm.expect(jsonData.data).to.have.property('seller_info');",
+							"    pm.expect(jsonData.data).to.have.property('evidence');",
+							"    pm.expect(jsonData.data).to.have.property('timeline');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Criar uma disputa de teste se não existir",
+							"pm.environment.set('testDisputeId', 'dd1e8400-e29b-41d4-a716-446655440001');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{testDisputeId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{testDisputeId}}"
+					]
+				},
+				"description": "Visualiza detalhes completos de uma disputa específica."
+			}
+		},
+		{
+			"name": "Criar Disputa de Teste",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Dispute created successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data.status).to.equal('OPEN');",
+							"    ",
+							"    // Salvar ID da nova disputa",
+							"    pm.environment.set('newDisputeId', jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"arremate_id\": \"aa1e8400-e29b-41d4-a716-446655440001\",\n    \"buyer_id\": \"880e8400-e29b-41d4-a716-446655440020\",\n    \"seller_id\": \"660e8400-e29b-41d4-a716-446655440010\",\n    \"reason\": \"Produto recebido com defeito. O smartphone apresenta tela trincada e não liga. Solicitando reembolso total.\",\n    \"evidence\": [\n        {\n            \"type\": \"PHOTO\",\n            \"url\": \"https://storage.example.com/evidence/photo1.jpg\",\n            \"description\": \"Foto da tela trincada\"\n        },\n        {\n            \"type\": \"VIDEO\",\n            \"url\": \"https://storage.example.com/evidence/video1.mp4\",\n            \"description\": \"Vídeo mostrando que o aparelho não liga\"\n        }\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes"
+					]
+				},
+				"description": "Cria uma nova disputa para testes."
+			}
+		},
+		{
+			"name": "Atribuir Disputa a Moderador",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute assigned successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('IN_PROGRESS');",
+							"    pm.expect(jsonData.data).to.have.property('resolved_by');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"moderator_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"observacoes\": \"Disputa atribuída para análise detalhada\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{newDisputeId}}/assign",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{newDisputeId}}",
+						"assign"
+					]
+				},
+				"description": "Atribui uma disputa a um moderador específico."
+			}
+		},
+		{
+			"name": "Adicionar Evidência à Disputa",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Evidence added successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.evidence).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"evidence\": {\n        \"type\": \"DOCUMENT\",\n        \"url\": \"https://storage.example.com/evidence/laudo_tecnico.pdf\",\n        \"description\": \"Laudo técnico confirmando defeito de fábrica\",\n        \"added_by\": \"ADMIN\"\n    },\n    \"observacoes\": \"Evidência adicional fornecida pela administração\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{newDisputeId}}/evidence",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{newDisputeId}}",
+						"evidence"
+					]
+				},
+				"description": "Adiciona nova evidência a uma disputa existente."
+			}
+		},
+		{
+			"name": "Resolver Disputa - Favor do Comprador",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute resolved successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('RESOLVED');",
+							"    pm.expect(jsonData.data).to.have.property('resolution');",
+							"    pm.expect(jsonData.data).to.have.property('resolved_at');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"decision\": \"BUYER_FAVOR\",\n    \"resolution\": \"Após análise das evidências, foi constatado que o produto foi entregue com defeito de fábrica. O comprador tem direito ao reembolso integral. O vendedor deve processar o estorno em até 5 dias úteis.\",\n    \"actions\": [\n        {\n            \"type\": \"REFUND\",\n            \"amount\": 3250.00,\n            \"recipient\": \"BUYER\"\n        },\n        {\n            \"type\": \"FEE_WAIVER\",\n            \"amount\": 113.75,\n            \"recipient\": \"SELLER\"\n        }\n    ],\n    \"observacoes\": \"Decisão baseada no laudo técnico e evidências fotográficas\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{newDisputeId}}/resolve",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{newDisputeId}}",
+						"resolve"
+					]
+				},
+				"description": "Resolve uma disputa em favor do comprador."
+			}
+		},
+		{
+			"name": "Resolver Disputa - Favor do Vendedor",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute resolved successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('RESOLVED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Criar outra disputa para este teste",
+							"pm.environment.set('testDisputeId2', 'dd1e8400-e29b-41d4-a716-446655440002');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"decision\": \"SELLER_FAVOR\",\n    \"resolution\": \"Após análise das evidências, foi constatado que o produto foi entregue conforme descrito. O comprador não apresentou evidências suficientes para comprovar defeito. A venda é mantida.\",\n    \"actions\": [\n        {\n            \"type\": \"MAINTAIN_SALE\",\n            \"description\": \"Venda mantida, pagamento liberado para o vendedor\"\n        }\n    ],\n    \"observacoes\": \"Produto entregue conforme anunciado\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{testDisputeId2}}/resolve",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{testDisputeId2}}",
+						"resolve"
+					]
+				},
+				"description": "Resolve uma disputa em favor do vendedor."
+			}
+		},
+		{
+			"name": "Fechar Disputa",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute closed successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('CLOSED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"observacoes\": \"Disputa fechada após confirmação de que todas as ações foram executadas\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/{{newDisputeId}}/close",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"{{newDisputeId}}",
+						"close"
+					]
+				},
+				"description": "Fecha definitivamente uma disputa resolvida."
+			}
+		},
+		{
+			"name": "Listar Disputas por Vendedor",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All disputes from same seller\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(dispute => {",
+							"        pm.expect(dispute.seller_id).to.equal('660e8400-e29b-41d4-a716-446655440010');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes?seller_id=660e8400-e29b-41d4-a716-446655440010",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes"
+					],
+					"query": [
+						{
+							"key": "seller_id",
+							"value": "660e8400-e29b-41d4-a716-446655440010"
+						}
+					]
+				},
+				"description": "Lista disputas de um vendedor específico."
+			}
+		},
+		{
+			"name": "Estatísticas de Disputas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Dispute statistics complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('total_disputas');",
+							"    pm.expect(jsonData.data).to.have.property('por_status');",
+							"    pm.expect(jsonData.data).to.have.property('tempo_medio_resolucao');",
+							"    pm.expect(jsonData.data).to.have.property('taxa_resolucao_favor_comprador');",
+							"    pm.expect(jsonData.data).to.have.property('vendedores_mais_disputados');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/disputes/statistics?period=90",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"disputes",
+						"statistics"
+					],
+					"query": [
+						{
+							"key": "period",
+							"value": "90"
+						}
+					]
+				},
+				"description": "Obtém estatísticas de disputas dos últimos X dias."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se está logado como admin",
+					"const authToken = pm.environment.get('authToken');",
+					"if (!authToken) {",
+					"    console.log('Token de autenticação não encontrado. Execute o login de admin primeiro.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global para verificar autorização",
+					"if (pm.response.code === 403) {",
+					"    console.log('Acesso negado. Certifique-se de estar logado como administrador.');",
+					"}"
+				]
+			}
+		}
+	]
+}

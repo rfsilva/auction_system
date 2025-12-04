@@ -1,0 +1,615 @@
+{
+	"info": {
+		"_postman_id": "lances-collection-id",
+		"name": "06 - Lances",
+		"description": "Collection para testes do sistema de lances do leilão eletrônico.\n\n**Funcionalidades cobertas:**\n- Criação de lances\n- Listagem de lances por produto\n- Histórico de lances do usuário\n- Validação de regras de lance\n- Sistema de lance automático (proxy bid)\n- Verificação de lance vencedor\n\n**Produtos com lances ativos:**\n- Samsung Galaxy S23 Ultra: 990e8400-e29b-41d4-a716-446655440001\n- Dom Casmurro 1ª Edição: 990e8400-e29b-41d4-a716-446655440006\n- Fender Stratocaster 1978: 990e8400-e29b-41d4-a716-446655440008\n\n**Pré-requisitos:**\n- Execute login de comprador antes dos testes\n- Produtos devem estar ativos para receber lances",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Criar Lance - Samsung Galaxy S23",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Lance created with correct data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lance = jsonData.data;",
+							"    pm.expect(lance).to.have.property('id');",
+							"    pm.expect(lance).to.have.property('produtoId');",
+							"    pm.expect(lance).to.have.property('userId');",
+							"    pm.expect(lance).to.have.property('value');",
+							"    pm.expect(lance).to.have.property('timestamp');",
+							"    pm.expect(lance.value).to.be.a('number');",
+							"    pm.expect(lance.value).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Lance has sequence number\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lance = jsonData.data;",
+							"    pm.expect(lance).to.have.property('sequenceNumber');",
+							"    pm.expect(lance.sequenceNumber).to.be.a('number');",
+							"});",
+							"",
+							"// Salvar ID do lance para testes posteriores",
+							"pm.test(\"Save lance ID for later tests\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.success && jsonData.data.id) {",
+							"        pm.environment.set('lanceId', jsonData.data.id);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Gerar valor de lance ligeiramente superior ao atual",
+							"const currentPrice = 3250.00; // Preço atual do Samsung",
+							"const increment = 50.00;",
+							"const newBidValue = currentPrice + increment;",
+							"pm.environment.set('newBidValue', newBidValue);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"value\": {{newBidValue}},\n    \"currency\": \"BRL\",\n    \"proxyBid\": false\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/lances",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances"
+					]
+				},
+				"description": "Cria um novo lance no produto Samsung Galaxy S23 Ultra."
+			}
+		},
+		{
+			"name": "Criar Lance Automático - Dom Casmurro",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Proxy bid created correctly\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lance = jsonData.data;",
+							"    pm.expect(lance).to.have.property('proxyBid');",
+							"    pm.expect(lance.proxyBid).to.be.true;",
+							"    pm.expect(lance).to.have.property('maxBidValue');",
+							"    pm.expect(lance.maxBidValue).to.be.a('number');",
+							"    pm.expect(lance.maxBidValue).to.be.above(lance.value);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"produtoId\": \"990e8400-e29b-41d4-a716-446655440006\",\n    \"value\": 4000.00,\n    \"currency\": \"BRL\",\n    \"proxyBid\": true,\n    \"maxBidValue\": 5000.00\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/lances",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances"
+					]
+				},
+				"description": "Cria um lance automático (proxy bid) no livro Dom Casmurro."
+			}
+		},
+		{
+			"name": "Listar Lances por Produto - Samsung",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has paginated lance data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('content');",
+							"    pm.expect(jsonData.data).to.have.property('totalElements');",
+							"    pm.expect(jsonData.data.content).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Lances are ordered by timestamp desc\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lances = jsonData.data.content;",
+							"    if (lances.length > 1) {",
+							"        for (let i = 0; i < lances.length - 1; i++) {",
+							"            const current = new Date(lances[i].timestamp);",
+							"            const next = new Date(lances[i + 1].timestamp);",
+							"            pm.expect(current.getTime()).to.be.at.least(next.getTime());",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"All lances belong to the same product\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lances = jsonData.data.content;",
+							"    const expectedProdutoId = pm.environment.get('produtoId');",
+							"    lances.forEach(lance => {",
+							"        pm.expect(lance.produtoId).to.equal(expectedProdutoId);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/lances/produto/{{produtoId}}?page=0&size=20",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances",
+						"produto",
+						"{{produtoId}}"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "20"
+						}
+					]
+				},
+				"description": "Lista todos os lances do produto Samsung Galaxy S23 Ultra."
+			}
+		},
+		{
+			"name": "Buscar Lance Vencedor - Samsung",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Winning bid has correct properties\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data) {",
+							"        const lance = jsonData.data;",
+							"        pm.expect(lance).to.have.property('id');",
+							"        pm.expect(lance).to.have.property('isWinning');",
+							"        pm.expect(lance.isWinning).to.be.true;",
+							"        pm.expect(lance).to.have.property('value');",
+							"        pm.expect(lance).to.have.property('userId');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/lances/produto/{{produtoId}}/vencedor",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances",
+						"produto",
+						"{{produtoId}}",
+						"vencedor"
+					]
+				},
+				"description": "Busca o lance vencedor atual do produto Samsung Galaxy S23 Ultra."
+			}
+		},
+		{
+			"name": "Meus Lances",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has paginated data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.have.property('content');",
+							"    pm.expect(jsonData.data).to.have.property('totalElements');",
+							"    pm.expect(jsonData.data.content).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"All lances belong to authenticated user\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const lances = jsonData.data.content;",
+							"    // Note: We can't easily verify userId without knowing the current user ID",
+							"    // This test ensures the structure is correct",
+							"    lances.forEach(lance => {",
+							"        pm.expect(lance).to.have.property('userId');",
+							"        pm.expect(lance).to.have.property('produtoId');",
+							"        pm.expect(lance).to.have.property('value');",
+							"        pm.expect(lance).to.have.property('timestamp');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/lances/meus?page=0&size=20",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances",
+						"meus"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "20"
+						}
+					]
+				},
+				"description": "Lista todos os lances do usuário autenticado."
+			}
+		},
+		{
+			"name": "Criar Lance Inválido - Valor Baixo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"value\": 100.00,\n    \"currency\": \"BRL\",\n    \"proxyBid\": false\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/lances",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances"
+					]
+				},
+				"description": "Tenta criar lance com valor inferior ao mínimo permitido."
+			}
+		},
+		{
+			"name": "Criar Lance - Produto Inexistente",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"produtoId\": \"999e8400-e29b-41d4-a716-446655440999\",\n    \"value\": 1000.00,\n    \"currency\": \"BRL\",\n    \"proxyBid\": false\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/lances",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances"
+					]
+				},
+				"description": "Tenta criar lance em produto que não existe."
+			}
+		},
+		{
+			"name": "Estatísticas de Lances - Produto",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Statistics have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const stats = jsonData.data;",
+							"    pm.expect(stats).to.have.property('totalLances');",
+							"    pm.expect(stats).to.have.property('participantesUnicos');",
+							"    pm.expect(stats).to.have.property('valorMedio');",
+							"    pm.expect(stats).to.have.property('maiorLance');",
+							"    pm.expect(stats).to.have.property('menorLance');",
+							"    pm.expect(stats.totalLances).to.be.a('number');",
+							"    pm.expect(stats.participantesUnicos).to.be.a('number');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/lances/produto/{{produtoId}}/estatisticas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"lances",
+						"produto",
+						"{{produtoId}}",
+						"estatisticas"
+					]
+				},
+				"description": "Obtém estatísticas dos lances do produto Samsung Galaxy S23 Ultra."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado antes de cada requisição",
+					"console.log('Executando requisição para lances:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado após cada requisição",
+					"console.log('Resposta recebida com status:', pm.response.code);"
+				]
+			}
+		}
+	]
+}

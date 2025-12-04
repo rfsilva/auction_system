@@ -1,0 +1,760 @@
+{
+	"info": {
+		"_postman_id": "admin-contracts-collection-id",
+		"name": "12 - Administração - Contratos a Vender",
+		"description": "Collection para administração de contratos de vendedores no sistema de leilão.\n\n**Funcionalidades cobertas:**\n- Listar contratos com filtros\n- Criar novos contratos\n- Aprovar/rejeitar contratos\n- Atualizar termos de contratos\n- Suspender/cancelar contratos\n- Visualizar detalhes de contratos\n- Estatísticas de contratos\n\n**Contratos de teste disponíveis:**\n- ABC Importadora: Ativo (3.5% taxa)\n- Loja da Ana: Ativo (4.0% taxa)\n- Antiquálhas: Pendente aprovação\n- Vendas Suspeitas: Cancelado\n\n**Requer autenticação:** Admin",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Todos os Contratos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has contracts list\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Contracts have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.length > 0) {",
+							"        const firstContract = jsonData.data[0];",
+							"        pm.expect(firstContract).to.have.property('id');",
+							"        pm.expect(firstContract).to.have.property('seller_id');",
+							"        pm.expect(firstContract).to.have.property('fee_rate');",
+							"        pm.expect(firstContract).to.have.property('status');",
+							"        pm.expect(firstContract).to.have.property('valid_from');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts"
+					]
+				},
+				"description": "Lista todos os contratos do sistema."
+			}
+		},
+		{
+			"name": "Listar Contratos por Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts have ACTIVE status\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(contract => {",
+							"        pm.expect(contract.status).to.equal('ACTIVE');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts?status=ACTIVE",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "ACTIVE"
+						}
+					]
+				},
+				"description": "Lista contratos filtrados por status."
+			}
+		},
+		{
+			"name": "Listar Contratos Pendentes",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts have DRAFT status\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(contract => {",
+							"        pm.expect(contract.status).to.equal('DRAFT');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts?status=DRAFT",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "DRAFT"
+						}
+					]
+				},
+				"description": "Lista contratos pendentes de aprovação."
+			}
+		},
+		{
+			"name": "Visualizar Detalhes do Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has contract details\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('seller_id');",
+							"    pm.expect(jsonData.data).to.have.property('fee_rate');",
+							"    pm.expect(jsonData.data).to.have.property('terms');",
+							"    pm.expect(jsonData.data).to.have.property('status');",
+							"    pm.expect(jsonData.data).to.have.property('seller_info');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/{{contratoId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"{{contratoId}}"
+					]
+				},
+				"description": "Visualiza detalhes completos de um contrato específico."
+			}
+		},
+		{
+			"name": "Criar Novo Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Contract created successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data.status).to.equal('DRAFT');",
+							"    ",
+							"    // Salvar ID do novo contrato",
+							"    pm.environment.set('newContractId', jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"seller_id\": \"660e8400-e29b-41d4-a716-446655440012\",\n    \"fee_rate\": 0.045,\n    \"terms\": \"Contrato padrão para vendedor de antiguidades. Taxa de 4.5% sobre vendas realizadas. Pagamento em até 7 dias após confirmação da entrega.\",\n    \"categoria\": \"Antiguidades\",\n    \"valid_from\": \"2024-12-20T00:00:00Z\",\n    \"valid_to\": \"2025-12-19T23:59:59Z\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts"
+					]
+				},
+				"description": "Cria um novo contrato para um vendedor."
+			}
+		},
+		{
+			"name": "Aprovar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract approved successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('ACTIVE');",
+							"    pm.expect(jsonData.data).to.have.property('approved_by');",
+							"    pm.expect(jsonData.data).to.have.property('approved_at');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"observacoes\": \"Contrato aprovado após análise da documentação do vendedor.\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/770e8400-e29b-41d4-a716-446655440012/approve",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"770e8400-e29b-41d4-a716-446655440012",
+						"approve"
+					]
+				},
+				"description": "Aprova um contrato pendente, ativando-o."
+			}
+		},
+		{
+			"name": "Rejeitar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract rejected successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('CANCELLED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"motivo\": \"Documentação incompleta. Vendedor deve reenviar CNPJ atualizado.\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/{{newContractId}}/reject",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"{{newContractId}}",
+						"reject"
+					]
+				},
+				"description": "Rejeita um contrato pendente com motivo."
+			}
+		},
+		{
+			"name": "Atualizar Taxa do Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract fee updated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.fee_rate).to.equal(0.04);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"fee_rate\": 0.04,\n    \"motivo\": \"Ajuste de taxa conforme negociação com vendedor\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/770e8400-e29b-41d4-a716-446655440011/fee",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"770e8400-e29b-41d4-a716-446655440011",
+						"fee"
+					]
+				},
+				"description": "Atualiza a taxa de comissão de um contrato ativo."
+			}
+		},
+		{
+			"name": "Suspender Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract suspended successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('SUSPENDED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"motivo\": \"Suspensão temporária para análise de irregularidades\",\n    \"prazo_dias\": 30\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/770e8400-e29b-41d4-a716-446655440011/suspend",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"770e8400-e29b-41d4-a716-446655440011",
+						"suspend"
+					]
+				},
+				"description": "Suspende temporariamente um contrato ativo."
+			}
+		},
+		{
+			"name": "Reativar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract reactivated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('ACTIVE');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"observacoes\": \"Reativação após resolução das pendências\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/770e8400-e29b-41d4-a716-446655440011/reactivate",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"770e8400-e29b-41d4-a716-446655440011",
+						"reactivate"
+					]
+				},
+				"description": "Reativa um contrato que estava suspenso."
+			}
+		},
+		{
+			"name": "Listar Contratos Vencendo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has expiring contracts\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/expiring?days=30",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"expiring"
+					],
+					"query": [
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				},
+				"description": "Lista contratos que vencem nos próximos X dias."
+			}
+		},
+		{
+			"name": "Estatísticas de Contratos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has contract statistics\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('total_contratos');",
+							"    pm.expect(jsonData.data).to.have.property('por_status');",
+							"    pm.expect(jsonData.data).to.have.property('taxa_media');",
+							"    pm.expect(jsonData.data).to.have.property('vencendo_30_dias');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/contracts/statistics",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"contracts",
+						"statistics"
+					]
+				},
+				"description": "Obtém estatísticas gerais sobre os contratos."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se está logado como admin",
+					"const authToken = pm.environment.get('authToken');",
+					"if (!authToken) {",
+					"    console.log('Token de autenticação não encontrado. Execute o login de admin primeiro.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global para verificar autorização",
+					"if (pm.response.code === 403) {",
+					"    console.log('Acesso negado. Certifique-se de estar logado como administrador.');",
+					"}"
+				]
+			}
+		}
+	]
+}

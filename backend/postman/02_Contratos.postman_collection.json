@@ -1,0 +1,962 @@
+{
+	"info": {
+		"_postman_id": "contratos-collection-id",
+		"name": "02 - Contratos",
+		"description": "Collection para testes de gestão de contratos de vendedores.\n\n**Funcionalidades cobertas:**\n- Listar contratos com filtros\n- Buscar contrato por ID\n- Criar novo contrato\n- Atualizar contrato existente\n- Ativar/Suspender/Cancelar contratos\n- Ativar vendedor (criar usuário + vendedor + contrato)\n- Verificar contratos ativos\n- Listar categorias\n\n**Dados de teste disponíveis:**\n- Contratos ativos: ABC Importadora, Loja da Ana, Patricia, Sebo do João\n- Contratos inativos: Antiquário (draft), Vendas Rápidas (cancelado)\n- Diferentes categorias: Eletrônicos, Artesanatos, Livros, etc.\n\n**Permissões necessárias:** ADMIN para a maioria das operações",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Todos os Contratos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has paginated structure\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('content');",
+							"    pm.expect(jsonData.data).to.have.property('totalElements');",
+							"    pm.expect(jsonData.data).to.have.property('totalPages');",
+							"});",
+							"",
+							"pm.test(\"Contracts have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.content.length > 0) {",
+							"        const contract = jsonData.data.content[0];",
+							"        pm.expect(contract).to.have.property('id');",
+							"        pm.expect(contract).to.have.property('sellerId');",
+							"        pm.expect(contract).to.have.property('feeRate');",
+							"        pm.expect(contract).to.have.property('status');",
+							"        pm.expect(contract).to.have.property('active');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos?page=0&size=20&sort=createdAt&direction=desc",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "20"
+						},
+						{
+							"key": "sort",
+							"value": "createdAt"
+						},
+						{
+							"key": "direction",
+							"value": "desc"
+						}
+					]
+				},
+				"description": "Lista todos os contratos com paginação."
+			}
+		},
+		{
+			"name": "Listar Contratos Ativos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts are active\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.content.length > 0) {",
+							"        jsonData.data.content.forEach(contract => {",
+							"            pm.expect(contract.active).to.be.true;",
+							"            pm.expect(contract.status).to.equal('ACTIVE');",
+							"        });",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos?active=true&status=ACTIVE",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos"
+					],
+					"query": [
+						{
+							"key": "active",
+							"value": "true"
+						},
+						{
+							"key": "status",
+							"value": "ACTIVE"
+						}
+					]
+				},
+				"description": "Lista apenas contratos ativos."
+			}
+		},
+		{
+			"name": "Buscar Contrato por ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract details are present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('sellerId');",
+							"    pm.expect(jsonData.data).to.have.property('feeRate');",
+							"    pm.expect(jsonData.data).to.have.property('terms');",
+							"    pm.expect(jsonData.data).to.have.property('status');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{contratoId}}"
+					]
+				},
+				"description": "Busca um contrato específico pelo ID."
+			}
+		},
+		{
+			"name": "Buscar Contrato Ativo por Vendedor",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Active contract found\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data.active).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('ACTIVE');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/vendedor/{{vendedorId}}/ativo",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"vendedor",
+						"{{vendedorId}}",
+						"ativo"
+					]
+				},
+				"description": "Busca o contrato ativo de um vendedor específico."
+			}
+		},
+		{
+			"name": "Verificar se Vendedor Tem Contrato Ativo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is boolean\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(typeof jsonData.data).to.equal('boolean');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/vendedor/{{vendedorId}}/tem-ativo",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"vendedor",
+						"{{vendedorId}}",
+						"tem-ativo"
+					]
+				},
+				"description": "Verifica se um vendedor possui contrato ativo."
+			}
+		},
+		{
+			"name": "Listar Categorias",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Categories list is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Categories include expected values\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    const categories = jsonData.data;",
+							"    pm.expect(categories).to.include('Artesanatos');",
+							"    pm.expect(categories).to.include('Livros');",
+							"    pm.expect(categories).to.include('Instrumentos Musicais');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/categorias",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"categorias"
+					]
+				},
+				"description": "Lista todas as categorias disponíveis para contratos."
+			}
+		},
+		{
+			"name": "Criar Novo Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"pm.test(\"Contract created successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('sellerId');",
+							"    pm.expect(jsonData.data.feeRate).to.equal(0.035);",
+							"    pm.expect(jsonData.data.categoria).to.equal('Teste Postman');",
+							"    ",
+							"    // Salvar ID do contrato criado",
+							"    pm.environment.set('novoContratoId', jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Verificar se está logado como admin",
+							"const authToken = pm.environment.get('authToken');",
+							"if (!authToken) {",
+							"    console.log('Token de autenticação não encontrado. Execute o login de admin primeiro.');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sellerId\": \"{{vendedorId}}\",\n    \"feeRate\": 0.035,\n    \"terms\": \"Contrato de teste criado via Postman. Taxa de 3,5% para produtos da categoria Teste Postman. Válido por 6 meses.\",\n    \"validFrom\": \"2024-12-19T10:00:00\",\n    \"validTo\": \"2025-06-19T10:00:00\",\n    \"categoria\": \"Teste Postman\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos"
+					]
+				},
+				"description": "Cria um novo contrato para um vendedor existente."
+			}
+		},
+		{
+			"name": "Atualizar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract updated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data.feeRate).to.equal(0.04);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Verificar se existe contrato criado anteriormente",
+							"const novoContratoId = pm.environment.get('novoContratoId');",
+							"if (!novoContratoId) {",
+							"    console.log('ID do novo contrato não encontrado. Execute a criação de contrato primeiro.');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"feeRate\": 0.04,\n    \"terms\": \"Contrato de teste ATUALIZADO via Postman. Taxa alterada para 4% para produtos da categoria Teste Postman. Termos revisados.\",\n    \"validTo\": \"2025-12-19T10:00:00\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{novoContratoId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{novoContratoId}}"
+					]
+				},
+				"description": "Atualiza um contrato existente."
+			}
+		},
+		{
+			"name": "Ativar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract activated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.active).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('ACTIVE');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{novoContratoId}}/ativar",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{novoContratoId}}",
+						"ativar"
+					]
+				},
+				"description": "Ativa um contrato em status DRAFT."
+			}
+		},
+		{
+			"name": "Suspender Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract suspended successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.active).to.be.false;",
+							"    pm.expect(jsonData.data.status).to.equal('SUSPENDED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{novoContratoId}}/suspender",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{novoContratoId}}",
+						"suspender"
+					]
+				},
+				"description": "Suspende um contrato ativo."
+			}
+		},
+		{
+			"name": "Cancelar Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Contract cancelled successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.active).to.be.false;",
+							"    pm.expect(jsonData.data.status).to.equal('CANCELLED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{novoContratoId}}/cancelar",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{novoContratoId}}",
+						"cancelar"
+					]
+				},
+				"description": "Cancela um contrato (ação irreversível)."
+			}
+		},
+		{
+			"name": "Excluir Contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 204\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+							"});",
+							"",
+							"pm.test(\"Contract deleted successfully\", function () {",
+							"    if (pm.response.code === 200) {",
+							"        const jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('success');",
+							"        pm.expect(jsonData.success).to.be.true;",
+							"    }",
+							"});",
+							"",
+							"// Limpar variável do environment",
+							"pm.environment.unset('novoContratoId');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/{{novoContratoId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"{{novoContratoId}}"
+					]
+				},
+				"description": "Exclui um contrato do sistema."
+			}
+		},
+		{
+			"name": "Ativar Vendedor (Fluxo Completo)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"pm.test(\"Seller activated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('sellerId');",
+							"    pm.expect(jsonData.data.active).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('ACTIVE');",
+							"    ",
+							"    // Salvar ID do contrato do novo vendedor",
+							"    pm.environment.set('contratoNovoVendedorId', jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Gerar email único para o novo vendedor",
+							"const timestamp = Date.now();",
+							"const randomEmail = `vendedor.teste.${timestamp}@postman.test`;",
+							"pm.environment.set('novoVendedorEmail', randomEmail);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nome\": \"Vendedor Teste Postman\",\n    \"email\": \"{{novoVendedorEmail}}\",\n    \"telefone\": \"(11) 98888-7777\",\n    \"companyName\": \"Empresa Teste Postman Ltda\",\n    \"taxId\": \"12.345.678/0001-90\",\n    \"contactEmail\": \"{{novoVendedorEmail}}\",\n    \"contactPhone\": \"(11) 98888-7777\",\n    \"description\": \"Empresa de teste criada via Postman para validação da API\",\n    \"feeRate\": 0.045,\n    \"terms\": \"Contrato de teste para novo vendedor criado via Postman. Taxa de 4,5% aplicável a todos os produtos.\",\n    \"validFrom\": \"2024-12-19T10:00:00\",\n    \"validTo\": \"2025-12-19T10:00:00\",\n    \"categoria\": \"Teste Postman Vendedor\",\n    \"ativarImediatamente\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos/ativar-vendedor",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos",
+						"ativar-vendedor"
+					]
+				},
+				"description": "Cria usuário, vendedor e contrato em uma única operação."
+			}
+		},
+		{
+			"name": "Filtrar Contratos por Categoria",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts have correct category\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.content.length > 0) {",
+							"        jsonData.data.content.forEach(contract => {",
+							"            pm.expect(contract.categoria).to.equal('Artesanatos');",
+							"        });",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos?categoria=Artesanatos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos"
+					],
+					"query": [
+						{
+							"key": "categoria",
+							"value": "Artesanatos"
+						}
+					]
+				},
+				"description": "Filtra contratos por categoria específica."
+			}
+		},
+		{
+			"name": "Filtrar Contratos por Faixa de Taxa",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All contracts have fee rate in range\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.content.length > 0) {",
+							"        jsonData.data.content.forEach(contract => {",
+							"            pm.expect(contract.feeRate).to.be.at.least(0.03);",
+							"            pm.expect(contract.feeRate).to.be.at.most(0.05);",
+							"        });",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/contratos?feeRateMin=0.03&feeRateMax=0.05",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"contratos"
+					],
+					"query": [
+						{
+							"key": "feeRateMin",
+							"value": "0.03"
+						},
+						{
+							"key": "feeRateMax",
+							"value": "0.05"
+						}
+					]
+				},
+				"description": "Filtra contratos por faixa de taxa de comissão."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar autenticação antes de cada requisição",
+					"const authToken = pm.environment.get('authToken');",
+					"if (!authToken) {",
+					"    console.log('⚠️ Token de autenticação não encontrado. Execute o login primeiro.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Log global para debug",
+					"console.log('📋 Contrato - Resposta:', pm.response.code, pm.response.status);"
+				]
+			}
+		}
+	]
+}

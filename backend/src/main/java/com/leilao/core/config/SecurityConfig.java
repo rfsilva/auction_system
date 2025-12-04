@@ -29,7 +29,9 @@ import java.util.List;
  * Configuração de segurança da aplicação
  * História 5: Integração e Otimização - Sprint S2.2
  * 
- * Atualizada para incluir Rate Limiting Filter
+ * Atualizada para sistema baseado em lotes:
+ * - Endpoints públicos: /catalogo/** (novo sistema de catálogo)
+ * - Endpoints privados: /lotes/gerenciar/** (área do vendedor)
  */
 @Configuration
 @EnableWebSecurity
@@ -74,12 +76,18 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**", "/public/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/catalogo/**", "/h2-console/**").permitAll() // Para testes
+                .requestMatchers("/h2-console/**").permitAll() // Para testes
+                
+                // Catálogo público (novo sistema baseado em lotes)
+                .requestMatchers("/catalogo/**").permitAll()
+                
                 // WebSocket e SSE endpoints (fora do context-path)
                 .requestMatchers("/ws/**", "/sse/**").permitAll()
                 // Realtime endpoints (dentro do context-path /api)
                 .requestMatchers("/realtime/**").permitAll()
+                
                 // Todos os outros endpoints requerem autenticação
+                // Incluindo /lotes/gerenciar/** (área privada do vendedor)
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

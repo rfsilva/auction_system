@@ -1,0 +1,861 @@
+{
+	"info": {
+		"_postman_id": "admin-preauth-collection-id",
+		"name": "16 - Administração - Pré-autorizações",
+		"description": "Collection para administração de pré-autorizações de pagamento no sistema de leilão.\n\n**Funcionalidades cobertas:**\n- Listar pré-autorizações\n- Visualizar detalhes de pré-autorização\n- Cancelar pré-autorizações\n- Estender validade\n- Forçar expiração\n- Estatísticas de pré-autorizações\n\n**Status de pré-autorizações:**\n- PENDING: Aguardando processamento\n- AUTHORIZED: Autorizada e válida\n- EXPIRED: Expirada\n- CANCELLED: Cancelada\n- USED: Utilizada em compra\n\n**Requer autenticação:** Admin",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Todas as Pré-autorizações",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has pre-authorizations list\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Pre-authorizations have required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.data.length > 0) {",
+							"        const firstPreAuth = jsonData.data[0];",
+							"        pm.expect(firstPreAuth).to.have.property('id');",
+							"        pm.expect(firstPreAuth).to.have.property('buyer_id');",
+							"        pm.expect(firstPreAuth).to.have.property('produto_id');",
+							"        pm.expect(firstPreAuth).to.have.property('amount');",
+							"        pm.expect(firstPreAuth).to.have.property('status');",
+							"        pm.expect(firstPreAuth).to.have.property('expires_at');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations?page=0&size=50",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "50"
+						}
+					]
+				},
+				"description": "Lista todas as pré-autorizações do sistema com paginação."
+			}
+		},
+		{
+			"name": "Listar Pré-autorizações por Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All pre-authorizations are AUTHORIZED\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(preAuth => {",
+							"        pm.expect(preAuth.status).to.equal('AUTHORIZED');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations?status=AUTHORIZED",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "AUTHORIZED"
+						}
+					]
+				},
+				"description": "Lista pré-autorizações filtradas por status."
+			}
+		},
+		{
+			"name": "Listar Pré-autorizações Expiradas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All pre-authorizations are EXPIRED\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(preAuth => {",
+							"        pm.expect(preAuth.status).to.equal('EXPIRED');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations?status=EXPIRED",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "EXPIRED"
+						}
+					]
+				},
+				"description": "Lista pré-autorizações que já expiraram."
+			}
+		},
+		{
+			"name": "Listar Pré-autorizações por Comprador",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All pre-authorizations from same buyer\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    jsonData.data.forEach(preAuth => {",
+							"        pm.expect(preAuth.buyer_id).to.equal('880e8400-e29b-41d4-a716-446655440020');",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations?buyer_id=880e8400-e29b-41d4-a716-446655440020",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations"
+					],
+					"query": [
+						{
+							"key": "buyer_id",
+							"value": "880e8400-e29b-41d4-a716-446655440020"
+						}
+					]
+				},
+				"description": "Lista pré-autorizações de um comprador específico."
+			}
+		},
+		{
+			"name": "Visualizar Detalhes da Pré-autorização",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization details complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('buyer_info');",
+							"    pm.expect(jsonData.data).to.have.property('produto_info');",
+							"    pm.expect(jsonData.data).to.have.property('payment_method_id');",
+							"    pm.expect(jsonData.data).to.have.property('authorization_code');",
+							"    pm.expect(jsonData.data).to.have.property('created_at');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// ID de pré-autorização de teste",
+							"pm.environment.set('testPreAuthId', 'ff1e8400-e29b-41d4-a716-446655440001');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/{{testPreAuthId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"{{testPreAuthId}}"
+					]
+				},
+				"description": "Visualiza detalhes completos de uma pré-autorização específica."
+			}
+		},
+		{
+			"name": "Criar Pré-autorização de Teste",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization created successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data.status).to.equal('AUTHORIZED');",
+							"    ",
+							"    // Salvar ID da nova pré-autorização",
+							"    pm.environment.set('newPreAuthId', jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"buyer_id\": \"880e8400-e29b-41d4-a716-446655440021\",\n    \"produto_id\": \"990e8400-e29b-41d4-a716-446655440009\",\n    \"amount\": 3000.00,\n    \"payment_method_id\": \"card_test_123456\",\n    \"expires_in_hours\": 48,\n    \"auto_authorize\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations"
+					]
+				},
+				"description": "Cria uma nova pré-autorização para testes."
+			}
+		},
+		{
+			"name": "Estender Validade da Pré-autorização",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization extended successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('expires_at');",
+							"    ",
+							"    // Verificar se a data de expiração foi estendida",
+							"    const newExpiryDate = new Date(jsonData.data.expires_at);",
+							"    const now = new Date();",
+							"    pm.expect(newExpiryDate).to.be.above(now);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"extend_hours\": 24,\n    \"motivo\": \"Extensão solicitada pelo comprador devido a problemas técnicos\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/{{testPreAuthId}}/extend",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"{{testPreAuthId}}",
+						"extend"
+					]
+				},
+				"description": "Estende a validade de uma pré-autorização."
+			}
+		},
+		{
+			"name": "Cancelar Pré-autorização",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization cancelled successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('CANCELLED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"motivo\": \"Cancelamento solicitado pelo administrador devido a irregularidades\",\n    \"refund_immediately\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/{{newPreAuthId}}/cancel",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"{{newPreAuthId}}",
+						"cancel"
+					]
+				},
+				"description": "Cancela uma pré-autorização ativa."
+			}
+		},
+		{
+			"name": "Forçar Expiração",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization expired successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.status).to.equal('EXPIRED');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Usar outra pré-autorização para este teste",
+							"pm.environment.set('testPreAuthId2', 'ff1e8400-e29b-41d4-a716-446655440002');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"motivo\": \"Expiração forçada para limpeza de pré-autorizações antigas\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/{{testPreAuthId2}}/expire",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"{{testPreAuthId2}}",
+						"expire"
+					]
+				},
+				"description": "Força a expiração de uma pré-autorização."
+			}
+		},
+		{
+			"name": "Listar Pré-autorizações Vencendo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Expiring pre-authorizations found\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    ",
+							"    const now = new Date();",
+							"    const hoursLimit = 24;",
+							"    const limitDate = new Date(now.getTime() + (hoursLimit * 60 * 60 * 1000));",
+							"    ",
+							"    jsonData.data.forEach(preAuth => {",
+							"        const expiryDate = new Date(preAuth.expires_at);",
+							"        pm.expect(expiryDate).to.be.below(limitDate);",
+							"        pm.expect(expiryDate).to.be.above(now);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/expiring?hours=24",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"expiring"
+					],
+					"query": [
+						{
+							"key": "hours",
+							"value": "24"
+						}
+					]
+				},
+				"description": "Lista pré-autorizações que vencem nas próximas X horas."
+			}
+		},
+		{
+			"name": "Verificar Status no Gateway",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Gateway status verified\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('gateway_status');",
+							"    pm.expect(jsonData.data).to.have.property('local_status');",
+							"    pm.expect(jsonData.data).to.have.property('sync_status');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/{{testPreAuthId}}/verify-gateway",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"{{testPreAuthId}}",
+						"verify-gateway"
+					]
+				},
+				"description": "Verifica o status da pré-autorização no gateway de pagamento."
+			}
+		},
+		{
+			"name": "Sincronizar com Gateway",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Synchronization completed\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('synchronized_count');",
+							"    pm.expect(jsonData.data).to.have.property('updated_count');",
+							"    pm.expect(jsonData.data).to.have.property('errors');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sync_all\": false,\n    \"status_filter\": [\"AUTHORIZED\", \"PENDING\"],\n    \"max_age_hours\": 72\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/sync-gateway",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"sync-gateway"
+					]
+				},
+				"description": "Sincroniza pré-autorizações com o gateway de pagamento."
+			}
+		},
+		{
+			"name": "Estatísticas de Pré-autorizações",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Pre-authorization statistics complete\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('total_pre_autorizacoes');",
+							"    pm.expect(jsonData.data).to.have.property('por_status');",
+							"    pm.expect(jsonData.data).to.have.property('valor_total_autorizado');",
+							"    pm.expect(jsonData.data).to.have.property('taxa_utilizacao');",
+							"    pm.expect(jsonData.data).to.have.property('tempo_medio_utilizacao');",
+							"    pm.expect(jsonData.data).to.have.property('vencendo_24h');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/admin/pre-authorizations/statistics?period=30",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"pre-authorizations",
+						"statistics"
+					],
+					"query": [
+						{
+							"key": "period",
+							"value": "30"
+						}
+					]
+				},
+				"description": "Obtém estatísticas de pré-autorizações dos últimos X dias."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar se está logado como admin",
+					"const authToken = pm.environment.get('authToken');",
+					"if (!authToken) {",
+					"    console.log('Token de autenticação não encontrado. Execute o login de admin primeiro.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global para verificar autorização",
+					"if (pm.response.code === 403) {",
+					"    console.log('Acesso negado. Certifique-se de estar logado como administrador.');",
+					"}"
+				]
+			}
+		}
+	]
+}

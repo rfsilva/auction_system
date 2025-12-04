@@ -1,0 +1,759 @@
+{
+	"info": {
+		"_postman_id": "auth-collection-id",
+		"name": "01 - Autenticação",
+		"description": "Collection para testes de autenticação e autorização do sistema de leilão.\n\n**Funcionalidades cobertas:**\n- Login de usuários\n- Registro de novos usuários\n- Refresh de tokens\n- Verificação de email\n- Logout\n- Health check\n\n**Usuários de teste disponíveis:**\n- Admin: admin@leilao.com\n- Vendedor: carlos.vendedor@empresaabc.com\n- Comprador: fernanda.lima@email.com\n- Participante: luiza.curiosa@outlook.com\n\n**Senha padrão:** password",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 1000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"health"
+					]
+				},
+				"description": "Verifica se a API está funcionando corretamente."
+			}
+		},
+		{
+			"name": "Login Admin",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"    ",
+							"    // Salvar tokens no environment",
+							"    pm.environment.set('authToken', jsonData.data.token);",
+							"    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+							"});",
+							"",
+							"pm.test(\"User has admin role\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.user.roles).to.include('ADMIN');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{adminEmail}}\",\n    \"password\": \"{{adminPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login do administrador root do sistema."
+			}
+		},
+		{
+			"name": "Login Vendedor",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"    ",
+							"    // Salvar tokens no environment",
+							"    pm.environment.set('authToken', jsonData.data.token);",
+							"    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+							"});",
+							"",
+							"pm.test(\"User has seller role\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.user.roles).to.include('SELLER');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{vendedorEmail}}\",\n    \"password\": \"{{adminPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login do vendedor ABC Importadora."
+			}
+		},
+		{
+			"name": "Login Comprador",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"    ",
+							"    // Salvar tokens no environment",
+							"    pm.environment.set('authToken', jsonData.data.token);",
+							"    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+							"});",
+							"",
+							"pm.test(\"User has buyer role\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.user.roles).to.include('BUYER');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{compradorEmail}}\",\n    \"password\": \"{{adminPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login da compradora VIP Fernanda."
+			}
+		},
+		{
+			"name": "Login Participante",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"    ",
+							"    // Salvar tokens no environment",
+							"    pm.environment.set('authToken', jsonData.data.token);",
+							"    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+							"});",
+							"",
+							"pm.test(\"User has participant role\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.user.roles).to.include('PARTICIPANT');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{participanteEmail}}\",\n    \"password\": \"{{adminPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login do participante curioso Luiza."
+			}
+		},
+		{
+			"name": "Verificar Email Existente",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Email exists\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/check-email?email={{adminEmail}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"check-email"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "{{adminEmail}}"
+						}
+					]
+				},
+				"description": "Verifica se um email já está cadastrado no sistema."
+			}
+		},
+		{
+			"name": "Verificar Email Não Existente",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Email does not exist\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.false;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/check-email?email=novo.usuario@teste.com",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"check-email"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "novo.usuario@teste.com"
+						}
+					]
+				},
+				"description": "Verifica se um email não cadastrado retorna false."
+			}
+		},
+		{
+			"name": "Registro Novo Usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 201\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"",
+							"pm.test(\"Response has token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"});",
+							"",
+							"pm.test(\"User has participant role by default\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.user.roles).to.include('PARTICIPANT');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Gerar email único para cada teste",
+							"const timestamp = Date.now();",
+							"const randomEmail = `teste.usuario.${timestamp}@postman.test`;",
+							"pm.environment.set('randomEmail', randomEmail);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Usuário Teste Postman\",\n    \"email\": \"{{randomEmail}}\",\n    \"password\": \"{{adminPassword}}\",\n    \"phone\": \"(11) 99999-9999\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "Registra um novo usuário no sistema com email único."
+			}
+		},
+		{
+			"name": "Refresh Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has new token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.have.property('token');",
+							"    pm.expect(jsonData.data).to.have.property('refreshToken');",
+							"    pm.expect(jsonData.data).to.have.property('user');",
+							"    ",
+							"    // Atualizar tokens no environment",
+							"    pm.environment.set('authToken', jsonData.data.token);",
+							"    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Verificar se existe refresh token",
+							"const refreshToken = pm.environment.get('refreshToken');",
+							"if (!refreshToken) {",
+							"    console.log('Refresh token não encontrado. Execute um login primeiro.');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/refresh",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"refresh"
+					]
+				},
+				"description": "Renova o token de acesso usando o refresh token."
+			}
+		},
+		{
+			"name": "Logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Logout successful\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"});",
+							"",
+							"// Limpar tokens do environment após logout",
+							"pm.environment.set('authToken', '');",
+							"pm.environment.set('refreshToken', '');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/logout",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"logout"
+					]
+				},
+				"description": "Realiza logout do usuário e invalida o token."
+			}
+		},
+		{
+			"name": "Login Inválido - Email Inexistente",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"pm.test(\"Error message is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"usuario.inexistente@teste.com\",\n    \"password\": \"{{adminPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Testa login com email que não existe no sistema."
+			}
+		},
+		{
+			"name": "Login Inválido - Senha Incorreta",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"pm.test(\"Error message is present\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "{{contentType}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "{{acceptType}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{adminEmail}}\",\n    \"password\": \"senhaIncorreta123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Testa login com senha incorreta."
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado antes de cada requisição",
+					"console.log('Executando requisição para:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global executado após cada requisição",
+					"console.log('Resposta recebida com status:', pm.response.code);"
+				]
+			}
+		}
+	]
+}

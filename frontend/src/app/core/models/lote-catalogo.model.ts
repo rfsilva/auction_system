@@ -1,6 +1,8 @@
 /**
  * Modelos específicos para o catálogo público de lotes
  * História 02: Transformação do Catálogo em Catálogo de Lotes
+ * 
+ * CORRIGIDO: Mapeamento correto dos campos do backend
  */
 
 import { LoteStatus } from './lote.model';
@@ -13,12 +15,18 @@ export interface LoteCatalogo {
   status: LoteStatus;
   createdAt: string;
   
-  // Campos calculados
-  isActive: boolean;
-  timeRemaining: number; // em segundos
+  // CORRIGIDO: Campos calculados com nomes corretos do backend
+  active: boolean;        // Backend envia 'active', não 'isActive'
+  expired: boolean;       // Backend envia 'expired', não 'isExpired'
+  timeRemaining: number;  // em segundos
+  
+  // Aliases para compatibilidade (getters calculados)
+  isActive?: boolean;     // Será calculado a partir de 'active'
+  isExpired?: boolean;    // Será calculado a partir de 'expired'
   
   // Informações dos produtos válidos
-  quantidadeProdutosValidos: number;
+  totalProdutos: number;
+  quantidadeProdutosValidos?: number; // Alias para compatibilidade
   imagemDestaque?: string; // Primeira imagem do primeiro produto válido
   
   // Informações do vendedor (para exibição)
@@ -56,7 +64,12 @@ export interface LoteDestaque {
   description: string;
   loteEndDateTime: string;
   timeRemaining: number;
-  quantidadeProdutosValidos: number;
+  
+  // CORRIGIDO: Usar campos corretos do backend
+  active: boolean;
+  totalProdutos: number;
+  quantidadeProdutosValidos?: number; // Alias para compatibilidade
+  
   imagemDestaque?: string;
   sellerName?: string;
   categoria?: string;

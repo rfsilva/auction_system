@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +21,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Service para operações com Produto com suporte a i18n usando MessageSourceAccessor
+ * Service para operações com Produto (área privada - vendedores)
+ * 
+ * Nota: Catálogo público foi movido para LoteService
+ * Produtos são acessados publicamente apenas através de lotes
  */
 @Service
 @RequiredArgsConstructor
@@ -145,7 +146,7 @@ public class ProdutoService {
     }
 
     /**
-     * Busca produto por ID
+     * Busca produto por ID (área privada)
      */
     @Transactional(readOnly = true)
     public ProdutoDto buscarPorId(String produtoId) {
@@ -220,26 +221,7 @@ public class ProdutoService {
     }
 
     /**
-     * Busca catálogo público com filtros
-     */
-    @Transactional(readOnly = true)
-    public Page<ProdutoDto> buscarCatalogoPublico(CatalogoFiltroRequest filtros) {
-        Pageable pageable = criarPageable(filtros);
-        
-        Page<Produto> produtos = produtoRepository.findCatalogoPublico(
-            LocalDateTime.now(),
-            filtros.getCategoria(),
-            filtros.getPrecoMin(),
-            filtros.getPrecoMax(),
-            filtros.getTitulo(),
-            pageable
-        );
-        
-        return produtos.map(this::convertToDto);
-    }
-
-    /**
-     * Lista categorias ativas
+     * Lista categorias ativas (usado por lotes e produtos)
      */
     @Transactional(readOnly = true)
     public List<String> listarCategoriasAtivas() {
@@ -344,17 +326,6 @@ public class ProdutoService {
             throw new BusinessException(
                     messageSourceAccessor.getMessage("product.date.invalid", LocaleContextHolder.getLocale()));
         }
-    }
-
-    private Pageable criarPageable(CatalogoFiltroRequest filtros) {
-        Sort sort = switch (filtros.getOrdenacao()) {
-            case "preco_asc" -> Sort.by("currentPrice").ascending();
-            case "preco_desc" -> Sort.by("currentPrice").descending();
-            case "terminando" -> Sort.by("endDateTime").ascending();
-            default -> Sort.by("createdAt").descending();
-        };
-        
-        return PageRequest.of(filtros.getPage(), filtros.getSize(), sort);
     }
 
     private ProdutoDto convertToDto(Produto produto) {

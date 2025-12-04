@@ -1,5 +1,6 @@
 /* Estilos para o componente LoteCard */
 /* História 02: Transformação do Catálogo em Catálogo de Lotes */
+/* Atualizado para usar LoteImageComponent */
 
 .lote-card {
   background: white;
@@ -19,87 +20,27 @@
   &.ending-soon {
     border: 2px solid #ff6b35;
     
-    .lote-image::after {
+    // Efeito visual para lotes próximos do encerramento
+    &::after {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 53, 0.1) 100%);
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 53, 0.05) 100%);
       pointer-events: none;
+      z-index: 1;
     }
   }
 
   &.inactive {
     opacity: 0.7;
     
-    .lote-image {
+    // O filtro de grayscale agora é aplicado no componente de imagem
+    app-lote-image {
       filter: grayscale(50%);
     }
-  }
-}
-
-.lote-image {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover img {
-    transform: scale(1.05);
-  }
-
-  .status-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-
-    &.status-active {
-      background: #10b981;
-      color: white;
-    }
-
-    &.status-ending-soon {
-      background: #f59e0b;
-      color: white;
-      animation: pulse 2s infinite;
-    }
-
-    &.status-ending-today {
-      background: #ef4444;
-      color: white;
-      animation: pulse 1.5s infinite;
-    }
-
-    &.status-inactive {
-      background: #6b7280;
-      color: white;
-    }
-  }
-
-  .produtos-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 500;
   }
 }
 
@@ -194,65 +135,51 @@
   align-items: center;
   gap: 8px;
 
-  .btn-favorite {
-    background: none;
-    border: 1px solid #d1d5db;
+  .btn {
     border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
+    font-weight: 500;
     transition: all 0.2s ease;
-    display: flex;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    height: 36px;
-
-    i {
-      font-size: 1rem;
-      color: #6b7280;
-      transition: color 0.2s ease;
-    }
-
+    
     &:hover {
-      border-color: #ff6b35;
-      background: #fef7f0;
-      
-      i {
-        color: #ff6b35;
-      }
+      text-decoration: none;
+      transform: translateY(-1px);
     }
-
-    &.favorited {
-      border-color: #ff6b35;
-      background: #ff6b35;
-      
-      i {
-        color: white;
-      }
-
-      &:hover {
-        background: #e55a2b;
-      }
+    
+    &.btn-sm {
+      padding: 6px 12px;
+      font-size: 0.875rem;
     }
   }
 
-  .btn-details {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background 0.2s ease;
-    flex: 1;
-    text-align: center;
-
+  .btn-outline-danger {
+    min-width: 36px;
+    
     &:hover {
-      background: #2563eb;
-      text-decoration: none;
-      color: white;
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    
+    &:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+    }
+  }
+
+  .btn-primary {
+    flex: 1;
+    
+    &:hover {
+      background-color: #0056b3;
+      border-color: #004085;
     }
   }
 }
@@ -270,10 +197,6 @@
 /* Responsividade */
 @media (max-width: 768px) {
   .lote-card {
-    .lote-image {
-      height: 160px;
-    }
-
     .lote-content {
       padding: 12px;
       gap: 6px;
@@ -290,8 +213,8 @@
     .lote-actions {
       padding: 8px 12px;
       
-      .btn-details {
-        padding: 6px 12px;
+      .btn.btn-sm {
+        padding: 5px 10px;
         font-size: 0.8rem;
       }
     }
@@ -300,21 +223,27 @@
 
 @media (max-width: 480px) {
   .lote-card {
-    .lote-image {
-      height: 140px;
-    }
-
     .lote-actions {
       flex-direction: column;
       gap: 8px;
 
-      .btn-favorite {
+      .btn-outline-danger,
+      .btn-danger {
         align-self: flex-end;
       }
 
-      .btn-details {
+      .btn-primary {
         width: 100%;
       }
     }
+  }
+}
+
+/* Ajustes específicos para o componente de imagem */
+app-lote-image {
+  transition: filter 0.3s ease;
+  
+  &:hover {
+    // Efeito de hover será tratado internamente pelo componente
   }
 }
