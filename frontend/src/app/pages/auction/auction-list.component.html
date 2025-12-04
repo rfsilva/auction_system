@@ -2,6 +2,10 @@
   <div class="page-header">
     <h1>Leilões Ativos</h1>
     <p>Participe dos leilões em tempo real</p>
+    <div class="mock-notice">
+      <span class="badge badge-mock">DADOS DEMONSTRATIVOS</span>
+      <small>Esta página contém dados fictícios para demonstração</small>
+    </div>
   </div>
 
   <div class="filters">
@@ -27,12 +31,13 @@
 
   <div class="auction-grid">
     @for (auction of mockAuctions; track auction.id) {
-      <div class="auction-card">
+      <div class="auction-card mock-card">
         <div class="auction-image">
           <div class="placeholder-image">📷</div>
           <div class="auction-status" [class]="auction.status">
             {{ getStatusText(auction.status) }}
           </div>
+          <span class="badge badge-mock card-mock">MOCK</span>
         </div>
         <div class="auction-content">
           <h3 class="auction-title">{{ auction.title }}</h3>

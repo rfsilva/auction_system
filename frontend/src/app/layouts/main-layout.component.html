@@ -11,7 +11,6 @@
       <div class="nav-menu">
         <a routerLink="/" class="nav-link">Home</a>
         <a routerLink="/catalogo" class="nav-link">Catálogo</a>
-        <a routerLink="/auctions" class="nav-link">Leilões</a>
         
         @if (authService.isAuthenticated()) {
           @if (authService.canSell()) {
@@ -40,10 +39,12 @@
                 <a href="#" class="dropdown-item">
                   <i class="fas fa-chart-line me-2"></i>
                   Relatórios de Vendas
+                  <span class="badge badge-mock">MOCK</span>
                 </a>
                 <a href="#" class="dropdown-item">
                   <i class="fas fa-cog me-2"></i>
                   Configurações
+                  <span class="badge badge-mock">MOCK</span>
                 </a>
               </div>
             </div>
@@ -73,10 +74,12 @@
                 <a href="#" class="dropdown-item">
                   <i class="fas fa-store me-2"></i>
                   Vendedores
+                  <span class="badge badge-mock">MOCK</span>
                 </a>
                 <a href="#" class="dropdown-item">
                   <i class="fas fa-chart-bar me-2"></i>
                   Relatórios
+                  <span class="badge badge-mock">MOCK</span>
                 </a>
               </div>
             </div>

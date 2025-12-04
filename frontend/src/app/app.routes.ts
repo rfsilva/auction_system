@@ -20,10 +20,6 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/auth/register.component').then(m => m.RegisterComponent)
       },
       {
-        path: 'auctions',
-        loadComponent: () => import('./pages/auction/auction-list.component').then(m => m.AuctionListComponent)
-      },
-      {
         path: 'profile',
         loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
         canActivate: [authGuard]

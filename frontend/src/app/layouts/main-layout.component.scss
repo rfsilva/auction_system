@@ -91,7 +91,9 @@
     z-index: 1000;
 
     .dropdown-item {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 0.75rem 1rem;
       color: #666;
       text-decoration: none;
@@ -106,6 +108,44 @@
         color: #e74c3c;
       }
     }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e9ecef;
+      margin: 0.5rem 0;
+    }
+  }
+}
+
+// Badge para elementos mockados
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+
+  &.badge-mock {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #ffb300;
+    animation: pulse-mock 2s infinite;
+  }
+}
+
+@keyframes pulse-mock {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
   }
 }
 
