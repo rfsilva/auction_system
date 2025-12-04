@@ -1,5 +1,6 @@
 package com.leilao.core.config;
 
+import com.leilao.core.filter.RateLimitingFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,9 @@ import java.util.List;
 
 /**
  * Configuração de segurança da aplicação
+ * História 5: Integração e Otimização - Sprint S2.2
+ * 
+ * Atualizada para incluir Rate Limiting Filter
  */
 @Configuration
 @EnableWebSecurity
@@ -34,6 +38,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthFilter;
+
+    @Autowired
+    private RateLimitingFilter rateLimitingFilter;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -76,9 +83,14 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // Ordem dos filtros é importante:
+            // 1. Rate Limiting (antes de tudo)
+            // 2. JWT Authentication
+            // 3. Username/Password Authentication
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(jwtAuthFilter, RateLimitingFilter.class)
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
+                .frameOptions().deny()
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
             );
 

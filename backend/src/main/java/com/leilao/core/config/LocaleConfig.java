@@ -8,27 +8,27 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
-import java.util.Arrays;
 import java.util.Locale;
 
 /**
  * Configuração de internacionalização (i18n) com MessageSourceAccessor
+ * História 5: Integração e Otimização - Sprint S2.2
  */
 @Configuration
 public class LocaleConfig implements WebMvcConfigurer {
 
     /**
-     * Configuração do MessageSource para carregar mensagens dos arquivos de propriedades
+     * Configuração do MessageSource para carregar mensagens dos arquivos .properties
      */
     @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasename("classpath:messages/messages");
         messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setDefaultLocale(new Locale("pt", "BR")); // Português como padrão
+        messageSource.setDefaultLocale(new Locale("pt", "BR"));
         messageSource.setCacheSeconds(3600); // Cache por 1 hora
         messageSource.setFallbackToSystemLocale(false);
         return messageSource;
@@ -44,18 +44,12 @@ public class LocaleConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Resolver de locale baseado no header Accept-Language
+     * Resolver de locale baseado na sessão
      */
     @Bean
     public LocaleResolver localeResolver() {
-        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
-        localeResolver.setDefaultLocale(new Locale("pt", "BR")); // Português como padrão
-        localeResolver.setSupportedLocales(Arrays.asList(
-            new Locale("pt", "BR"), // Português (Brasil)
-            new Locale("en", "US"), // Inglês (Estados Unidos)
-            new Locale("es", "ES"), // Espanhol (Espanha)
-            new Locale("it", "IT")  // Italiano (Itália)
-        ));
+        SessionLocaleResolver localeResolver = new SessionLocaleResolver();
+        localeResolver.setDefaultLocale(new Locale("pt", "BR"));
         return localeResolver;
     }
 
@@ -65,7 +59,7 @@ public class LocaleConfig implements WebMvcConfigurer {
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
         LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-        interceptor.setParamName("lang"); // Parâmetro para mudança de idioma: ?lang=en
+        interceptor.setParamName("lang");
         return interceptor;
     }
 
