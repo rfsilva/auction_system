@@ -404,7 +404,7 @@ public class AdminUsuarioService {
         long usuariosAtivos = usuarioRepository.countByStatus(UserStatus.ACTIVE);
         long usuariosInativos = usuarioRepository.countByStatus(UserStatus.INACTIVE);
         long usuariosSuspensos = usuarioRepository.countByStatus(UserStatus.SUSPENDED);
-        long usuariosPendentes = usuarioRepository.countByStatus(UserStatus.PENDING);
+        long usuariosPendentes = usuarioRepository.countByStatus(UserStatus.PENDING_VERIFICATION); // Corrigido aqui
         
         List<Usuario> vendedores = usuarioRepository.findUsuariosByRole(UserRole.SELLER.name());
         long totalVendedores = vendedores.size();

@@ -6,7 +6,7 @@ package com.leilao.shared.enums;
 public enum UserStatus {
     ACTIVE("status.active"),
     INACTIVE("status.inactive"),
-    PENDING("status.pending"),
+    PENDING_VERIFICATION("status.pending_verification"),  // Corrigido para corresponder ao banco
     SUSPENDED("status.suspended");
 
     private final String messageKey;
