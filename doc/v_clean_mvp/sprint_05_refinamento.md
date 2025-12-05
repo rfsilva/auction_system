@@ -14,6 +14,7 @@ Garantir monitoramento do sistema, métricas de operação, relatórios gerencia
 ### 🛠️ Backend:
 - Java 21 + Spring Boot 3 + API REST + DTO + Validation + Lombok + JPA + MySQL + Flyway
 - Entidade JPA completa (com Lombok, constraints e relacionamentos)
+- Usar String para campos UUID quando as colunas do banco são VARCHAR(36)
 - DTOs (request/response), validadores e mappers
 - Repository
 - Service com regras de negócio
@@ -21,6 +22,7 @@ Garantir monitoramento do sistema, métricas de operação, relatórios gerencia
 - Migrations (somente se necessário; primeiro valide se existe na V1)
 - Regras de validação (negócio e campos)
 - Mensagens de erro claras	
+- I18N estruturado para Português, Inglês, Espanhol e Italiano
 
 ### 🎨 Frontend: 
 - Angular 18 (standalone) + HttpClient com fetch + Reactive Forms + rotas

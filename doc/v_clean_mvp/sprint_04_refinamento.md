@@ -14,6 +14,7 @@ Completar funcionalidades críticas de pós-arremate: pagamentos reais, contesta
 ### 🛠️ Backend:
 - Java 21 + Spring Boot 3 + API REST + DTO + Validation + Lombok + JPA + MySQL + Flyway
 - Entidade JPA completa (com Lombok, constraints e relacionamentos)
+- Usar String para campos UUID quando as colunas do banco são VARCHAR(36)
 - DTOs (request/response), validadores e mappers
 - Repository
 - Service com regras de negócio
