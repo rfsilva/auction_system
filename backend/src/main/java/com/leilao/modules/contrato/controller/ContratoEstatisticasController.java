@@ -19,10 +19,10 @@ import java.time.LocalDate;
  * Controller para estatísticas e relatórios de contratos com suporte a i18n
  * História 1: Endpoints de Estatísticas de Contratos - Sprint S2.2
  * História 2: Sistema de Cálculo de Comissões - Sprint S2.2
- * VERSÃO CORRIGIDA - Com suporte completo a i18n usando MessageSourceAccessor
+ * REFATORAÇÃO: Movido para /api/admin/contratos/estatisticas/** para organização das rotas
  */
 @RestController
-@RequestMapping("/contratos")
+@RequestMapping("/api/admin/contratos/estatisticas")
 @RequiredArgsConstructor
 @Slf4j
 public class ContratoEstatisticasController {
@@ -38,7 +38,7 @@ public class ContratoEstatisticasController {
      * Performance: < 500ms para consultas de estatísticas (com cache)
      * Cache: 5 minutos para estatísticas gerais
      */
-    @GetMapping("/estatisticas")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoEstatisticasDto>> obterEstatisticas() {
         log.info("Solicitação de estatísticas de contratos recebida");

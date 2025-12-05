@@ -3,17 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { LoteCatalogoService } from '../../core/services/lote-catalogo.service';
+import { PublicCatalogoService, LoteDto, LoteFiltro } from '../../core/services/public-catalogo.service';
 import { LoteCardComponent } from '../../shared/components/lote-card.component';
-import { 
-  LoteCatalogo, 
-  LoteCatalogoFiltro, 
-  PAGINACAO_CONFIG 
-} from '../../core/models/lote-catalogo.model';
-import { PaginatedResponse } from '../../core/models/lote.model';
 
 /**
  * Componente do catálogo de lotes
+ * FASE 2 - Atualização de Componentes: Migrado para PublicCatalogoService
+ * 
  * História 02: Transformação do Catálogo em Catálogo de Lotes
  */
 @Component({
@@ -85,18 +81,15 @@ import { PaginatedResponse } from '../../core/models/lote.model';
           <!-- Filtros expandidos -->
           <div class="filtros-expandidos" *ngIf="filtrosExpandidos">
             <div class="filtros-grid">
-              <!-- Aqui podem ser adicionados filtros adicionais no futuro -->
               <div class="filter-group">
                 <label>Itens por página:</label>
                 <select 
                   [(ngModel)]="filtros.size"
                   (change)="aplicarFiltros()"
                   class="filter-select small">
-                  <option 
-                    *ngFor="let opcao of paginacaoConfig.opcoesPorPagina" 
-                    [value]="opcao">
-                    {{ opcao }}
-                  </option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
                 </select>
               </div>
             </div>
@@ -223,30 +216,29 @@ import { PaginatedResponse } from '../../core/models/lote.model';
 export class CatalogoLotesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  lotes: LoteCatalogo[] = [];
+  lotes: LoteDto[] = [];
   categorias: string[] = [];
   loading = false;
   error = '';
   
   // Filtros
-  filtros: LoteCatalogoFiltro = {
+  filtros: LoteFiltro = {
     termo: '',
     categoria: '',
     ordenacao: 'proximidade_encerramento',
     page: 0,
-    size: PAGINACAO_CONFIG.padraoLotes
+    size: 20
   };
 
   // Paginação
   currentPage = 0;
   totalPages = 0;
   totalElements = 0;
-  paginacaoConfig = PAGINACAO_CONFIG;
 
   // UI
   filtrosExpandidos = false;
 
-  constructor(private loteCatalogoService: LoteCatalogoService) {}
+  constructor(private publicCatalogoService: PublicCatalogoService) {}
 
   ngOnInit(): void {
     this.carregarCategorias();
@@ -259,21 +251,32 @@ export class CatalogoLotesComponent implements OnInit, OnDestroy {
   }
 
   // TrackBy function para otimizar *ngFor
-  trackByLoteId(index: number, lote: LoteCatalogo): string {
+  trackByLoteId(index: number, lote: LoteDto): string {
     return lote.id;
   }
 
   carregarCategorias(): void {
-    // Por enquanto, usar categorias fixas
-    // No futuro, pode ser um endpoint específico para categorias de lotes
-    this.categorias = [
-      'Eletrônicos',
-      'Livros',
-      'Arte',
-      'Colecionáveis',
-      'Móveis',
-      'Roupas'
-    ];
+    this.publicCatalogoService.listarCategorias()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.categorias = response.data;
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao carregar categorias:', error);
+          // Fallback para categorias fixas
+          this.categorias = [
+            'Eletrônicos',
+            'Livros',
+            'Arte',
+            'Colecionáveis',
+            'Móveis',
+            'Roupas'
+          ];
+        }
+      });
   }
 
   buscarLotes(page?: number): void {
@@ -285,7 +288,7 @@ export class CatalogoLotesComponent implements OnInit, OnDestroy {
       page: page !== undefined ? page : this.filtros.page 
     };
 
-    this.loteCatalogoService.buscarCatalogoPublico(filtrosComPagina)
+    this.publicCatalogoService.buscarLotes(filtrosComPagina)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -319,7 +322,7 @@ export class CatalogoLotesComponent implements OnInit, OnDestroy {
       categoria: '',
       ordenacao: 'proximidade_encerramento',
       page: 0,
-      size: PAGINACAO_CONFIG.padraoLotes
+      size: 20
     };
     this.buscarLotes(0);
   }
@@ -359,6 +362,11 @@ export class CatalogoLotesComponent implements OnInit, OnDestroy {
   }
 
   getOrdenacaoText(): string {
-    return this.loteCatalogoService.getOrdenacaoText(this.filtros.ordenacao || 'proximidade_encerramento');
+    const ordenacaoMap: { [key: string]: string } = {
+      'proximidade_encerramento': 'Encerrando primeiro',
+      'recentes': 'Mais recentes',
+      'alfabetica': 'Ordem alfabética'
+    };
+    return ordenacaoMap[this.filtros.ordenacao || 'proximidade_encerramento'] || 'Padrão';
   }
 }

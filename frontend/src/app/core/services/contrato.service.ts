@@ -27,31 +27,41 @@ export interface ContratoCreateFromUserRequest {
 
 /**
  * Service para operações com contratos
+ * FASE 2 - Reorganização de Services: Atualizado para nova estrutura de rotas
+ * 
+ * Conecta com os endpoints:
+ * - /api/admin/contratos/** (operações administrativas)
+ * - /api/vendedor/contratos/** (operações do vendedor)
+ * 
  * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
- * ✅ CONSOLIDADO: Usa interfaces do arquivo centralizado
  */
 @Injectable({
   providedIn: 'root'
 })
 export class ContratoService {
 
-  private readonly baseUrl = `${environment.apiUrl}/contratos`;
+  private readonly adminUrl = `${environment.apiUrl}/api/admin/contratos`;
+  private readonly vendedorUrl = `${environment.apiUrl}/api/vendedor/contratos`;
 
   constructor(private http: HttpClient) {}
+
+  // ========================================
+  // OPERAÇÕES ADMINISTRATIVAS
+  // ========================================
 
   /**
    * Cria um novo contrato a partir de usuário (novo fluxo)
    * Promove automaticamente o usuário a vendedor se necessário
    */
   criarContratoDeUsuario(contrato: ContratoCreateFromUserRequest): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/criar-de-usuario`, contrato);
+    return this.http.post<ApiResponse<Contrato>>(`${this.adminUrl}/criar-de-usuario`, contrato);
   }
 
   /**
    * Cria um novo contrato (fluxo antigo - para vendedores existentes)
    */
   criarContrato(contrato: ContratoCreateRequest): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(this.baseUrl, contrato);
+    return this.http.post<ApiResponse<Contrato>>(this.adminUrl, contrato);
   }
 
   /**
@@ -59,25 +69,25 @@ export class ContratoService {
    * História 2: Processo de Contratação de Vendedores
    */
   ativarVendedor(request: AtivarVendedorRequest): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/ativar-vendedor`, request);
+    return this.http.post<ApiResponse<Contrato>>(`${this.adminUrl}/ativar-vendedor`, request);
   }
 
   /**
-   * Atualiza um contrato existente
+   * Atualiza um contrato existente (admin)
    */
   atualizarContrato(contratoId: string, contrato: ContratoUpdateRequest): Observable<ApiResponse<Contrato>> {
-    return this.http.put<ApiResponse<Contrato>>(`${this.baseUrl}/${contratoId}`, contrato);
+    return this.http.put<ApiResponse<Contrato>>(`${this.adminUrl}/${contratoId}`, contrato);
   }
 
   /**
-   * Busca contrato por ID
+   * Busca contrato por ID (admin)
    */
   buscarContrato(contratoId: string): Observable<ApiResponse<Contrato>> {
-    return this.http.get<ApiResponse<Contrato>>(`${this.baseUrl}/${contratoId}`);
+    return this.http.get<ApiResponse<Contrato>>(`${this.adminUrl}/${contratoId}`);
   }
 
   /**
-   * Lista contratos com filtros
+   * Lista contratos com filtros (admin)
    */
   listarContratos(filtros: ContratoFiltro = {}): Observable<ApiResponse<PaginatedResponse<Contrato>>> {
     let params = new HttpParams();
@@ -95,11 +105,11 @@ export class ContratoService {
     if (filtros.sort) params = params.set('sort', filtros.sort);
     if (filtros.direction) params = params.set('direction', filtros.direction);
 
-    return this.http.get<ApiResponse<PaginatedResponse<Contrato>>>(this.baseUrl, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Contrato>>>(this.adminUrl, { params });
   }
 
   /**
-   * Lista contratos por vendedor
+   * Lista contratos por vendedor (admin)
    */
   listarContratosPorVendedor(sellerId: string, page: number = 0, size: number = 20): Observable<ApiResponse<PaginatedResponse<Contrato>>> {
     let params = new HttpParams()
@@ -108,74 +118,92 @@ export class ContratoService {
       .set('sort', 'createdAt')
       .set('direction', 'desc');
 
-    return this.http.get<ApiResponse<PaginatedResponse<Contrato>>>(`${this.baseUrl}/vendedor/${sellerId}`, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Contrato>>>(`${this.adminUrl}/vendedor/${sellerId}`, { params });
   }
 
   /**
-   * Lista contratos ativos do vendedor atual (para seleção em lotes)
-   */
-  listarMeusContratosAtivos(): Observable<ApiResponse<Contrato[]>> {
-    const params = new HttpParams()
-      .set('active', 'true')
-      .set('status', 'ACTIVE')
-      .set('size', '100'); // Buscar todos os contratos ativos
-
-    return this.http.get<ApiResponse<Contrato[]>>(`${this.baseUrl}/meus-ativos`, { params });
-  }
-
-  /**
-   * Ativa um contrato
+   * Ativa um contrato (admin)
    */
   ativarContrato(contratoId: string): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/${contratoId}/ativar`, {});
+    return this.http.post<ApiResponse<Contrato>>(`${this.adminUrl}/${contratoId}/ativar`, {});
   }
 
   /**
-   * Cancela um contrato
+   * Cancela um contrato (admin)
    */
   cancelarContrato(contratoId: string): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/${contratoId}/cancelar`, {});
+    return this.http.post<ApiResponse<Contrato>>(`${this.adminUrl}/${contratoId}/cancelar`, {});
   }
 
   /**
-   * Suspende um contrato
+   * Suspende um contrato (admin)
    */
   suspenderContrato(contratoId: string): Observable<ApiResponse<Contrato>> {
-    return this.http.post<ApiResponse<Contrato>>(`${this.baseUrl}/${contratoId}/suspender`, {});
+    return this.http.post<ApiResponse<Contrato>>(`${this.adminUrl}/${contratoId}/suspender`, {});
   }
 
   /**
-   * Exclui um contrato
+   * Exclui um contrato (admin)
    */
   excluirContrato(contratoId: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${contratoId}`);
+    return this.http.delete<ApiResponse<void>>(`${this.adminUrl}/${contratoId}`);
   }
 
   /**
-   * Busca contrato ativo para vendedor e categoria
+   * Busca contrato ativo para vendedor e categoria (admin)
    */
   buscarContratoAtivo(sellerId: string, categoria?: string): Observable<ApiResponse<Contrato>> {
     let params = new HttpParams();
     if (categoria) params = params.set('categoria', categoria);
 
-    return this.http.get<ApiResponse<Contrato>>(`${this.baseUrl}/vendedor/${sellerId}/ativo`, { params });
+    return this.http.get<ApiResponse<Contrato>>(`${this.adminUrl}/vendedor/${sellerId}/ativo`, { params });
   }
 
   /**
    * Lista categorias disponíveis
    */
   listarCategorias(): Observable<ApiResponse<string[]>> {
-    return this.http.get<ApiResponse<string[]>>(`${this.baseUrl}/categorias`);
+    return this.http.get<ApiResponse<string[]>>(`${this.adminUrl}/categorias`);
   }
 
   /**
-   * Verifica se vendedor tem contrato ativo
+   * Verifica se vendedor tem contrato ativo (admin)
    */
   vendedorTemContratoAtivo(sellerId: string): Observable<ApiResponse<boolean>> {
-    return this.http.get<ApiResponse<boolean>>(`${this.baseUrl}/vendedor/${sellerId}/tem-ativo`);
+    return this.http.get<ApiResponse<boolean>>(`${this.adminUrl}/vendedor/${sellerId}/tem-ativo`);
   }
 
-  // Métodos utilitários
+  // ========================================
+  // OPERAÇÕES DO VENDEDOR
+  // ========================================
+
+  /**
+   * Lista contratos ativos do vendedor atual (para seleção em lotes)
+   */
+  listarMeusContratosAtivos(): Observable<ApiResponse<Contrato[]>> {
+    return this.http.get<ApiResponse<Contrato[]>>(`${this.vendedorUrl}/meus-ativos`);
+  }
+
+  /**
+   * Busca contrato ativo do vendedor para uma categoria específica
+   */
+  buscarMeuContratoAtivo(categoria?: string): Observable<ApiResponse<Contrato>> {
+    let params = new HttpParams();
+    if (categoria) params = params.set('categoria', categoria);
+
+    return this.http.get<ApiResponse<Contrato>>(`${this.vendedorUrl}/meu-ativo`, { params });
+  }
+
+  /**
+   * Verifica se o vendedor tem contrato ativo
+   */
+  tenhoContratoAtivo(): Observable<ApiResponse<boolean>> {
+    return this.http.get<ApiResponse<boolean>>(`${this.vendedorUrl}/tenho-ativo`);
+  }
+
+  // ========================================
+  // MÉTODOS UTILITÁRIOS
+  // ========================================
 
   /**
    * Formata taxa de comissão para exibição

@@ -108,19 +108,32 @@ export class LoteFormComponent implements OnInit {
     });
   }
 
+  /**
+   * ✅ CORRIGIDO: Agora usa ProdutoService em vez de ContratoService
+   * O endpoint /api/vendedor/produtos/categorias é acessível para vendedores
+   */
   private carregarCategorias(): void {
     this.loadingCategorias = true;
     
-    this.contratoService.listarCategorias().subscribe({
+    // ✅ CORRIGIDO: Desabilitar o campo categoria enquanto carrega
+    this.loteForm.get('categoria')?.disable();
+    
+    this.produtoService.listarCategorias().subscribe({
       next: (response) => {
         if (response.success) {
           this.categorias = response.data;
         }
         this.loadingCategorias = false;
+        
+        // ✅ CORRIGIDO: Reabilitar o campo categoria após carregar
+        this.loteForm.get('categoria')?.enable();
       },
       error: (error) => {
         console.error('Erro ao carregar categorias:', error);
         this.loadingCategorias = false;
+        
+        // ✅ CORRIGIDO: Reabilitar o campo categoria mesmo em caso de erro
+        this.loteForm.get('categoria')?.enable();
       }
     });
   }

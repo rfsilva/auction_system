@@ -1,13 +1,16 @@
 <div class="lote-image-container" [style.height.px]="height">
-  <!-- Placeholder sempre visível -->
-  <div class="image-placeholder" [class.hidden]="imageLoaded && !imageError">
+  <!-- Placeholder CSS (sempre visível quando necessário) -->
+  <div 
+    *ngIf="shouldShowPlaceholder()" 
+    class="image-placeholder"
+    [class.loading]="!imageError && !isExampleUrl && imageSrc">
     <div class="placeholder-content">
       <div class="placeholder-icon">{{ getPlaceholderIcon() }}</div>
       <div class="placeholder-text">{{ getPlaceholderText() }}</div>
     </div>
   </div>
   
-  <!-- Imagem real -->
+  <!-- Imagem real (apenas quando válida e carregada) -->
   <img 
     *ngIf="shouldShowImage()"
     [src]="imageSrc"

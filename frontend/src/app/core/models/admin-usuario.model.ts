@@ -44,6 +44,15 @@ export interface AdminUsuarioUpdateRequest {
   telefoneVerificado?: boolean;
 }
 
+export interface UsuarioSugestaoDto {
+  id: string;
+  nome: string;
+  email: string;
+  telefone?: string;
+  isVendedor: boolean;
+  temContratoAtivo?: boolean;
+}
+
 export interface PaginatedResponse<T> {
   content: T[];
   totalElements: number;

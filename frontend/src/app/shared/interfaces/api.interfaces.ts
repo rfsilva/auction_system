@@ -94,6 +94,7 @@ export interface UsuarioSugestaoDto {
   id: string;
   nome: string;
   email: string;
+  telefone?: string;
   isVendedor: boolean;
   temContratoAtivo?: boolean;
 }

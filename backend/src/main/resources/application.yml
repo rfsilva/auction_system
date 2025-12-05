@@ -94,7 +94,7 @@ logging:
   level:
     com.leilao: INFO
     org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     # Logs do Flyway
     org.flywaydb: INFO
@@ -110,8 +110,6 @@ logging:
 # Configurações do servidor
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /api
   error:
     include-message: always
     include-binding-errors: always

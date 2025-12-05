@@ -20,32 +20,18 @@ import java.util.List;
 
 /**
  * Controller para operações com contratos
+ * FASE 1 - Reorganização de Rotas: Movido para /api/admin/contratos/**
+ * 
  * Apenas administradores podem gerenciar contratos
  * Inclui funcionalidades da História 2: Processo de Contratação de Vendedores
  */
 @RestController
-@RequestMapping("/contratos")
+@RequestMapping("/api/admin/contratos")
 @RequiredArgsConstructor
 @Slf4j
 public class ContratoController {
 
     private final ContratoService contratoService;
-
-    /**
-     * Lista contratos ativos do vendedor atual (para seleção em lotes)
-     * Endpoint acessível por vendedores
-     */
-    @GetMapping("/meus-ativos")
-    @PreAuthorize("hasRole('SELLER')")
-    public ResponseEntity<ApiResponse<List<ContratoDto>>> listarMeusContratosAtivos(
-            @AuthenticationPrincipal Usuario usuario) {
-        
-        log.info("Vendedor {} listando seus contratos ativos", usuario.getId());
-        
-        List<ContratoDto> contratos = contratoService.listarContratosAtivosDoVendedor(usuario.getId());
-        
-        return ResponseEntity.ok(ApiResponse.success(contratos));
-    }
 
     /**
      * Cria um novo contrato a partir de usuário (novo fluxo)

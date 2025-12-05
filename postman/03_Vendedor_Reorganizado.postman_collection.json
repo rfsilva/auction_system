@@ -1,0 +1,496 @@
+{
+  "info": {
+    "name": "03 - Área do Vendedor (Reorganizado)",
+    "description": "Collection para testar endpoints da área do vendedor após reorganização\nEndpoints: /api/vendedor/** (requer role SELLER)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Gestão de Produtos",
+      "item": [
+        {
+          "name": "Listar Meus Produtos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.content.length > 0) {",
+                  "        pm.environment.set('produtoId', response.data.content[0].id);",
+                  "        console.log('Produto ID salvo: ' + response.data.content[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos?page=0&size=10",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista produtos do vendedor logado"
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('produtoId', response.data.id);",
+                  "        console.log('Produto criado com ID: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Smartphone Samsung Galaxy\",\n  \"description\": \"Smartphone em excelente estado, pouco uso\",\n  \"initialPrice\": 800.00,\n  \"reservePrice\": 600.00,\n  \"incrementMin\": 50.00,\n  \"endDateTime\": \"2024-12-31T23:59:59\",\n  \"categoria\": \"Eletrônicos\",\n  \"tags\": [\"smartphone\", \"samsung\", \"galaxy\"],\n  \"images\": [\"https://exemplo.com/imagem1.jpg\"],\n  \"weight\": 0.2,\n  \"dimensions\": \"15x7x1 cm\",\n  \"antiSnipeEnabled\": true,\n  \"antiSnipeExtension\": 300\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            },
+            "description": "Cria um novo produto"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Produto por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/{{produtoId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "{{produtoId}}"]
+            },
+            "description": "Busca produto por ID (área privada do vendedor)"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Produto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Smartphone Samsung Galaxy - Atualizado\",\n  \"description\": \"Smartphone em excelente estado, pouco uso - Descrição atualizada\",\n  \"initialPrice\": 850.00,\n  \"reservePrice\": 650.00,\n  \"categoria\": \"Eletrônicos\",\n  \"tags\": [\"smartphone\", \"samsung\", \"galaxy\", \"atualizado\"]\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/{{produtoId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "{{produtoId}}"]
+            },
+            "description": "Atualiza um produto existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Publicar Produto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/{{produtoId}}/publicar",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "{{produtoId}}", "publicar"]
+            },
+            "description": "Publica um produto (muda status para ACTIVE)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Categorias de Produtos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/categorias",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "categorias"]
+            },
+            "description": "Lista categorias disponíveis para produtos"
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/{{produtoId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "{{produtoId}}"]
+            },
+            "description": "Exclui um produto"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gestão de Lotes",
+      "item": [
+        {
+          "name": "Listar Meus Lotes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.content.length > 0) {",
+                  "        pm.environment.set('loteId', response.data.content[0].id);",
+                  "        console.log('Lote ID salvo: ' + response.data.content[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes?page=0&size=10",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista lotes do vendedor logado"
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Lote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('loteId', response.data.id);",
+                  "        console.log('Lote criado com ID: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lote de Eletrônicos\",\n  \"description\": \"Lote com diversos produtos eletrônicos em bom estado\",\n  \"loteEndDateTime\": \"2024-12-31T23:59:59\",\n  \"produtoIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes"]
+            },
+            "description": "Cria um novo lote"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Lote por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}"]
+            },
+            "description": "Busca lote por ID (área privada do vendedor)"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Lote",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lote de Eletrônicos - Atualizado\",\n  \"description\": \"Lote com diversos produtos eletrônicos em bom estado - Descrição atualizada\",\n  \"loteEndDateTime\": \"2024-12-31T23:59:59\"\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}"]
+            },
+            "description": "Atualiza um lote existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Ativar Lote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}/ativar",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}", "ativar"]
+            },
+            "description": "Ativa um lote"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar Lote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}/cancelar",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}", "cancelar"]
+            },
+            "description": "Cancela um lote"
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Lote",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}"]
+            },
+            "description": "Exclui um lote"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meus Contratos",
+      "item": [
+        {
+          "name": "Listar Meus Contratos Ativos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.length > 0) {",
+                  "        pm.environment.set('contratoId', response.data[0].id);",
+                  "        console.log('Contrato ID salvo: ' + response.data[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/contratos/meus-ativos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["contratos", "meus-ativos"]
+            },
+            "description": "Lista contratos ativos do vendedor atual"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Meu Contrato Ativo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/contratos/meu-ativo?categoria=Eletrônicos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["contratos", "meu-ativo"],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria específica (opcional)"
+                }
+              ]
+            },
+            "description": "Busca contrato ativo do vendedor para uma categoria específica"
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar Se Tenho Contrato Ativo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/contratos/tenho-ativo",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["contratos", "tenho-ativo"]
+            },
+            "description": "Verifica se o vendedor tem contrato ativo"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -18,15 +18,19 @@ interface ApiResponse<T> {
 
 /**
  * Serviço para gerenciamento de produtos (área privada - vendedores)
+ * FASE 2 - Reorganização de Services: Atualizado para nova estrutura de rotas
  * 
- * Nota: Catálogo público foi movido para LoteCatalogoService
+ * Conecta com os endpoints do ProdutoController no backend:
+ * - /api/vendedor/produtos/** (operações privadas do vendedor)
+ * 
+ * Nota: Para catálogo público, use PublicCatalogoService
  * Produtos são acessados publicamente apenas através de lotes
  */
 @Injectable({
   providedIn: 'root'
 })
 export class ProdutoService {
-  private readonly apiUrl = `${environment.apiUrl}`;
+  private readonly apiUrl = `${environment.apiUrl}/api/vendedor/produtos`;
 
   constructor(private http: HttpClient) {}
 
@@ -36,21 +40,21 @@ export class ProdutoService {
    * Cria um novo produto
    */
   criarProduto(produto: ProdutoCreateRequest): Observable<ApiResponse<Produto>> {
-    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos`, produto);
+    return this.http.post<ApiResponse<Produto>>(this.apiUrl, produto);
   }
 
   /**
    * Atualiza um produto existente
    */
   atualizarProduto(produtoId: string, produto: ProdutoUpdateRequest): Observable<ApiResponse<Produto>> {
-    return this.http.put<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}`, produto);
+    return this.http.put<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}`, produto);
   }
 
   /**
    * Busca produto por ID (vendedor)
    */
   buscarProduto(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}`);
+    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}`);
   }
 
   /**
@@ -61,29 +65,28 @@ export class ProdutoService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(`${this.apiUrl}/produtos/meus-produtos`, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(this.apiUrl, { params });
   }
 
   /**
    * Exclui um produto
    */
   excluirProduto(produtoId: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/produtos/${produtoId}`);
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${produtoId}`);
   }
 
   /**
    * Publica um produto
    */
   publicarProduto(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}/publicar`, {});
+    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}/publicar`, {});
   }
 
   /**
    * Lista categorias disponíveis (usado por lotes e produtos)
-   * Endpoint: GET /api/catalogo/categorias
    */
   listarCategorias(): Observable<ApiResponse<string[]>> {
-    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/catalogo/categorias`);
+    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/categorias`);
   }
 
   // ===== Métodos Utilitários (MANTIDOS) =====

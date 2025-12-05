@@ -20,12 +20,13 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller para operações privadas de Lote (área do vendedor)
+ * FASE 1 - Reorganização de Rotas: Movido para /api/vendedor/lotes/**
  * 
  * Endpoints para vendedores gerenciarem seus lotes
- * Separado do CatalogoLoteController para evitar conflitos de mapeamento
+ * Requer autenticação e role SELLER
  */
 @RestController
-@RequestMapping("/lotes/gerenciar")
+@RequestMapping("/api/vendedor/lotes")
 @RequiredArgsConstructor
 @Slf4j
 public class LoteController {

@@ -17,12 +17,13 @@ import {
 /**
  * Service para Dashboard Administrativo de Contratos
  * História 4: Dashboard Administrativo de Contratos - Sprint S2.2
+ * CORRIGIDO: URLs atualizadas para corresponder exatamente aos controllers do backend
  */
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardAdminService {
-  private readonly baseUrl = `${environment.apiUrl}/contratos`;
+  private readonly baseUrl = `${environment.apiUrl}/api/admin/contratos`;
   
   // Estados do dashboard
   private dashboardStatusSubject = new BehaviorSubject<DashboardStatus>({
@@ -49,6 +50,7 @@ export class DashboardAdminService {
 
   /**
    * Obtém estatísticas consolidadas de contratos
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/estatisticas
    */
   obterEstatisticas(): Observable<ContratoEstatisticas> {
     this.updateStatus({ carregando: true });
@@ -77,6 +79,7 @@ export class DashboardAdminService {
 
   /**
    * Obtém relatório de comissões por período
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/estatisticas/comissoes
    */
   obterRelatorioComissoes(
     inicio: string,
@@ -93,7 +96,7 @@ export class DashboardAdminService {
     if (categoria) params = params.set('categoria', categoria);
     if (status) params = params.set('status', status);
 
-    return this.http.get<ApiResponse<ComissaoRelatorio>>(`${this.baseUrl}/comissoes`, { params })
+    return this.http.get<ApiResponse<ComissaoRelatorio>>(`${this.baseUrl}/estatisticas/comissoes`, { params })
       .pipe(
         tap(response => {
           this.comissoesSubject.next(response.data);
@@ -108,6 +111,7 @@ export class DashboardAdminService {
 
   /**
    * Obtém contratos próximos ao vencimento
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/vencimentos
    */
   obterContratosVencendo(
     dias: number = 30,
@@ -124,7 +128,7 @@ export class DashboardAdminService {
     if (categoria) params = params.set('categoria', categoria);
     if (urgencia) params = params.set('urgencia', urgencia);
 
-    return this.http.get<ApiResponse<ContratoVencendoRelatorio>>(`${this.baseUrl}/vencendo`, { params })
+    return this.http.get<ApiResponse<ContratoVencendoRelatorio>>(`${this.baseUrl}/vencimentos`, { params })
       .pipe(
         tap(response => {
           this.contratosVencendoSubject.next(response.data);
@@ -219,6 +223,7 @@ export class DashboardAdminService {
 
   /**
    * Exporta relatório de contratos vencendo em CSV
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/vencimentos/export/csv
    */
   exportarContratosVencendoCSV(
     dias: number = 30,
@@ -235,7 +240,7 @@ export class DashboardAdminService {
     if (categoria) params = params.set('categoria', categoria);
     if (urgencia) params = params.set('urgencia', urgencia);
 
-    return this.http.get(`${this.baseUrl}/vencendo/export/csv`, {
+    return this.http.get(`${this.baseUrl}/vencimentos/export/csv`, {
       params,
       responseType: 'blob'
     });
@@ -243,6 +248,7 @@ export class DashboardAdminService {
 
   /**
    * Exporta relatório de contratos vencendo em PDF
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/vencimentos/export/pdf
    */
   exportarContratosVencendoPDF(
     dias: number = 30,
@@ -259,7 +265,7 @@ export class DashboardAdminService {
     if (categoria) params = params.set('categoria', categoria);
     if (urgencia) params = params.set('urgencia', urgencia);
 
-    return this.http.get(`${this.baseUrl}/vencendo/export/pdf`, {
+    return this.http.get(`${this.baseUrl}/vencimentos/export/pdf`, {
       params,
       responseType: 'blob'
     });
@@ -267,9 +273,119 @@ export class DashboardAdminService {
 
   /**
    * Envia notificações de contratos vencendo
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/vencimentos/notificar
    */
   enviarNotificacoesVencimento(): Observable<string> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/vencendo/notificar`, {})
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/vencimentos/notificar`, {})
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  /**
+   * Obtém cálculos avançados de comissões
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/comissoes/detalhado
+   */
+  calcularComissoesDetalhado(
+    inicio: string,
+    fim: string,
+    vendedor?: string,
+    categoria?: string,
+    status?: string
+  ): Observable<ComissaoRelatorio> {
+    let params = new HttpParams()
+      .set('inicio', inicio)
+      .set('fim', fim);
+    
+    if (vendedor) params = params.set('vendedor', vendedor);
+    if (categoria) params = params.set('categoria', categoria);
+    if (status) params = params.set('status', status);
+
+    return this.http.get<ApiResponse<ComissaoRelatorio>>(`${this.baseUrl}/comissoes/detalhado`, { params })
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  /**
+   * Obtém comissões agrupadas por vendedor
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/comissoes/por-vendedor
+   */
+  calcularComissoesPorVendedor(
+    inicio: string,
+    fim: string,
+    categoria?: string
+  ): Observable<{ [key: string]: any }> {
+    let params = new HttpParams()
+      .set('inicio', inicio)
+      .set('fim', fim);
+    
+    if (categoria) params = params.set('categoria', categoria);
+
+    return this.http.get<ApiResponse<{ [key: string]: any }>>(`${this.baseUrl}/comissoes/por-vendedor`, { params })
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  /**
+   * Calcula projeção de receita
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/comissoes/projecao
+   */
+  calcularProjecaoReceita(
+    meses: number = 3,
+    categoria?: string
+  ): Observable<number> {
+    let params = new HttpParams()
+      .set('meses', meses.toString());
+    
+    if (categoria) params = params.set('categoria', categoria);
+
+    return this.http.get<ApiResponse<number>>(`${this.baseUrl}/comissoes/projecao`, { params })
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  /**
+   * Obtém breakdown detalhado de um vendedor
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/comissoes/breakdown/{vendedorId}
+   */
+  obterBreakdownVendedor(
+    vendedorId: string,
+    inicio: string,
+    fim: string
+  ): Observable<any[]> {
+    let params = new HttpParams()
+      .set('inicio', inicio)
+      .set('fim', fim);
+
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/comissoes/breakdown/${vendedorId}`, { params })
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  /**
+   * Compara performance entre períodos
+   * CORRIGIDO: Usa a rota correta /api/admin/contratos/comissoes/comparacao
+   */
+  compararPeriodos(
+    periodo1Inicio: string,
+    periodo1Fim: string,
+    periodo2Inicio: string,
+    periodo2Fim: string,
+    categoria?: string
+  ): Observable<{ [key: string]: any }> {
+    let params = new HttpParams()
+      .set('periodo1Inicio', periodo1Inicio)
+      .set('periodo1Fim', periodo1Fim)
+      .set('periodo2Inicio', periodo2Inicio)
+      .set('periodo2Fim', periodo2Fim);
+    
+    if (categoria) params = params.set('categoria', categoria);
+
+    return this.http.get<ApiResponse<{ [key: string]: any }>>(`${this.baseUrl}/comissoes/comparacao`, { params })
       .pipe(
         map(response => response.data)
       );

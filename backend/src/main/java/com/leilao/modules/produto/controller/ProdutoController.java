@@ -23,9 +23,12 @@ import java.util.List;
 
 /**
  * Controller para operações CRUD de produtos (vendedores)
+ * FASE 1 - Reorganização de Rotas: Movido para /api/vendedor/produtos/**
+ * 
+ * Requer autenticação e role SELLER
  */
 @RestController
-@RequestMapping("/produtos")
+@RequestMapping("/api/vendedor/produtos")
 @RequiredArgsConstructor
 public class ProdutoController {
 
@@ -104,7 +107,7 @@ public class ProdutoController {
     /**
      * Lista produtos do vendedor logado
      */
-    @GetMapping("/meus-produtos")
+    @GetMapping
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<Page<ProdutoDto>>> listarMeusProdutos(
             @AuthenticationPrincipal Usuario usuario,

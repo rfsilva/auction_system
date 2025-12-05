@@ -4,27 +4,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AdminUsuarioService } from '../../core/services/admin-usuario.service';
 // ✅ CORRIGIDO: Import da interface consolidada
 import { AtivarVendedorRequest } from '../../core/models/contrato.model';
+import { UsuarioSugestaoDto } from '../../core/models/admin-usuario.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
-
-interface UsuarioSugestao {
-  id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  isVendedor: boolean;
-  temContratoAtivo: boolean;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  timestamp: string;
-}
 
 /**
  * Componente para ativar vendedores através de contratos
@@ -45,8 +31,8 @@ export class AtivarVendedorComponent implements OnInit {
   successMessage = '';
   
   // Busca de usuários
-  usuarios: UsuarioSugestao[] = [];
-  usuarioSelecionado: UsuarioSugestao | null = null;
+  usuarios: UsuarioSugestaoDto[] = [];
+  usuarioSelecionado: UsuarioSugestaoDto | null = null;
   buscandoUsuarios = false;
   
   // Categorias disponíveis
@@ -59,6 +45,7 @@ export class AtivarVendedorComponent implements OnInit {
     private fb: FormBuilder,
     private contratoService: ContratoService,
     private authService: AuthService,
+    private adminUsuarioService: AdminUsuarioService,
     private http: HttpClient,
     private router: Router
   ) {
@@ -128,12 +115,13 @@ export class AtivarVendedorComponent implements OnInit {
     });
   }
 
-  private buscarUsuarios(termo: string): Observable<UsuarioSugestao[]> {
+  /**
+   * ✅ PADRONIZADO: Agora usa o AdminUsuarioService
+   */
+  private buscarUsuarios(termo: string): Observable<UsuarioSugestaoDto[]> {
     this.buscandoUsuarios = true;
     
-    return this.http.get<ApiResponse<UsuarioSugestao[]>>(
-      `${environment.apiUrl}/admin/usuarios/buscar?termo=${encodeURIComponent(termo)}`
-    ).pipe(
+    return this.adminUsuarioService.buscarUsuarios(termo, 10).pipe(
       switchMap(response => of(response.data || []))
     );
   }
@@ -151,10 +139,10 @@ export class AtivarVendedorComponent implements OnInit {
     });
   }
 
-  selecionarUsuario(usuario: UsuarioSugestao): void {
+  selecionarUsuario(usuario: UsuarioSugestaoDto): void {
     this.usuarioSelecionado = usuario;
     this.form.patchValue({
-      usuarioBusca: `${usuario.nome} (${usuario.email})`,
+      usuarioBusca: this.adminUsuarioService.formatarNomeUsuarioSugestao(usuario),
       usuarioSelecionadoId: usuario.id
     });
     this.usuarios = [];

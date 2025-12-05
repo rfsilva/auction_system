@@ -111,9 +111,10 @@
                   id="categoria"
                   class="form-select"
                   [class.is-invalid]="isFieldInvalid('categoria')"
-                  formControlName="categoria"
-                  [disabled]="loadingCategorias">
-                  <option value="">Todas as categorias</option>
+                  formControlName="categoria">
+                  <option value="">
+                    {{ loadingCategorias ? 'Carregando categorias...' : 'Todas as categorias' }}
+                  </option>
                   <option *ngFor="let categoria of categorias" [value]="categoria">
                     {{ categoria }}
                   </option>

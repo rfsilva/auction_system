@@ -22,9 +22,10 @@ import java.util.Map;
 /**
  * Controller específico para cálculos avançados de comissões
  * História 2: Sistema de Cálculo de Comissões - Sprint S2.2
+ * REFATORAÇÃO: Movido para /api/admin/contratos/comissoes/** para organização das rotas
  */
 @RestController
-@RequestMapping("/contratos/comissoes")
+@RequestMapping("/api/admin/contratos/comissoes")
 @RequiredArgsConstructor
 @Slf4j
 public class ComissaoController {

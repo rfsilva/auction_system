@@ -9,7 +9,8 @@ import {
   PaginatedResponse, 
   ApiResponse,
   UserStatus,
-  UserRole
+  UserRole,
+  UsuarioSugestaoDto
 } from '../models/admin-usuario.model';
 
 /**
@@ -20,7 +21,7 @@ import {
 })
 export class AdminUsuarioService {
 
-  private readonly baseUrl = `${environment.apiUrl}/admin/usuarios`;
+  private readonly baseUrl = `${environment.apiUrl}/api/admin/usuarios`;
 
   constructor(private http: HttpClient) {}
 
@@ -60,6 +61,18 @@ export class AdminUsuarioService {
     }
 
     return this.http.get<ApiResponse<PaginatedResponse<AdminUsuario>>>(`${this.baseUrl}/admin-list`, { params });
+  }
+
+  /**
+   * Busca usuários por termo (nome ou email) para seleção em formulários
+   * Usado principalmente para ativação de vendedores
+   */
+  buscarUsuarios(termo: string, limit: number = 10): Observable<ApiResponse<UsuarioSugestaoDto[]>> {
+    let params = new HttpParams()
+      .set('termo', termo)
+      .set('limit', limit.toString());
+
+    return this.http.get<ApiResponse<UsuarioSugestaoDto[]>>(`${this.baseUrl}/buscar`, { params });
   }
 
   /**
@@ -161,6 +174,23 @@ export class AdminUsuarioService {
     
     if (usuario.temContratoAtivo) {
       nome += ' - Ativo';
+    }
+    
+    return nome;
+  }
+
+  /**
+   * Formata nome do usuário sugestão para exibição
+   */
+  formatarNomeUsuarioSugestao(usuario: UsuarioSugestaoDto): string {
+    let nome = `${usuario.nome} (${usuario.email})`;
+    
+    if (usuario.isVendedor) {
+      nome += ' - Vendedor';
+    }
+    
+    if (usuario.temContratoAtivo) {
+      nome += ' Ativo';
     }
     
     return nome;

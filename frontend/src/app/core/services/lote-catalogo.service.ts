@@ -199,13 +199,14 @@ export class LoteCatalogoService {
   }
 
   /**
-   * Obtém primeira imagem válida ou placeholder
+   * ✅ CORRIGIDO: Retorna a imagem do lote ou null para usar placeholder CSS
    */
-  getImagemOuPlaceholder(lote: LoteCatalogo): string {
+  getImagemOuPlaceholder(lote: LoteCatalogo): string | null {
     if (lote.imagemDestaque && this.isValidImageUrl(lote.imagemDestaque)) {
       return lote.imagemDestaque;
     }
-    return '/assets/images/lote-placeholder.jpg';
+    // Retornar null para que o componente use placeholder CSS
+    return null;
   }
 
   /**
@@ -213,6 +214,11 @@ export class LoteCatalogoService {
    */
   private isValidImageUrl(url: string): boolean {
     if (!url || url.trim() === '') {
+      return false;
+    }
+    
+    // Verificar se não é uma URL de exemplo
+    if (this.isExampleDomain(url)) {
       return false;
     }
     
@@ -224,5 +230,17 @@ export class LoteCatalogoService {
       // Se não for URL absoluta, assumir que é relativa e válida
       return url.startsWith('/') || url.startsWith('./') || !url.includes('://');
     }
+  }
+
+  /**
+   * Verifica se é um domínio de exemplo
+   */
+  private isExampleDomain(url: string): boolean {
+    return url.includes('example.com') || 
+           url.includes('placeholder.com') || 
+           url.includes('via.placeholder.com') ||
+           url.includes('picsum.photos') ||
+           url.startsWith('http://example') ||
+           url.startsWith('https://example');
   }
 }

@@ -24,6 +24,7 @@ import java.util.Set;
 /**
  * Filtro de Rate Limiting para proteger endpoints contra abuso
  * História 5: Integração e Otimização - Sprint S2.2
+ * REFATORAÇÃO: URLs atualizadas para nova organização de rotas
  * 
  * Aplica diferentes limites baseados no tipo de usuário e endpoint.
  * Endpoints de relatórios têm limites mais restritivos.
@@ -37,22 +38,22 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final MessageSourceAccessor messageSourceAccessor;
     private final ObjectMapper objectMapper;
 
-    // Endpoints que requerem rate limiting mais restritivo
+    // Endpoints que requerem rate limiting mais restritivo (ROTAS ATUALIZADAS)
     private static final Set<String> REPORT_ENDPOINTS = Set.of(
-            "/contratos/estatisticas",
-            "/contratos/comissoes",
-            "/contratos/vencendo",
-            "/contratos/vencendo/export/csv",
-            "/contratos/vencendo/export/pdf",
-            "/contratos/projecoes-receita"
+            "/api/admin/contratos/estatisticas",
+            "/api/admin/contratos/comissoes",
+            "/api/admin/contratos/vencimentos",
+            "/api/admin/contratos/vencimentos/export/csv",
+            "/api/admin/contratos/vencimentos/export/pdf",
+            "/api/admin/contratos/estatisticas/projecoes-receita"
     );
 
-    // Endpoints administrativos
+    // Endpoints administrativos (ROTAS ATUALIZADAS)
     private static final Set<String> ADMIN_ENDPOINTS = Set.of(
-            "/admin/usuarios",
-            "/admin/dashboard",
-            "/contratos/estatisticas",
-            "/contratos/comissoes"
+            "/api/admin/usuarios",
+            "/api/admin/dashboard",
+            "/api/admin/contratos/estatisticas",
+            "/api/admin/contratos/comissoes"
     );
 
     @Override

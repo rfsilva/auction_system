@@ -1,0 +1,173 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-lote-detalhe',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a routerLink="/">Início</a>
+              </li>
+              <li class="breadcrumb-item">
+                <a routerLink="/catalogo">Catálogo</a>
+              </li>
+              <li class="breadcrumb-item active" aria-current="page">
+                Detalhes do Lote
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <div class="row" *ngIf="loteId">
+        <!-- Imagens do Lote -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body text-center">
+              <div class="lote-image-placeholder">
+                <i class="fas fa-image fa-4x text-muted"></i>
+                <p class="text-muted mt-3">Imagens do Lote</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informações do Lote -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title mb-0">
+                <i class="fas fa-gavel me-2"></i>
+                Lote #{{ loteId }}
+              </h4>
+            </div>
+            <div class="card-body">
+              <div class="lote-info">
+                <div class="info-item mb-3">
+                  <label class="fw-bold">Título:</label>
+                  <p class="mb-0">Carregando...</p>
+                </div>
+                
+                <div class="info-item mb-3">
+                  <label class="fw-bold">Descrição:</label>
+                  <p class="mb-0 text-muted">Carregando informações do lote...</p>
+                </div>
+                
+                <div class="info-item mb-3">
+                  <label class="fw-bold">Lance Inicial:</label>
+                  <p class="mb-0 text-success fw-bold">R$ --,--</p>
+                </div>
+                
+                <div class="info-item mb-3">
+                  <label class="fw-bold">Status:</label>
+                  <span class="badge bg-info">Carregando</span>
+                </div>
+                
+                <div class="info-item mb-4">
+                  <label class="fw-bold">Data de Encerramento:</label>
+                  <p class="mb-0">--/--/---- --:--</p>
+                </div>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <strong>Em Desenvolvimento:</strong> 
+                  Este componente será implementado nas próximas iterações 
+                  com integração completa ao backend.
+                </div>
+                
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary" disabled>
+                    <i class="fas fa-hand-paper me-2"></i>
+                    Fazer Lance
+                  </button>
+                  <button class="btn btn-outline-secondary" routerLink="/catalogo">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar ao Catálogo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Produtos do Lote -->
+      <div class="row mt-4" *ngIf="loteId">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-box me-2"></i>
+                Produtos deste Lote
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="text-center py-4">
+                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                <h6 class="text-muted">Produtos em Carregamento</h6>
+                <p class="text-muted">
+                  A lista de produtos será carregada quando a integração estiver completa.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .breadcrumb {
+      background-color: transparent;
+      padding: 0;
+    }
+    
+    .card {
+      border: none;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .lote-image-placeholder {
+      padding: 4rem 2rem;
+      background-color: #f8f9fa;
+      border-radius: 0.375rem;
+      border: 2px dashed #dee2e6;
+    }
+    
+    .info-item label {
+      color: #495057;
+      font-size: 0.9rem;
+    }
+    
+    .info-item p {
+      font-size: 1rem;
+      margin-top: 0.25rem;
+    }
+    
+    .badge {
+      font-size: 0.8rem;
+    }
+  `]
+})
+export class LoteDetalheComponent implements OnInit {
+  loteId: string | null = null;
+
+  constructor(private route: ActivatedRoute) { }
+
+  ngOnInit(): void {
+    this.loteId = this.route.snapshot.paramMap.get('id');
+    console.log('LoteDetalheComponent inicializado para lote:', this.loteId);
+  }
+}

@@ -22,10 +22,13 @@ import java.util.Map;
 
 /**
  * Controller para operações administrativas com usuários
+ * FASE 1 - Reorganização de Rotas: Movido para /api/admin/usuarios/**
+ * 
  * História 2: Processo de Contratação de Vendedores
+ * Requer autenticação e role ADMIN
  */
 @RestController
-@RequestMapping("/admin/usuarios")
+@RequestMapping("/api/admin/usuarios")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminUsuarioController {

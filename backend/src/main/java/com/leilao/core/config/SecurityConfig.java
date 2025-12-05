@@ -27,11 +27,11 @@ import java.util.List;
 
 /**
  * Configuração de segurança da aplicação
- * História 5: Integração e Otimização - Sprint S2.2
+ * FASE 1 - Reorganização de Rotas: Separação público/não-público
  * 
- * Atualizada para sistema baseado em lotes:
- * - Endpoints públicos: /catalogo/** (novo sistema de catálogo)
- * - Endpoints privados: /lotes/gerenciar/** (área do vendedor)
+ * Estrutura de rotas reorganizada:
+ * - Público (SEM autenticação): /public/**, /auth/**
+ * - Privado por role (COM autenticação): /api/usuario/**, /api/vendedor/**, /api/admin/**
  */
 @Configuration
 @EnableWebSecurity
@@ -67,27 +67,42 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
+        return http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos (considerando context-path /api)
-                .requestMatchers("/auth/**", "/public/**").permitAll()
+                // ========================================
+                // 🌐 ÁREA PÚBLICA (SEM autenticação)
+                // ========================================
+                .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                
+                // Endpoints técnicos
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll() // Para testes
                 
-                // Catálogo público (novo sistema baseado em lotes)
-                .requestMatchers("/catalogo/**").permitAll()
-                
-                // WebSocket e SSE endpoints (fora do context-path)
+                // WebSocket e SSE endpoints
                 .requestMatchers("/ws/**", "/sse/**").permitAll()
-                // Realtime endpoints (dentro do context-path /api)
                 .requestMatchers("/realtime/**").permitAll()
                 
-                // Todos os outros endpoints requerem autenticação
-                // Incluindo /lotes/gerenciar/** (área privada do vendedor)
+                // ========================================
+                // 🔐 ÁREA PRIVADA (COM autenticação por role)
+                // ========================================
+                
+                // Área do Usuário (role USER)
+                .requestMatchers("/api/usuario/**").hasRole("USER")
+                
+                // Área do Vendedor (role SELLER)
+                .requestMatchers("/api/vendedor/**").hasRole("SELLER")
+                
+                // Área do Admin (role ADMIN)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // ========================================
+                // 🛡️ FALLBACK: Qualquer outra requisição precisa de autenticação
+                // ========================================
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
@@ -100,9 +115,8 @@ public class SecurityConfig {
             .headers(headers -> headers
                 .frameOptions().deny()
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-            );
-
-        return http.build();
+            )
+            .build();
     }
 
     @Bean

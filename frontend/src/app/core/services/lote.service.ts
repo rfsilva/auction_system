@@ -19,16 +19,20 @@ interface ApiResponse<T> {
 }
 
 /**
- * Service para operações de Lote
- * Atualizado para trabalhar com contratos ao invés de vendedores diretamente
+ * Service para operações privadas de Lote (área do vendedor)
+ * FASE 2 - Reorganização de Services: Atualizado para nova estrutura de rotas
+ * 
+ * Conecta com os endpoints do LoteController no backend:
+ * - /api/vendedor/lotes/** (operações privadas do vendedor)
+ * 
+ * Para endpoints públicos, use PublicCatalogoService
  */
 @Injectable({
   providedIn: 'root'
 })
 export class LoteService {
 
-  private readonly apiUrl = `${environment.apiUrl}/lotes`;
-  private readonly catalogoUrl = `${environment.apiUrl}/catalogo/lotes`;
+  private readonly apiUrl = `${environment.apiUrl}/api/vendedor/lotes`;
 
   constructor(private http: HttpClient) {}
 
@@ -47,17 +51,10 @@ export class LoteService {
   }
 
   /**
-   * Busca lote por ID
+   * Busca lote por ID (área privada do vendedor)
    */
   buscarLote(loteId: string): Observable<ApiResponse<Lote>> {
     return this.http.get<ApiResponse<Lote>>(`${this.apiUrl}/${loteId}`);
-  }
-
-  /**
-   * Busca lote específico no catálogo (público)
-   */
-  buscarLoteCatalogo(loteId: string): Observable<ApiResponse<Lote>> {
-    return this.http.get<ApiResponse<Lote>>(`${this.catalogoUrl}/${loteId}`);
   }
 
   /**
@@ -68,35 +65,7 @@ export class LoteService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<ApiResponse<PaginatedResponse<Lote>>>(`${this.apiUrl}/meus-lotes`, { params });
-  }
-
-  /**
-   * Busca lotes no catálogo público
-   */
-  buscarCatalogoLotes(filtros: LoteFiltro = {}): Observable<ApiResponse<PaginatedResponse<Lote>>> {
-    let params = new HttpParams();
-    
-    if (filtros.termo) {
-      params = params.set('termo', filtros.termo);
-    }
-    if (filtros.categoria) {
-      params = params.set('categoria', filtros.categoria);
-    }
-    if (filtros.contractId) {
-      params = params.set('contractId', filtros.contractId);
-    }
-    if (filtros.sellerId) {
-      params = params.set('sellerId', filtros.sellerId);
-    }
-    if (filtros.page !== undefined) {
-      params = params.set('page', filtros.page.toString());
-    }
-    if (filtros.size !== undefined) {
-      params = params.set('size', filtros.size.toString());
-    }
-
-    return this.http.get<ApiResponse<PaginatedResponse<Lote>>>(this.catalogoUrl, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Lote>>>(this.apiUrl, { params });
   }
 
   /**

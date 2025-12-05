@@ -1,0 +1,1000 @@
+{
+  "info": {
+    "name": "07 - Admin - Estatísticas e Relatórios (Reorganizado)",
+    "description": "Collection para testar endpoints de estatísticas e relatórios administrativos após reorganização\nEndpoints: /api/admin/contratos/estatisticas/**, /api/admin/contratos/comissoes/**, /api/admin/contratos/vencimentos/** (requer role ADMIN)\n\n**REFATORAÇÃO CONCLUÍDA:**\n- ComissaoController → /api/admin/contratos/comissoes/**\n- ContratoEstatisticasController → /api/admin/contratos/estatisticas/**\n- ContratoVencendoController → /api/admin/contratos/vencimentos/**",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Estatísticas de Contratos",
+      "item": [
+        {
+          "name": "Estatísticas Gerais",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Statistics have required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const stats = jsonData.data;",
+                  "    pm.expect(stats).to.have.property('totalContratos');",
+                  "    pm.expect(stats).to.have.property('contratosAtivos');",
+                  "    pm.expect(stats).to.have.property('vendedoresAtivos');",
+                  "    pm.expect(stats).to.have.property('receitaProjetadaMes');",
+                  "    pm.expect(stats).to.have.property('taxaMediaComissao');",
+                  "});",
+                  "",
+                  "pm.test(\"Numeric values are valid\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const stats = jsonData.data;",
+                  "    pm.expect(stats.totalContratos).to.be.a('number');",
+                  "    pm.expect(stats.contratosAtivos).to.be.a('number');",
+                  "    pm.expect(stats.vendedoresAtivos).to.be.a('number');",
+                  "    pm.expect(stats.totalContratos).to.be.at.least(0);",
+                  "    pm.expect(stats.contratosAtivos).to.be.at.most(stats.totalContratos);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/estatisticas",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "estatisticas"]
+            },
+            "description": "Obtém estatísticas consolidadas de contratos"
+          },
+          "response": []
+        },
+        {
+          "name": "Relatório de Comissões por Período",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Commission report has required structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Report has period information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const report = jsonData.data;",
+                  "    pm.expect(report).to.have.property('periodo');",
+                  "    pm.expect(report).to.have.property('resumo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/estatisticas/comissoes?inicio=2024-01-01&fim=2024-12-31",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "estatisticas", "comissoes"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01",
+                  "description": "Data de início do período"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31",
+                  "description": "Data de fim do período"
+                }
+              ]
+            },
+            "description": "Gera relatório de comissões para período especificado"
+          },
+          "response": []
+        },
+        {
+          "name": "Relatório de Comissões com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/estatisticas/comissoes?inicio=2024-01-01&fim=2024-12-31&vendedor={{vendedorId}}&categoria=Eletrônicos&status=ACTIVE",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "estatisticas", "comissoes"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "vendedor",
+                  "value": "{{vendedorId}}",
+                  "description": "ID do vendedor específico"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria específica"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Status do contrato"
+                }
+              ]
+            },
+            "description": "Relatório de comissões com filtros avançados"
+          },
+          "response": []
+        },
+        {
+          "name": "Projeções de Receita",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Revenue projections are valid\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/estatisticas/projecoes-receita",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "estatisticas", "projecoes-receita"]
+            },
+            "description": "Obtém projeções de receita baseadas nos contratos ativos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cálculos Avançados de Comissões",
+      "item": [
+        {
+          "name": "Cálculo Detalhado de Comissões",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Detailed calculation has breakdown\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    const report = jsonData.data;",
+                  "    pm.expect(report).to.have.property('porContrato');",
+                  "    pm.expect(report).to.have.property('resumo');",
+                  "    pm.expect(report.porContrato).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/detalhado?inicio=2024-01-01&fim=2024-12-31",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "detalhado"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01",
+                  "description": "Data de início"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31",
+                  "description": "Data de fim"
+                }
+              ]
+            },
+            "description": "Cálculo detalhado de comissões com breakdown por contrato"
+          },
+          "response": []
+        },
+        {
+          "name": "Cálculo Detalhado com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/detalhado?inicio=2024-01-01&fim=2024-12-31&vendedor={{vendedorId}}&categoria=Eletrônicos&status=ACTIVE",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "detalhado"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "vendedor",
+                  "value": "{{vendedorId}}",
+                  "description": "ID do vendedor"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Status"
+                }
+              ]
+            },
+            "description": "Cálculo detalhado com filtros por vendedor, categoria e status"
+          },
+          "response": []
+        },
+        {
+          "name": "Comissões Agrupadas por Vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Grouped by seller correctly\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/por-vendedor?inicio=2024-01-01&fim=2024-12-31",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "por-vendedor"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Obtém comissões agrupadas por vendedor"
+          },
+          "response": []
+        },
+        {
+          "name": "Comissões por Vendedor com Categoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/por-vendedor?inicio=2024-01-01&fim=2024-12-31&categoria=Eletrônicos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "por-vendedor"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Filtro por categoria"
+                }
+              ]
+            },
+            "description": "Comissões por vendedor filtradas por categoria"
+          },
+          "response": []
+        },
+        {
+          "name": "Projeção de Receita Personalizada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Revenue projection is a number\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.be.a('number');",
+                  "    pm.expect(jsonData.data).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/projecao?meses=3",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "projecao"],
+              "query": [
+                {
+                  "key": "meses",
+                  "value": "3",
+                  "description": "Número de meses para projeção (1-24)"
+                }
+              ]
+            },
+            "description": "Calcula projeção de receita para os próximos meses"
+          },
+          "response": []
+        },
+        {
+          "name": "Projeção por Categoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/projecao?meses=6&categoria=Eletrônicos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "projecao"],
+              "query": [
+                {
+                  "key": "meses",
+                  "value": "6"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria específica"
+                }
+              ]
+            },
+            "description": "Projeção de receita para categoria específica"
+          },
+          "response": []
+        },
+        {
+          "name": "Breakdown Detalhado por Vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Breakdown is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/breakdown/{{vendedorId}}?inicio=2024-01-01&fim=2024-12-31",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "breakdown", "{{vendedorId}}"],
+              "query": [
+                {
+                  "key": "inicio",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "fim",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Breakdown detalhado de comissões para vendedor específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Comparação entre Períodos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Comparison has two periods\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    const comparison = jsonData.data;",
+                  "    pm.expect(comparison).to.have.property('periodo1');",
+                  "    pm.expect(comparison).to.have.property('periodo2');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/comissoes/comparacao?periodo1Inicio=2024-01-01&periodo1Fim=2024-06-30&periodo2Inicio=2024-07-01&periodo2Fim=2024-12-31",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "comissoes", "comparacao"],
+              "query": [
+                {
+                  "key": "periodo1Inicio",
+                  "value": "2024-01-01",
+                  "description": "Início do primeiro período"
+                },
+                {
+                  "key": "periodo1Fim",
+                  "value": "2024-06-30",
+                  "description": "Fim do primeiro período"
+                },
+                {
+                  "key": "periodo2Inicio",
+                  "value": "2024-07-01",
+                  "description": "Início do segundo período"
+                },
+                {
+                  "key": "periodo2Fim",
+                  "value": "2024-12-31",
+                  "description": "Fim do segundo período"
+                }
+              ]
+            },
+            "description": "Compara performance de comissões entre dois períodos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contratos Vencendo",
+      "item": [
+        {
+          "name": "Contratos Vencendo - Próximos 30 Dias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Expiring contracts report structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    const report = jsonData.data;",
+                  "    pm.expect(report).to.have.property('contratos');",
+                  "    pm.expect(report).to.have.property('resumo');",
+                  "    pm.expect(report.contratos).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Summary has urgency breakdown\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const resumo = jsonData.data.resumo;",
+                  "    pm.expect(resumo).to.have.property('total');",
+                  "    pm.expect(resumo).to.have.property('urgenciaAlta');",
+                  "    pm.expect(resumo).to.have.property('urgenciaMedia');",
+                  "    pm.expect(resumo).to.have.property('urgenciaBaixa');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos?dias=30",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30",
+                  "description": "Número de dias para vencimento"
+                }
+              ]
+            },
+            "description": "Lista contratos que vencem nos próximos 30 dias"
+          },
+          "response": []
+        },
+        {
+          "name": "Contratos Vencendo - Urgência Alta (7 dias)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All contracts are high urgency\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const contratos = jsonData.data.contratos;",
+                  "    contratos.forEach(contrato => {",
+                  "        pm.expect(contrato.urgencia).to.equal('ALTA');",
+                  "        pm.expect(contrato.diasRestantes).to.be.at.most(7);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos?dias=7&urgencia=ALTA",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "7"
+                },
+                {
+                  "key": "urgencia",
+                  "value": "ALTA",
+                  "description": "Filtro por urgência"
+                }
+              ]
+            },
+            "description": "Lista apenas contratos de urgência alta (≤7 dias)"
+          },
+          "response": []
+        },
+        {
+          "name": "Contratos Vencendo com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos?dias=15&incluirNotificados=false&vendedor={{vendedorId}}&categoria=Eletrônicos&urgencia=MEDIA",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "15"
+                },
+                {
+                  "key": "incluirNotificados",
+                  "value": "false",
+                  "description": "Incluir contratos já notificados"
+                },
+                {
+                  "key": "vendedor",
+                  "value": "{{vendedorId}}",
+                  "description": "ID do vendedor"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria"
+                },
+                {
+                  "key": "urgencia",
+                  "value": "MEDIA",
+                  "description": "Nível de urgência"
+                }
+              ]
+            },
+            "description": "Contratos vencendo com filtros avançados"
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar Notificações de Vencimento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Notification response is valid\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos/notificar",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos", "notificar"]
+            },
+            "description": "Envia notificações para vendedores de contratos vencendo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Exportação de Relatórios",
+      "item": [
+        {
+          "name": "Exportar Contratos Vencendo - CSV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is CSV format\", function () {",
+                  "    const contentType = pm.response.headers.get('Content-Type');",
+                  "    pm.expect(contentType).to.include('text/csv');",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Disposition header present\", function () {",
+                  "    const disposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(disposition).to.not.be.null;",
+                  "    pm.expect(disposition).to.include('attachment');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos/export/csv?dias=30",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos", "export", "csv"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Exporta relatório de contratos vencendo em formato CSV"
+          },
+          "response": []
+        },
+        {
+          "name": "Exportar Contratos Vencendo - CSV com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos/export/csv?dias=15&incluirNotificados=false&categoria=Eletrônicos&urgencia=ALTA",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos", "export", "csv"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "15"
+                },
+                {
+                  "key": "incluirNotificados",
+                  "value": "false"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos"
+                },
+                {
+                  "key": "urgencia",
+                  "value": "ALTA"
+                }
+              ]
+            },
+            "description": "Exporta CSV com filtros específicos"
+          },
+          "response": []
+        },
+        {
+          "name": "Exportar Contratos Vencendo - PDF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is PDF format\", function () {",
+                  "    const contentType = pm.response.headers.get('Content-Type');",
+                  "    pm.expect(contentType).to.include('application/pdf');",
+                  "});",
+                  "",
+                  "pm.test(\"PDF has content\", function () {",
+                  "    const responseSize = pm.response.responseSize;",
+                  "    pm.expect(responseSize).to.be.above(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos/export/pdf?dias=30",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos", "export", "pdf"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Exporta relatório de contratos vencendo em formato PDF"
+          },
+          "response": []
+        },
+        {
+          "name": "Exportar Contratos Vencendo - PDF com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vencimentos/export/pdf?dias=7&urgencia=ALTA&vendedor={{vendedorId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vencimentos", "export", "pdf"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "7"
+                },
+                {
+                  "key": "urgencia",
+                  "value": "ALTA"
+                },
+                {
+                  "key": "vendedor",
+                  "value": "{{vendedorId}}"
+                }
+              ]
+            },
+            "description": "Exporta PDF com filtros de urgência alta e vendedor específico"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Verificar se o token está presente",
+          "if (!pm.environment.get('token')) {",
+          "    console.warn('⚠️ Token não encontrado. Execute o login primeiro.');",
+          "}",
+          "",
+          "// Log da requisição",
+          "console.log('🚀 Executando:', pm.request.method, pm.request.url.toString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log da resposta",
+          "console.log('📥 Resposta:', pm.response.code, pm.response.status);",
+          "",
+          "// Testes globais",
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log de erros detalhados",
+          "if (pm.response.code >= 400) {",
+          "    console.error('❌ Erro na requisição:', pm.response.json());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

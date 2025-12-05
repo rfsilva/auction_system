@@ -7,6 +7,7 @@ export interface UsuarioSugestaoDto {
   id: string;
   nome: string;
   email: string;
+  telefone?: string;
   isVendedor: boolean;
   temContratoAtivo?: boolean;
 }
@@ -36,7 +37,7 @@ export interface PaginatedResponse<T> {
 })
 export class UsuarioService {
 
-  private readonly baseUrl = `${environment.apiUrl}/admin/usuarios`;
+  private readonly baseUrl = `${environment.apiUrl}/api/admin/usuarios`;
 
   constructor(private http: HttpClient) {}
 

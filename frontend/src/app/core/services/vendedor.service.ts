@@ -41,13 +41,15 @@ export interface PaginatedResponse<T> {
 
 /**
  * Service para operações com vendedores
+ * CORRIGIDO: Atualizado para usar as rotas reorganizadas do admin
  */
 @Injectable({
   providedIn: 'root'
 })
 export class VendedorService {
 
-  private readonly baseUrl = `${environment.apiUrl}/vendedores`;
+  // CORRIGIDO: URL atualizada para a nova estrutura de rotas
+  private readonly baseUrl = `${environment.apiUrl}/api/admin/vendedores`;
 
   constructor(private http: HttpClient) {}
 
@@ -66,6 +68,7 @@ export class VendedorService {
 
   /**
    * Lista apenas vendedores ativos (para seleção em formulários)
+   * CORRIGIDO: Agora usa a rota correta /api/admin/vendedores/ativos
    */
   listarAtivos(): Observable<ApiResponse<VendedorDto[]>> {
     return this.http.get<ApiResponse<VendedorDto[]>>(`${this.baseUrl}/ativos`);

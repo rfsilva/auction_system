@@ -1,0 +1,121 @@
+// ========================================
+// 🌐 CONTROLADORES PÚBLICOS
+// ========================================
+
+@RestController
+@RequestMapping("/public")
+public class PublicController {
+    
+    // Catálogo público
+    @GetMapping("/catalogo/lotes")
+    @GetMapping("/catalogo/lotes/{id}")
+    @GetMapping("/catalogo/lotes/destaque")
+    @GetMapping("/catalogo/categorias")
+    
+    // Informações gerais
+    @GetMapping("/sobre")
+    @GetMapping("/contato")
+    @PostMapping("/contato") // Enviar mensagem
+    @GetMapping("/termos")
+    @GetMapping("/privacidade")
+}
+
+// ========================================
+// 🔐 CONTROLADORES DE AUTENTICAÇÃO
+// ========================================
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+    // Já existente, sem alterações
+}
+
+// ========================================
+// 👤 CONTROLADORES DE USUÁRIO
+// ========================================
+
+@RestController
+@RequestMapping("/api/user")
+@PreAuthorize("hasRole('USER')")
+public class UserController {
+    
+    @GetMapping("/profile")
+    @PutMapping("/profile")
+    @GetMapping("/dashboard")
+    @GetMapping("/notificacoes")
+    @PutMapping("/configuracoes")
+}
+
+// ========================================
+// 🏪 CONTROLADORES DE VENDEDOR
+// ========================================
+
+@RestController
+@RequestMapping("/api/seller")
+@PreAuthorize("hasRole('SELLER')")
+public class SellerController {
+    
+    // Dashboard
+    @GetMapping("/dashboard")
+    @GetMapping("/estatisticas")
+    
+    // Produtos
+    @GetMapping("/produtos")
+    @PostMapping("/produtos")
+    @GetMapping("/produtos/{id}")
+    @PutMapping("/produtos/{id}")
+    @DeleteMapping("/produtos/{id}")
+    
+    // Lotes
+    @GetMapping("/lotes")
+    @PostMapping("/lotes")
+    @GetMapping("/lotes/{id}")
+    @PutMapping("/lotes/{id}")
+    @DeleteMapping("/lotes/{id}")
+    
+    // Contratos
+    @GetMapping("/contratos")
+    @GetMapping("/contratos/{id}")
+    
+    // Relatórios
+    @GetMapping("/relatorios/vendas")
+    @GetMapping("/relatorios/produtos")
+    @GetMapping("/financeiro")
+}
+
+// ========================================
+// 👑 CONTROLADORES ADMINISTRATIVOS
+// ========================================
+
+@RestController
+@RequestMapping("/api/admin")
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminController {
+    
+    // Dashboard
+    @GetMapping("/dashboard")
+    @GetMapping("/estatisticas")
+    
+    // Usuários
+    @GetMapping("/usuarios")
+    @GetMapping("/usuarios/{id}")
+    @PutMapping("/usuarios/{id}")
+    @DeleteMapping("/usuarios/{id}")
+    
+    // Vendedores
+    @GetMapping("/vendedores")
+    @PostMapping("/vendedores/ativar")
+    
+    // Contratos
+    @GetMapping("/contratos")
+    @PostMapping("/contratos")
+    @GetMapping("/contratos/{id}")
+    @PutMapping("/contratos/{id}")
+    @DeleteMapping("/contratos/{id}")
+    
+    // Sistema
+    @GetMapping("/logs")
+    @GetMapping("/configuracoes")
+    @PutMapping("/configuracoes")
+    @GetMapping("/relatorios/**")
+}

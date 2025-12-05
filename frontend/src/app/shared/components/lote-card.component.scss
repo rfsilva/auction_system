@@ -1,249 +1,269 @@
-/* Estilos para o componente LoteCard */
-/* História 02: Transformação do Catálogo em Catálogo de Lotes */
-/* Atualizado para usar LoteImageComponent */
-
+// Estilos para o componente LoteCard
 .lote-card {
-  background: white;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-
+  background: white;
+  
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
-
+  
   &.ending-soon {
-    border: 2px solid #ff6b35;
+    border: 2px solid #ffc107;
     
-    // Efeito visual para lotes próximos do encerramento
-    &::after {
+    &::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 53, 0.05) 100%);
-      pointer-events: none;
+      height: 4px;
+      background: linear-gradient(90deg, #ffc107, #ff6b35);
       z-index: 1;
     }
   }
-
+  
   &.inactive {
     opacity: 0.7;
     
-    // O filtro de grayscale agora é aplicado no componente de imagem
-    app-lote-image {
-      filter: grayscale(50%);
+    .lote-content {
+      background: #f8f9fa;
     }
   }
 }
 
 .lote-content {
-  padding: 16px;
-  flex: 1;
+  padding: 1.25rem;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
 
-  .lote-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+.lote-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.8rem; // Para manter altura consistente
+}
 
-  .lote-description {
-    color: #6b7280;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+.lote-description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
 
-  .seller-info,
-  .categoria-info {
+.lote-info {
+  margin-bottom: 1rem;
+  
+  .info-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: #6b7280;
-
-    i {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-  }
-
-  .tempo-restante {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    font-size: 0.875rem;
-
-    &.tempo-normal {
-      color: #10b981;
-    }
-
-    &.tempo-urgente {
-      color: #f59e0b;
-    }
-
-    &.tempo-critico {
-      color: #ef4444;
-      animation: pulse 2s infinite;
-    }
-
-    &.tempo-encerrado {
-      color: #6b7280;
-    }
-
-    i {
-      font-size: 0.75rem;
-    }
-  }
-
-  .data-encerramento {
-    margin-top: auto;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
     
-    small {
-      color: #9ca3af;
+    i {
+      margin-right: 0.5rem;
+      width: 14px;
+      color: #999;
+    }
+    
+    .status-badge {
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
       font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      
+      &.status-active {
+        background: #d4edda;
+        color: #155724;
+      }
+      
+      &.status-ending-soon {
+        background: #fff3cd;
+        color: #856404;
+      }
+      
+      &.status-expired {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      
+      &.status-inactive {
+        background: #e2e3e5;
+        color: #6c757d;
+      }
     }
   }
+}
+
+.tempo-restante {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  
+  i {
+    margin-right: 0.5rem;
+  }
+  
+  &.tempo-critico {
+    animation: pulse 1s infinite;
+  }
+  
+  &.tempo-urgente {
+    font-weight: 600;
+  }
+  
+  &.tempo-encerrado {
+    text-decoration: line-through;
+  }
+}
+
+.data-encerramento {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 1rem;
 }
 
 .lote-actions {
-  padding: 12px 16px;
-  border-top: 1px solid #f3f4f6;
   display: flex;
-  justify-content: space-between;
+  gap: 0.5rem;
   align-items: center;
-  gap: 8px;
-
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: auto;
+  
   .btn {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    transition: all 0.2s ease;
     
-    &:hover {
-      text-decoration: none;
-      transform: translateY(-1px);
+    i {
+      font-size: 0.8rem;
     }
     
-    &.btn-sm {
-      padding: 6px 12px;
-      font-size: 0.875rem;
+    &.btn-primary {
+      background: #007bff;
+      border: 1px solid #007bff;
+      color: white;
+      
+      &:hover {
+        background: #0056b3;
+        border-color: #0056b3;
+        transform: translateY(-1px);
+      }
     }
-  }
-
-  .btn-outline-danger {
-    min-width: 36px;
     
-    &:hover {
-      background-color: #dc3545;
-      border-color: #dc3545;
-    }
-  }
-
-  .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    
-    &:hover {
-      background-color: #c82333;
-      border-color: #bd2130;
-    }
-  }
-
-  .btn-primary {
-    flex: 1;
-    
-    &:hover {
-      background-color: #0056b3;
-      border-color: #004085;
+    &.btn-outline-danger {
+      border: 1px solid #dc3545;
+      color: #dc3545;
+      background: transparent;
+      
+      &:hover {
+        background: #dc3545;
+        color: white;
+      }
+      
+      &.btn-danger {
+        background: #dc3545;
+        color: white;
+        
+        &:hover {
+          background: #c82333;
+        }
+      }
     }
   }
 }
 
-/* Animações */
+// Animações
 @keyframes pulse {
-  0%, 100% {
+  0% {
     opacity: 1;
   }
   50% {
     opacity: 0.7;
   }
+  100% {
+    opacity: 1;
+  }
 }
 
-/* Responsividade */
+// Responsividade
 @media (max-width: 768px) {
   .lote-card {
-    .lote-content {
-      padding: 12px;
-      gap: 6px;
-
-      .lote-title {
-        font-size: 1rem;
-      }
-
-      .lote-description {
-        font-size: 0.8rem;
-      }
-    }
-
-    .lote-actions {
-      padding: 8px 12px;
-      
-      .btn.btn-sm {
-        padding: 5px 10px;
-        font-size: 0.8rem;
-      }
-    }
+    margin-bottom: 1rem;
   }
-}
-
-@media (max-width: 480px) {
-  .lote-card {
-    .lote-actions {
-      flex-direction: column;
-      gap: 8px;
-
-      .btn-outline-danger,
-      .btn-danger {
-        align-self: flex-end;
-      }
-
-      .btn-primary {
-        width: 100%;
-      }
-    }
-  }
-}
-
-/* Ajustes específicos para o componente de imagem */
-app-lote-image {
-  transition: filter 0.3s ease;
   
-  &:hover {
-    // Efeito de hover será tratado internamente pelo componente
+  .lote-content {
+    padding: 1rem;
+  }
+  
+  .lote-title {
+    font-size: 1rem;
+  }
+  
+  .lote-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Estados especiais
+.card.h-100 {
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+
+// Melhorias visuais
+.lote-card {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    transition: background 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:hover::after {
+    background: rgba(0, 123, 255, 0.02);
   }
 }

@@ -96,9 +96,7 @@ app:
 # Configurações do servidor para produção
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /api
-  
+
   # Configurações SSL (se habilitado)
   ssl:
     enabled: ${SSL_ENABLED:false}

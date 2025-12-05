@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller para relatórios de contratos vencendo
  * História 3: Relatórios de Contratos Vencendo - Sprint S2.2
+ * REFATORAÇÃO: Movido para /api/admin/contratos/vencimentos/** para organização das rotas
  */
 @RestController
-@RequestMapping("/contratos")
+@RequestMapping("/api/admin/contratos/vencimentos")
 @RequiredArgsConstructor
 @Slf4j
 public class ContratoVencendoController {
@@ -35,7 +36,7 @@ public class ContratoVencendoController {
      * Permite filtros por vendedor, categoria, urgência
      * Inclui/exclui contratos já notificados
      */
-    @GetMapping("/vencendo")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ContratoVencendoRelatorioDto>> obterContratosVencendo(
             @RequestParam(defaultValue = "30") Integer dias,
@@ -89,7 +90,7 @@ public class ContratoVencendoController {
      * Endpoint para exportar relatório de contratos vencendo em CSV
      * História 3: Relatórios de Contratos Vencendo
      */
-    @GetMapping("/vencendo/export/csv")
+    @GetMapping("/export/csv")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> exportarContratosVencendoCSV(
             @RequestParam(defaultValue = "30") Integer dias,
@@ -128,7 +129,7 @@ public class ContratoVencendoController {
      * Endpoint para exportar relatório de contratos vencendo em PDF
      * História 3: Relatórios de Contratos Vencendo
      */
-    @GetMapping("/vencendo/export/pdf")
+    @GetMapping("/export/pdf")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> exportarContratosVencendoPDF(
             @RequestParam(defaultValue = "30") Integer dias,
@@ -167,7 +168,7 @@ public class ContratoVencendoController {
      * Endpoint para forçar envio de notificações de contratos vencendo
      * História 3: Relatórios de Contratos Vencendo
      */
-    @PostMapping("/vencendo/notificar")
+    @PostMapping("/notificar")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> enviarNotificacoes() {
         log.info("Solicitação manual de envio de notificações de contratos vencendo");

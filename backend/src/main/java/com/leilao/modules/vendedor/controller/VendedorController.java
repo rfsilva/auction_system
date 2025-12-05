@@ -17,9 +17,12 @@ import java.util.List;
 
 /**
  * Controller para operações com vendedores
+ * FASE 1 - Reorganização de Rotas: Movido para /api/admin/vendedores/**
+ * 
+ * Requer autenticação e role ADMIN
  */
 @RestController
-@RequestMapping("/vendedores")
+@RequestMapping("/api/admin/vendedores")
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")

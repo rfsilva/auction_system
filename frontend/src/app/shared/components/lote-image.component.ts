@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./lote-image.component.scss']
 })
 export class LoteImageComponent implements OnInit {
-  @Input() src: string | undefined = '';
+  @Input() src: string | null | undefined = null;
   @Input() alt: string = '';
   @Input() height: number = 200;
   @Input() showBadges: boolean = true;
@@ -21,25 +21,37 @@ export class LoteImageComponent implements OnInit {
   imageLoaded: boolean = false;
   imageError: boolean = false;
   isExampleUrl: boolean = false;
+  showPlaceholder: boolean = true;
 
   ngOnInit() {
     this.setImageSrc();
   }
 
   private setImageSrc() {
+    // Se não há src ou é null/undefined, usar placeholder
+    if (!this.src || this.src.trim() === '') {
+      this.showPlaceholder = true;
+      this.imageError = false;
+      this.isExampleUrl = false;
+      return;
+    }
+
     // Verificar se é uma URL de exemplo (que sabemos que não funciona)
-    if (this.src && this.isExampleDomain(this.src)) {
+    if (this.isExampleDomain(this.src)) {
       this.isExampleUrl = true;
       this.imageError = true;
+      this.showPlaceholder = true;
       console.log('URL de exemplo detectada, usando placeholder:', this.src);
       return;
     }
 
     // Verificar se a URL é válida
-    if (this.src && this.isValidUrl(this.src)) {
+    if (this.isValidUrl(this.src)) {
       this.imageSrc = this.src;
+      this.showPlaceholder = false;
     } else {
       this.imageError = true;
+      this.showPlaceholder = true;
     }
   }
 
@@ -67,18 +79,24 @@ export class LoteImageComponent implements OnInit {
   }
 
   shouldShowImage(): boolean {
-    return Boolean(this.imageSrc) && !this.imageError && !this.isExampleUrl;
+    return Boolean(this.imageSrc) && !this.imageError && !this.isExampleUrl && !this.showPlaceholder;
+  }
+
+  shouldShowPlaceholder(): boolean {
+    return this.showPlaceholder || this.imageError || this.isExampleUrl || !this.imageSrc;
   }
 
   onImageLoad() {
     this.imageLoaded = true;
     this.imageError = false;
+    this.showPlaceholder = false;
     console.log('Imagem do lote carregada com sucesso:', this.imageSrc);
   }
 
   onImageError() {
     this.imageError = true;
     this.imageLoaded = false;
+    this.showPlaceholder = true;
     console.log('Erro ao carregar imagem do lote:', this.imageSrc);
   }
 
@@ -86,6 +104,8 @@ export class LoteImageComponent implements OnInit {
     if (this.isExampleUrl) {
       return '📦';
     } else if (this.imageError) {
+      return '📦';
+    } else if (!this.src) {
       return '📦';
     } else {
       return '⏳';
@@ -97,6 +117,8 @@ export class LoteImageComponent implements OnInit {
       return 'Lote de Exemplo';
     } else if (this.imageError) {
       return 'Sem Imagem';
+    } else if (!this.src) {
+      return 'Lote';
     } else {
       return 'Carregando...';
     }

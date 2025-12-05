@@ -1,158 +1,100 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layouts/main-layout.component';
-import { authGuard } from './core/guards/auth.guard';
+import { PrivateGuard, UsuarioGuard, VendedorGuard, AdminGuard } from './core/guards/area.guards';
 
 export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
     children: [
-      {
-        path: '',
+      // ========================================
+      // 🌐 ÁREA PÚBLICA (Sem Guards)
+      // ========================================
+      { 
+        path: '', 
         loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
       },
-      {
-        path: 'auth/login',
-        loadComponent: () => import('./pages/auth/login.component').then(m => m.LoginComponent)
+      { 
+        path: 'catalogo', 
+        loadChildren: () => import('./public/catalogo/catalogo.routes').then(m => m.catalogoRoutes)
       },
-      {
-        path: 'auth/register',
-        loadComponent: () => import('./pages/auth/register.component').then(m => m.RegisterComponent)
+      { 
+        path: 'sobre', 
+        loadComponent: () => import('./public/pages/sobre.component').then(m => m.SobreComponent)
       },
-      {
-        path: 'profile',
-        loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
-        canActivate: [authGuard]
+      { 
+        path: 'contato', 
+        loadComponent: () => import('./public/pages/contato.component').then(m => m.ContatoComponent)
       },
+      
+      // ========================================
+      // 🔐 AUTENTICAÇÃO
+      // ========================================
+      { 
+        path: 'auth', 
+        loadChildren: () => import('./auth/auth.routes').then(m => m.authRoutes)
+      },
+      
+      // ========================================
+      // 👤 ÁREA PRIVADA - USUÁRIO
+      // ========================================
+      { 
+        path: 'app', 
+        canActivate: [UsuarioGuard],
+        loadChildren: () => import('./private/usuario/usuario.routes').then(m => m.usuarioRoutes)
+      },
+      
+      // ========================================
+      // 🏪 ÁREA PRIVADA - VENDEDOR
+      // ========================================
+      { 
+        path: 'vendedor', 
+        canActivate: [VendedorGuard],
+        loadChildren: () => import('./private/vendedor/vendedor.routes').then(m => m.vendedorRoutes)
+      },
+      
+      // ========================================
+      // 👑 ÁREA PRIVADA - ADMIN
+      // ========================================
+      { 
+        path: 'admin', 
+        canActivate: [AdminGuard],
+        loadChildren: () => import('./private/admin/admin.routes').then(m => m.adminRoutes)
+      },
+
+      // ========================================
+      // 🧪 ÁREA DE TESTES (Temporário)
+      // ========================================
       {
         path: 'realtime-test',
         loadComponent: () => import('./pages/realtime-test/realtime-test.component').then(m => m.RealtimeTestComponent)
       },
+
+      // ========================================
+      // 🔄 REDIRECTS DE COMPATIBILIDADE
+      // ========================================
       
-      // ========================================
-      // HISTÓRIA 02: Catálogo de Lotes (NOVO PADRÃO)
-      // ========================================
+      // Redirects do sistema antigo para nova estrutura
+      { path: 'produtos/novo', redirectTo: '/vendedor/produtos/novo', pathMatch: 'full' },
+      { path: 'produtos/meus-produtos', redirectTo: '/vendedor/produtos', pathMatch: 'full' },
+      { path: 'produtos/:id/editar', redirectTo: '/vendedor/produtos/:id/editar', pathMatch: 'full' },
+      { path: 'lotes', redirectTo: '/vendedor/lotes', pathMatch: 'full' },
+      { path: 'lotes/novo', redirectTo: '/vendedor/lotes/novo', pathMatch: 'full' },
+      { path: 'lotes/:id/editar', redirectTo: '/vendedor/lotes/:id/editar', pathMatch: 'full' },
+      { path: 'contratos/meus-contratos', redirectTo: '/vendedor/contratos', pathMatch: 'full' },
+      { path: 'admin/contratos', redirectTo: '/admin/contratos', pathMatch: 'full' },
+      { path: 'admin/usuarios', redirectTo: '/admin/usuarios', pathMatch: 'full' },
+      { path: 'admin/ativar-vendedor', redirectTo: '/admin/contratos/ativar-vendedor', pathMatch: 'full' },
       
-      // ✅ Catálogo público de lotes (padrão atual)
-      {
-        path: 'catalogo',
-        loadComponent: () => import('./pages/catalogo/catalogo-lotes.component').then(m => m.CatalogoLotesComponent)
-      },
+      // Redirect do catálogo antigo de produtos
+      { path: 'catalogo-produtos', redirectTo: '/catalogo', pathMatch: 'full' },
       
-      // ⚠️ DEPRECIADO: Redirect do catálogo antigo de produtos
-      {
-        path: 'catalogo-produtos',
-        redirectTo: '/catalogo',
-        pathMatch: 'full'
-      },
-      
-      // ========================================
-      // Rotas de produtos para vendedores (ÁREA PRIVADA)
-      // ========================================
-      {
-        path: 'produtos/novo',
-        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'produtos/meus-produtos',
-        loadComponent: () => import('./pages/produto/produto-list.component').then(m => m.ProdutoListComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'produtos/:id/editar',
-        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'produtos/:id',
-        loadComponent: () => import('./pages/produto/produto-form.component').then(m => m.ProdutoFormComponent),
-        canActivate: [authGuard]
-      },
-      
-      // ========================================
-      // Rotas de lotes para vendedores (ÁREA PRIVADA)
-      // ========================================
-      {
-        path: 'lotes',
-        loadComponent: () => import('./pages/lote/lote-list.component').then(m => m.LoteListComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'lotes/novo',
-        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'lotes/:id',
-        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'lotes/:id/editar',
-        loadComponent: () => import('./pages/lote/lote-form.component').then(m => m.LoteFormComponent),
-        canActivate: [authGuard]
-      },
-      
-      // ========================================
-      // Rotas de contratos para vendedores
-      // ========================================
-      {
-        path: 'contratos/meus-contratos',
-        loadComponent: () => import('./pages/contrato/meus-contratos.component').then(m => m.MeusContratosComponent),
-        canActivate: [authGuard]
-      },
-      
-      // ========================================
-      // Rotas administrativas
-      // ========================================
-      {
-        path: 'admin/dashboard',
-        loadComponent: () => import('./pages/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'admin/contratos',
-        loadComponent: () => import('./pages/contrato/contrato-list.component').then(m => m.ContratoListComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'admin/contratos/novo',
-        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'admin/contratos/:id',
-        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'admin/contratos/:id/editar',
-        loadComponent: () => import('./pages/contrato/contrato-form.component').then(m => m.ContratoFormComponent),
-        canActivate: [authGuard]
-      },
-      
-      // ========================================
-      // Rotas de usuários para administradores
-      // ========================================
-      {
-        path: 'admin/usuarios',
-        loadComponent: () => import('./pages/admin/usuario-list.component').then(m => m.UsuarioListComponent),
-        canActivate: [authGuard]
-      },
-      
-      // ========================================
-      // Rota para ativar vendedor
-      // ========================================
-      {
-        path: 'admin/ativar-vendedor',
-        loadComponent: () => import('./pages/contrato/ativar-vendedor.component').then(m => m.AtivarVendedorComponent),
-        canActivate: [authGuard]
-      }
+      // Profile redirect
+      { path: 'profile', redirectTo: '/app/profile', pathMatch: 'full' }
     ]
   },
-  {
-    path: '**',
-    redirectTo: ''
+  { 
+    path: '**', 
+    loadComponent: () => import('./shared/components/not-found.component').then(m => m.NotFoundComponent)
   }
 ];
