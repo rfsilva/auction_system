@@ -1,0 +1,15 @@
+// seller.guard.ts
+@Injectable()
+export class SellerGuard implements CanActivate {
+  canActivate(): boolean {
+    return this.authService.hasRole('SELLER');
+  }
+}
+
+// admin.guard.ts  
+@Injectable()
+export class AdminGuard implements CanActivate {
+  canActivate(): boolean {
+    return this.authService.hasRole('ADMIN');
+  }
+}

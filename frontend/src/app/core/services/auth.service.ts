@@ -20,6 +20,7 @@ export class AuthService {
   private readonly API_URL = environment.apiUrl;
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly USER_KEY = 'current_user';
   
   // Signal para estado reativo
   private isAuthenticatedSignal = signal<boolean>(false);
@@ -130,30 +131,51 @@ export class AuthService {
   private setTokens(token: string, refreshToken: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-    this.isAuthenticatedSignal.set(true);
-    this.isAuthenticatedSubject.next(true);
+    this.updateAuthState(true);
   }
 
   private setUser(user: User): void {
+    // Salvar usuário no localStorage para persistir entre reloads
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     this.currentUserSignal.set(user);
   }
 
   private clearAuth(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    this.isAuthenticatedSignal.set(false);
+    localStorage.removeItem(this.USER_KEY);
+    this.updateAuthState(false);
     this.currentUserSignal.set(null);
-    this.isAuthenticatedSubject.next(false);
+  }
+
+  private updateAuthState(isAuthenticated: boolean): void {
+    // Atualizar ambos os estados de uma vez para evitar múltiplas re-renderizações
+    this.isAuthenticatedSignal.set(isAuthenticated);
+    this.isAuthenticatedSubject.next(isAuthenticated);
   }
 
   private checkAuthStatus(): void {
     const token = this.getToken();
-    if (token) {
-      // TODO: Validar token com o backend ou decodificar JWT
-      this.isAuthenticatedSignal.set(true);
-      this.isAuthenticatedSubject.next(true);
-      
-      // TODO: Recuperar dados do usuário do token ou fazer chamada para o backend
+    const userJson = localStorage.getItem(this.USER_KEY);
+    
+    if (token && userJson) {
+      try {
+        const user: User = JSON.parse(userJson);
+        // Validar se o objeto user tem as propriedades necessárias
+        if (user && user.id && user.email) {
+          this.currentUserSignal.set(user);
+          this.updateAuthState(true);
+          console.log('Usuário recuperado do localStorage:', user.email);
+        } else {
+          console.warn('Dados do usuário inválidos no localStorage');
+          this.clearAuth();
+        }
+      } catch (error) {
+        console.error('Erro ao parsear dados do usuário:', error);
+        this.clearAuth();
+      }
+    } else {
+      this.updateAuthState(false);
     }
   }
 

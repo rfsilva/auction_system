@@ -1,0 +1,26 @@
+@Configuration
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(authz -> authz
+            // Público
+            .requestMatchers("/public/**").permitAll()
+            .requestMatchers("/auth/**").permitAll()
+            
+            // Usuários autenticados
+            .requestMatchers("/api/user/**").hasRole("USER")
+            
+            // Vendedores
+            .requestMatchers("/api/seller/**").hasRole("SELLER")
+            
+            // Administradores
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            
+            // Qualquer outra requisição precisa de autenticação
+            .anyRequest().authenticated()
+        );
+        
+        return http.build();
+    }
+}

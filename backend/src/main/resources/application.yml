@@ -13,7 +13,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
+        format_sql: false
         jdbc:
           time_zone: America/Sao_Paulo
   
@@ -55,10 +55,12 @@ app:
     allowed-headers: "*"
     allow-credentials: true
   
-  # Configurações de Rate Limiting
+  # Configurações de Rate Limiting - História 5: Sprint S2.2
   rate-limit:
     enabled: true
     requests-per-minute: 60
+    admin-requests-per-minute: 120
+    report-requests-per-minute: 10
     burst-capacity: 100
   
   # Configurações de Email (padrão)
@@ -92,13 +94,15 @@ logging:
   level:
     com.leilao: INFO
     org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     # Logs do Flyway
     org.flywaydb: INFO
     # Reduzir logs de email por padrão
     org.springframework.mail: WARN
     org.springframework.boot.actuate.mail: WARN
+    # Rate limiting logs - História 5: Sprint S2.2
+    com.leilao.core.filter.RateLimitingFilter: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -106,8 +110,6 @@ logging:
 # Configurações do servidor
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /api
   error:
     include-message: always
     include-binding-errors: always

@@ -6,7 +6,6 @@ import {
   Produto, 
   ProdutoCreateRequest, 
   ProdutoUpdateRequest, 
-  CatalogoFiltro, 
   PaginatedResponse 
 } from '../models/produto.model';
 
@@ -17,35 +16,45 @@ interface ApiResponse<T> {
   timestamp: string;
 }
 
+/**
+ * Serviço para gerenciamento de produtos (área privada - vendedores)
+ * FASE 2 - Reorganização de Services: Atualizado para nova estrutura de rotas
+ * 
+ * Conecta com os endpoints do ProdutoController no backend:
+ * - /api/vendedor/produtos/** (operações privadas do vendedor)
+ * 
+ * Nota: Para catálogo público, use PublicCatalogoService
+ * Produtos são acessados publicamente apenas através de lotes
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ProdutoService {
-  private readonly apiUrl = `${environment.apiUrl}`;
+  private readonly apiUrl = `${environment.apiUrl}/api/vendedor/produtos`;
 
   constructor(private http: HttpClient) {}
 
-  // ===== CRUD para Vendedores =====
+  // ===== CRUD para Vendedores (ÁREA PRIVADA) =====
 
   /**
    * Cria um novo produto
    */
   criarProduto(produto: ProdutoCreateRequest): Observable<ApiResponse<Produto>> {
-    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos`, produto);
+    return this.http.post<ApiResponse<Produto>>(this.apiUrl, produto);
   }
 
   /**
    * Atualiza um produto existente
    */
   atualizarProduto(produtoId: string, produto: ProdutoUpdateRequest): Observable<ApiResponse<Produto>> {
-    return this.http.put<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}`, produto);
+    return this.http.put<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}`, produto);
   }
 
   /**
    * Busca produto por ID (vendedor)
    */
   buscarProduto(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}`);
+    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}`);
   }
 
   /**
@@ -56,71 +65,31 @@ export class ProdutoService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(`${this.apiUrl}/produtos/meus-produtos`, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(this.apiUrl, { params });
   }
 
   /**
    * Exclui um produto
    */
   excluirProduto(produtoId: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/produtos/${produtoId}`);
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${produtoId}`);
   }
 
   /**
    * Publica um produto
    */
   publicarProduto(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/produtos/${produtoId}/publicar`, {});
-  }
-
-  // ===== Catálogo Público =====
-
-  /**
-   * Busca produtos no catálogo público
-   */
-  buscarCatalogo(filtros: CatalogoFiltro = {}): Observable<ApiResponse<PaginatedResponse<Produto>>> {
-    let params = new HttpParams();
-
-    if (filtros.categoria) {
-      params = params.set('categoria', filtros.categoria);
-    }
-    if (filtros.precoMin !== undefined) {
-      params = params.set('precoMin', filtros.precoMin.toString());
-    }
-    if (filtros.precoMax !== undefined) {
-      params = params.set('precoMax', filtros.precoMax.toString());
-    }
-    if (filtros.titulo) {
-      params = params.set('titulo', filtros.titulo);
-    }
-    if (filtros.ordenacao) {
-      params = params.set('ordenacao', filtros.ordenacao);
-    }
-    if (filtros.page !== undefined) {
-      params = params.set('page', filtros.page.toString());
-    }
-    if (filtros.size !== undefined) {
-      params = params.set('size', filtros.size.toString());
-    }
-
-    return this.http.get<ApiResponse<PaginatedResponse<Produto>>>(`${this.apiUrl}/catalogo/produtos`, { params });
+    return this.http.post<ApiResponse<Produto>>(`${this.apiUrl}/${produtoId}/publicar`, {});
   }
 
   /**
-   * Busca produto específico no catálogo (público)
-   */
-  buscarProdutoCatalogo(produtoId: string): Observable<ApiResponse<Produto>> {
-    return this.http.get<ApiResponse<Produto>>(`${this.apiUrl}/catalogo/produtos/${produtoId}`);
-  }
-
-  /**
-   * Lista categorias disponíveis
+   * Lista categorias disponíveis (usado por lotes e produtos)
    */
   listarCategorias(): Observable<ApiResponse<string[]>> {
-    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/catalogo/categorias`);
+    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/categorias`);
   }
 
-  // ===== Métodos Utilitários =====
+  // ===== Métodos Utilitários (MANTIDOS) =====
 
   /**
    * Formata preço para exibição

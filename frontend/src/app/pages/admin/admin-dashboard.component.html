@@ -1,0 +1,384 @@
+<!-- Dashboard Administrativo de Contratos -->
+<div class="admin-dashboard">
+  
+  <!-- Header do Dashboard -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>
+          <i class="fas fa-tachometer-alt"></i>
+          Dashboard Administrativo
+        </h1>
+        <p class="subtitle">Visão geral de contratos, comissões e métricas</p>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Status de carregamento -->
+        <div class="status-indicator" [class.loading]="dashboardStatus.carregando">
+          <i class="fas fa-circle" [class.text-success]="!dashboardStatus.carregando && !dashboardStatus.erro"
+                                   [class.text-danger]="dashboardStatus.erro"
+                                   [class.text-warning]="dashboardStatus.carregando"></i>
+          <span class="status-text">
+            {{ dashboardStatus.carregando ? 'Carregando...' : 
+               dashboardStatus.erro ? 'Erro' : 'Online' }}
+          </span>
+        </div>
+        
+        <!-- Última atualização -->
+        <div class="last-update">
+          <small>
+            <i class="fas fa-clock"></i>
+            Última atualização: {{ formatarData(dashboardStatus.ultimaAtualizacao) }}
+          </small>
+        </div>
+        
+        <!-- Botões de ação -->
+        <div class="action-buttons">
+          <button type="button" 
+                  class="btn btn-outline-primary btn-sm"
+                  (click)="toggleFiltros()"
+                  [class.active]="showFiltros">
+            <i class="fas fa-filter"></i>
+            Filtros
+          </button>
+          
+          <button type="button" 
+                  class="btn btn-outline-success btn-sm"
+                  (click)="atualizarManual()"
+                  [disabled]="dashboardStatus.carregando">
+            <i class="fas fa-sync-alt" [class.fa-spin]="dashboardStatus.carregando"></i>
+            Atualizar
+          </button>
+          
+          <!-- CORRIGIDO: Dropdown de exportar -->
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                    type="button" 
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+              <i class="fas fa-download"></i>
+              Exportar
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" 
+                        type="button"
+                        (click)="exportarCSV($event)">
+                  <i class="fas fa-file-csv"></i> CSV
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" 
+                        type="button"
+                        (click)="exportarPDF($event)">
+                  <i class="fas fa-file-pdf"></i> PDF
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Painel de Filtros -->
+    <div class="filters-panel" [class.show]="showFiltros">
+      <form [formGroup]="filtrosForm" (ngSubmit)="aplicarFiltros()">
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label">Período</label>
+            <select class="form-select form-select-sm" formControlName="periodo">
+              <option value="dia">Último dia</option>
+              <option value="semana">Última semana</option>
+              <option value="mes">Último mês</option>
+              <option value="trimestre">Último trimestre</option>
+              <option value="ano">Último ano</option>
+            </select>
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label">Data Início</label>
+            <input type="date" class="form-control form-control-sm" formControlName="dataInicio">
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label">Data Fim</label>
+            <input type="date" class="form-control form-control-sm" formControlName="dataFim">
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label">Vendedor</label>
+            <select class="form-select form-select-sm" formControlName="vendedor">
+              <option value="">Todos</option>
+              <option *ngFor="let vendedor of vendedores" [value]="vendedor.id">
+                {{ vendedor.companyName || vendedor.usuarioNome }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label">Categoria</label>
+            <select class="form-select form-select-sm" formControlName="categoria">
+              <option value="">Todas</option>
+              <option *ngFor="let categoria of categorias" [value]="categoria">
+                {{ categoria }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="col-md-2">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" formControlName="autoRefresh" id="autoRefresh">
+              <label class="form-check-label" for="autoRefresh">
+                Auto-refresh (30s)
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="filter-actions mt-3">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fas fa-search"></i>
+            Aplicar Filtros
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ms-2" (click)="limparFiltros()">
+            <i class="fas fa-times"></i>
+            Limpar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="dashboardStatus.carregando">
+    <div class="loading-content">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+      <p class="mt-2">Carregando dashboard...</p>
+    </div>
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <div class="dashboard-content" *ngIf="!dashboardStatus.carregando">
+    
+    <!-- Cards de Métricas - Layout Melhorado -->
+    <div class="metrics-section" *ngIf="metricas.length > 0">
+      <h3 class="section-title">
+        <i class="fas fa-chart-pie me-2"></i>
+        Métricas Principais
+      </h3>
+      
+      <!-- Primeira linha: 3 cards principais -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6" *ngFor="let metrica of metricas.slice(0, 3)">
+          <app-metric-card [metrica]="metrica"></app-metric-card>
+        </div>
+      </div>
+      
+      <!-- Segunda linha: 3 cards restantes -->
+      <div class="row g-4" *ngIf="metricas.length > 3">
+        <div class="col-lg-4 col-md-6" *ngFor="let metrica of metricas.slice(3, 6)">
+          <app-metric-card [metrica]="metrica"></app-metric-card>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section" *ngIf="temDados()">
+      <h3 class="section-title">
+        <i class="fas fa-chart-bar me-2"></i>
+        Análises Visuais
+      </h3>
+      
+      <div class="row g-4">
+        <!-- Gráfico de Contratos por Status -->
+        <div class="col-lg-4">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h5>Contratos por Status</h5>
+            </div>
+            <div class="chart-container">
+              <canvas #chartContratosPorStatus></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Gráfico de Comissões -->
+        <div class="col-lg-4">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h5>Comissões por Vendedor</h5>
+            </div>
+            <div class="chart-container">
+              <canvas #chartComissoesPorMes></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Gráfico de Receita -->
+        <div class="col-lg-4">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h5>Receita Realizada vs Projetada</h5>
+            </div>
+            <div class="chart-container">
+              <canvas #chartReceitaProjetada></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Contratos Vencendo -->
+    <div class="contracts-section" *ngIf="contratosVencendo">
+      <div class="section-header">
+        <h4>
+          <i class="fas fa-exclamation-triangle text-warning"></i>
+          Contratos Próximos ao Vencimento
+        </h4>
+        <div class="section-actions">
+          <button type="button" 
+                  class="btn btn-warning btn-sm"
+                  (click)="enviarNotificacoes()">
+            <i class="fas fa-bell"></i>
+            Enviar Notificações
+          </button>
+        </div>
+      </div>
+      
+      <!-- Resumo -->
+      <div class="contracts-summary" *ngIf="contratosVencendo.resumo">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="summary-card">
+              <div class="summary-value">{{ contratosVencendo.resumo.total }}</div>
+              <div class="summary-label">Total</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="summary-card urgencia-alta">
+              <div class="summary-value">{{ contratosVencendo.resumo.urgenciaAlta }}</div>
+              <div class="summary-label">Urgência Alta</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="summary-card urgencia-media">
+              <div class="summary-value">{{ contratosVencendo.resumo.urgenciaMedia }}</div>
+              <div class="summary-label">Urgência Média</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="summary-card urgencia-baixa">
+              <div class="summary-value">{{ contratosVencendo.resumo.urgenciaBaixa }}</div>
+              <div class="summary-label">Urgência Baixa</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Componente de Tabela -->
+      <app-contratos-vencendo-table 
+        [contratos]="contratosVencendo.contratos"
+        (renovarContrato)="onRenovarContrato($event)"
+        (notificarContrato)="onNotificarContrato($event)">
+      </app-contratos-vencendo-table>
+    </div>
+
+    <!-- Seção de Comissões Detalhadas -->
+    <div class="commissions-section" *ngIf="comissoes">
+      <div class="section-header">
+        <h4>
+          <i class="fas fa-chart-bar text-primary"></i>
+          Relatório de Comissões
+        </h4>
+        <div class="section-info">
+          <span class="badge bg-info">
+            {{ formatarData(comissoes.periodo.inicio) }} - {{ formatarData(comissoes.periodo.fim) }}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Resumo de Comissões -->
+      <div class="commissions-summary">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="summary-card">
+              <div class="summary-value">{{ formatarValor(comissoes.resumo.totalComissoes, 'moeda') }}</div>
+              <div class="summary-label">Total Comissões</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="summary-card">
+              <div class="summary-value">{{ formatarValor(comissoes.resumo.totalVendas, 'moeda') }}</div>
+              <div class="summary-label">Total Vendas</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="summary-card">
+              <div class="summary-value">{{ comissoes.resumo.numeroTransacoes }}</div>
+              <div class="summary-label">Transações</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabela de Comissões por Contrato -->
+      <div class="table-responsive" *ngIf="comissoes.porContrato.length > 0">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>Categoria</th>
+              <th>Taxa</th>
+              <th>Vendas</th>
+              <th>Comissões</th>
+              <th>Transações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of comissoes.porContrato">
+              <td>{{ item.vendedorNome }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ item.categoria || 'Geral' }}</span>
+              </td>
+              <td>{{ formatarValor(item.taxaComissao * 100, 'percentual') }}</td>
+              <td>{{ formatarValor(item.totalVendas, 'moeda') }}</td>
+              <td>
+                <strong class="text-success">{{ formatarValor(item.totalComissoes, 'moeda') }}</strong>
+              </td>
+              <td>{{ item.numeroTransacoes }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado Vazio -->
+  <div class="empty-dashboard" *ngIf="!dashboardStatus.carregando && !temDados()">
+    <div class="empty-icon">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <h3>Dashboard Administrativo</h3>
+    <p class="text-muted">
+      Carregue os dados para visualizar estatísticas, comissões e contratos.
+    </p>
+    <button type="button" class="btn btn-primary" (click)="carregarDashboard()">
+      <i class="fas fa-refresh"></i>
+      Carregar Dados
+    </button>
+  </div>
+
+  <!-- Auto-refresh Status -->
+  <div class="auto-refresh-status" *ngIf="dashboardStatus.autoRefreshAtivo">
+    <div class="status-bar">
+      <i class="fas fa-sync-alt fa-spin"></i>
+      <span>Auto-refresh ativo</span>
+      <small>Próxima atualização: {{ getProximaAtualizacao() }}</small>
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="pararAutoRefresh()">
+        <i class="fas fa-pause"></i>
+      </button>
+    </div>
+  </div>
+</div>

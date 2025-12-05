@@ -1,0 +1,119 @@
+export const routes: Routes = [
+  {
+    path: '',
+    component: MainLayoutComponent,
+    children: [
+      // ========================================
+      // 🌐 ÁREA PÚBLICA (Sem Autenticação)
+      // ========================================
+      {
+        path: '',
+        children: [
+          { path: '', component: HomeComponent },
+          { path: 'catalogo', component: CatalogoLotesComponent },
+          { path: 'catalogo/lotes/:id', component: LoteDetalhesPublicoComponent },
+          { path: 'sobre', component: SobreComponent },
+          { path: 'contato', component: ContatoComponent },
+          { path: 'termos', component: TermosComponent },
+          { path: 'privacidade', component: PrivacidadeComponent }
+        ]
+      },
+
+      // ========================================
+      // 🔐 AUTENTICAÇÃO
+      // ========================================
+      {
+        path: 'auth',
+        children: [
+          { path: 'login', component: LoginComponent },
+          { path: 'register', component: RegisterComponent },
+          { path: 'forgot-password', component: ForgotPasswordComponent },
+          { path: 'reset-password', component: ResetPasswordComponent }
+        ]
+      },
+
+      // ========================================
+      // 👤 ÁREA DO USUÁRIO (Autenticado)
+      // ========================================
+      {
+        path: 'app',
+        canActivate: [authGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', component: UserDashboardComponent },
+          { path: 'profile', component: ProfileComponent },
+          { path: 'configuracoes', component: ConfiguracoesComponent },
+          { path: 'notificacoes', component: NotificacoesComponent }
+        ]
+      },
+
+      // ========================================
+      // 🏪 ÁREA DO VENDEDOR (Role: SELLER)
+      // ========================================
+      {
+        path: 'vendedor',
+        canActivate: [authGuard, sellerGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', component: VendedorDashboardComponent },
+          
+          // Produtos
+          { path: 'produtos', component: ProdutoListComponent },
+          { path: 'produtos/novo', component: ProdutoFormComponent },
+          { path: 'produtos/:id', component: ProdutoDetalhesComponent },
+          { path: 'produtos/:id/editar', component: ProdutoFormComponent },
+          
+          // Lotes
+          { path: 'lotes', component: LoteListComponent },
+          { path: 'lotes/novo', component: LoteFormComponent },
+          { path: 'lotes/:id', component: LoteDetalhesComponent },
+          { path: 'lotes/:id/editar', component: LoteFormComponent },
+          
+          // Contratos
+          { path: 'contratos', component: MeusContratosComponent },
+          { path: 'contratos/:id', component: ContratoDetalhesComponent },
+          
+          // Relatórios
+          { path: 'relatorios', component: RelatoriosVendedorComponent },
+          { path: 'financeiro', component: FinanceiroVendedorComponent }
+        ]
+      },
+
+      // ========================================
+      // 👑 ÁREA ADMINISTRATIVA (Role: ADMIN)
+      // ========================================
+      {
+        path: 'admin',
+        canActivate: [authGuard, adminGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', component: AdminDashboardComponent },
+          
+          // Usuários
+          { path: 'usuarios', component: UsuarioListComponent },
+          { path: 'usuarios/:id', component: UsuarioDetalhesComponent },
+          
+          // Vendedores
+          { path: 'vendedores', component: VendedorListComponent },
+          { path: 'vendedores/ativar', component: AtivarVendedorComponent },
+          
+          // Contratos
+          { path: 'contratos', component: ContratoListComponent },
+          { path: 'contratos/novo', component: ContratoFormComponent },
+          { path: 'contratos/:id', component: ContratoDetalhesComponent },
+          { path: 'contratos/:id/editar', component: ContratoFormComponent },
+          
+          // Sistema
+          { path: 'configuracoes', component: ConfiguracoesSistemaComponent },
+          { path: 'logs', component: LogsComponent },
+          { path: 'relatorios', component: RelatoriosAdminComponent },
+          { path: 'realtime-test', component: RealtimeTestComponent }
+        ]
+      }
+    ]
+  },
+  
+  // Redirects e 404
+  { path: 'catalogo-produtos', redirectTo: '/catalogo', pathMatch: 'full' },
+  { path: '**', component: NotFoundComponent }
+];

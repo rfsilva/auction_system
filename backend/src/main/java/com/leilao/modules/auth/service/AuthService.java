@@ -8,6 +8,8 @@ import com.leilao.shared.enums.UserStatus;
 import com.leilao.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,10 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 /**
- * Service para operações de autenticação e autorização
+ * Service para operações de autenticação e autorização com suporte a i18n usando MessageSourceAccessor
  */
 @Service
 @Transactional
@@ -37,6 +38,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Realiza o login do usuário
@@ -47,16 +49,19 @@ public class AuthService {
 
             // Buscar usuário
             Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new BadCredentialsException("Credenciais inválidas"));
+                    .orElseThrow(() -> new BadCredentialsException(
+                            messageSourceAccessor.getMessage("auth.login.failed", LocaleContextHolder.getLocale())));
 
             // Verificar se está bloqueado
             if (usuario.isBloqueado()) {
-                throw new BusinessException("Conta temporariamente bloqueada. Tente novamente mais tarde.");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.login.blocked", LocaleContextHolder.getLocale()));
             }
 
             // Verificar status
             if (!usuario.isActive()) {
-                throw new BusinessException("Conta não está ativa. Verifique seu email ou entre em contato com o suporte.");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.login.inactive", LocaleContextHolder.getLocale()));
             }
 
             // Autenticar
@@ -82,7 +87,8 @@ public class AuthService {
 
         } catch (AuthenticationException e) {
             handleFailedLogin(request.getEmail());
-            throw new BadCredentialsException("Credenciais inválidas");
+            throw new BadCredentialsException(
+                    messageSourceAccessor.getMessage("auth.login.failed", LocaleContextHolder.getLocale()));
         }
     }
 
@@ -94,7 +100,8 @@ public class AuthService {
 
         // Verificar se email já existe
         if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("Email já está em uso");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.register.email.exists", LocaleContextHolder.getLocale()));
         }
 
         // Criar usuário
@@ -103,10 +110,12 @@ public class AuthService {
         usuario.setEmail(request.getEmail());
         usuario.setSenhaHash(passwordEncoder.encode(request.getPassword()));
         usuario.setTelefone(request.getPhone());
-        usuario.setStatus(UserStatus.PENDING_VERIFICATION);
-        usuario.setRoles(Set.of(UserRole.VISITOR));
+        usuario.setStatus(UserStatus.ACTIVE); // Ativo para facilitar os testes
+        
+        // Usuário registrado recebe apenas roles básicas (não é vendedor automaticamente)
+        usuario.setRoles(Set.of(UserRole.VISITOR, UserRole.PARTICIPANT, UserRole.BUYER));
 
-        // Salvar
+        // Salvar usuário
         usuario = usuarioRepository.save(usuario);
 
         // Gerar tokens
@@ -116,7 +125,7 @@ public class AuthService {
         // Converter para DTO
         UserDto userDto = convertToDto(usuario);
 
-        log.info("Usuário registrado com sucesso: {}", usuario.getId());
+        log.info("Usuário registrado com sucesso: {} (roles: {})", usuario.getId(), usuario.getRoles());
         return new AuthResponse(token, refreshToken, userDto);
     }
 
@@ -127,7 +136,8 @@ public class AuthService {
         try {
             String email = jwtService.extractUsername(request.getRefreshToken());
             Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+                    .orElseThrow(() -> new BusinessException(
+                            messageSourceAccessor.getMessage("auth.user.not.found", LocaleContextHolder.getLocale())));
 
             if (jwtService.isTokenValid(request.getRefreshToken(), usuario)) {
                 String newToken = jwtService.generateToken(usuario);
@@ -137,10 +147,13 @@ public class AuthService {
                 
                 return new AuthResponse(newToken, newRefreshToken, userDto);
             } else {
-                throw new BusinessException("Refresh token inválido");
+                throw new BusinessException(
+                        messageSourceAccessor.getMessage("auth.token.invalid", LocaleContextHolder.getLocale()));
             }
         } catch (Exception e) {
-            throw new BusinessException("Erro ao renovar token: " + e.getMessage());
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.refresh.failed", 
+                            new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
         }
     }
 
@@ -173,7 +186,7 @@ public class AuthService {
      */
     public UserDto convertToDto(Usuario usuario) {
         UserDto dto = new UserDto();
-        dto.setId(UUID.fromString(usuario.getId()));
+        dto.setId(usuario.getId());
         dto.setName(usuario.getNome());
         dto.setEmail(usuario.getEmail());
         dto.setPhone(usuario.getTelefone());

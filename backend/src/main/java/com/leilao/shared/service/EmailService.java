@@ -1,38 +1,45 @@
 package com.leilao.shared.service;
 
 import com.leilao.core.config.EmailConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
+
 /**
- * Serviço de email com suporte a mock para desenvolvimento
+ * Serviço de email com suporte a mock para desenvolvimento e i18n usando MessageSourceAccessor
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final boolean emailEnabled;
-    private final boolean emailMock;
-
-    public EmailService(
-            JavaMailSender mailSender,
-            @Value("${app.email.enabled:true}") boolean emailEnabled,
-            @Value("${app.email.mock:false}") boolean emailMock) {
-        this.mailSender = mailSender;
-        this.emailEnabled = emailEnabled;
-        this.emailMock = emailMock;
-        
-        log.info("EmailService inicializado - Enabled: {}, Mock: {}", emailEnabled, emailMock);
-    }
+    private final MessageSourceAccessor messageSourceAccessor;
+    
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
+    
+    @Value("${app.email.mock:false}")
+    private boolean emailMock;
 
     /**
      * Enviar email simples
      */
     public void sendSimpleEmail(String to, String subject, String text) {
+        sendSimpleEmail(to, subject, text, null);
+    }
+
+    /**
+     * Enviar email simples com locale específico
+     */
+    public void sendSimpleEmail(String to, String subject, String text, Locale locale) {
         try {
             if (!emailEnabled) {
                 log.info("Email desabilitado - Não enviando para: {}", to);
@@ -59,7 +66,9 @@ public class EmailService {
             if (emailMock || !emailEnabled) {
                 log.warn("Ignorando erro de email em modo mock/desabilitado");
             } else {
-                throw new RuntimeException("Falha ao enviar email", e);
+                String errorMessage = messageSourceAccessor.getMessage("email.send.failed", 
+                        new Object[]{e.getMessage()}, LocaleContextHolder.getLocale());
+                throw new RuntimeException(errorMessage);
             }
         }
     }
@@ -68,55 +77,53 @@ public class EmailService {
      * Enviar email de boas-vindas
      */
     public void sendWelcomeEmail(String to, String userName) {
-        String subject = "Bem-vindo ao Sistema de Leilão Eletrônico";
-        String text = String.format(
-            "Olá %s,\n\n" +
-            "Bem-vindo ao nosso sistema de leilão eletrônico!\n\n" +
-            "Sua conta foi criada com sucesso. Agora você pode:\n" +
-            "- Participar de leilões\n" +
-            "- Dar lances em produtos\n" +
-            "- Acompanhar seus leilões favoritos\n\n" +
-            "Atenciosamente,\n" +
-            "Equipe Leilão Eletrônico",
-            userName
-        );
+        sendWelcomeEmail(to, userName, null);
+    }
 
-        sendSimpleEmail(to, subject, text);
+    /**
+     * Enviar email de boas-vindas com locale específico
+     */
+    public void sendWelcomeEmail(String to, String userName, Locale locale) {
+        Locale currentLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        String subject = messageSourceAccessor.getMessage("email.welcome.subject", currentLocale);
+        String text = messageSourceAccessor.getMessage("email.welcome.body", new Object[]{userName}, currentLocale);
+        sendSimpleEmail(to, subject, text, locale);
     }
 
     /**
      * Enviar notificação de lance superado
      */
     public void sendBidOutbidNotification(String to, String userName, String productTitle, String currentBid) {
-        String subject = "Seu lance foi superado!";
-        String text = String.format(
-            "Olá %s,\n\n" +
-            "Seu lance no produto '%s' foi superado.\n" +
-            "Lance atual: %s\n\n" +
-            "Acesse o sistema para dar um novo lance!\n\n" +
-            "Atenciosamente,\n" +
-            "Equipe Leilão Eletrônico",
-            userName, productTitle, currentBid
-        );
+        sendBidOutbidNotification(to, userName, productTitle, currentBid, null);
+    }
 
-        sendSimpleEmail(to, subject, text);
+    /**
+     * Enviar notificação de lance superado com locale específico
+     */
+    public void sendBidOutbidNotification(String to, String userName, String productTitle, String currentBid, Locale locale) {
+        Locale currentLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        String subject = messageSourceAccessor.getMessage("email.bid.outbid.subject", currentLocale);
+        String text = messageSourceAccessor.getMessage("email.bid.outbid.body", 
+                new Object[]{userName, productTitle, currentBid}, currentLocale);
+        sendSimpleEmail(to, subject, text, locale);
     }
 
     /**
      * Enviar notificação de leilão terminando
      */
     public void sendAuctionEndingNotification(String to, String userName, String productTitle, String timeLeft) {
-        String subject = "Leilão terminando em breve!";
-        String text = String.format(
-            "Olá %s,\n\n" +
-            "O leilão do produto '%s' termina em %s.\n\n" +
-            "Esta é sua última chance de dar um lance!\n\n" +
-            "Atenciosamente,\n" +
-            "Equipe Leilão Eletrônico",
-            userName, productTitle, timeLeft
-        );
+        sendAuctionEndingNotification(to, userName, productTitle, timeLeft, null);
+    }
 
-        sendSimpleEmail(to, subject, text);
+    /**
+     * Enviar notificação de leilão terminando com locale específico
+     */
+    public void sendAuctionEndingNotification(String to, String userName, String productTitle, String timeLeft, Locale locale) {
+        Locale currentLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        String subject = messageSourceAccessor.getMessage("email.auction.ending.subject", currentLocale);
+        String text = messageSourceAccessor.getMessage("email.auction.ending.body", 
+                new Object[]{userName, productTitle, timeLeft}, currentLocale);
+        sendSimpleEmail(to, subject, text, locale);
     }
 
     /**

@@ -3,25 +3,27 @@ package com.leilao.modules.produto.service;
 import com.leilao.modules.produto.dto.*;
 import com.leilao.modules.produto.entity.Produto;
 import com.leilao.modules.produto.repository.ProdutoRepository;
+import com.leilao.modules.vendedor.service.VendedorService;
 import com.leilao.shared.enums.ProdutoStatus;
 import com.leilao.shared.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Service para operações com Produto
+ * Service para operações com Produto (área privada - vendedores)
+ * HISTÓRIA 03: Adicionado método para listar produtos válidos de um lote com paginação
+ * HISTÓRIA 04: Adicionado método para buscar produto específico válido de um lote
  */
 @Service
 @RequiredArgsConstructor
@@ -29,19 +31,25 @@ import java.util.stream.Collectors;
 public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
+    private final VendedorService vendedorService;
+    private final MessageSourceAccessor messageSourceAccessor;
 
     /**
      * Cria um novo produto
      */
     @Transactional
-    public ProdutoDto criarProduto(ProdutoCreateRequest request, String sellerId) {
-        log.info("Criando produto para vendedor: {}", sellerId);
+    public ProdutoDto criarProduto(ProdutoCreateRequest request, String usuarioId) {
+        log.info("Criando produto para usuário: {}", usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        log.info("Vendedor ID encontrado: {} para usuário: {}", vendedorId, usuarioId);
         
         // Validações de negócio
         validarCriacaoProduto(request);
         
         Produto produto = new Produto();
-        produto.setSellerId(sellerId);
+        produto.setSellerId(vendedorId); // Usar o ID do vendedor, não do usuário
         produto.setTitle(request.getTitle());
         produto.setDescription(request.getDescription());
         produto.setImagesList(request.getImages());
@@ -60,7 +68,7 @@ public class ProdutoService {
         
         produto = produtoRepository.save(produto);
         
-        log.info("Produto criado com sucesso: {}", produto.getId());
+        log.info("Produto criado com sucesso: {} para vendedor: {}", produto.getId(), vendedorId);
         return convertToDto(produto);
     }
 
@@ -68,14 +76,18 @@ public class ProdutoService {
      * Atualiza um produto existente
      */
     @Transactional
-    public ProdutoDto atualizarProduto(String produtoId, ProdutoUpdateRequest request, String sellerId) {
-        log.info("Atualizando produto: {} por vendedor: {}", produtoId, sellerId);
+    public ProdutoDto atualizarProduto(String produtoId, ProdutoUpdateRequest request, String usuarioId) {
+        log.info("Atualizando produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
-            throw new BusinessException("Você não tem permissão para editar este produto");
+        if (!produto.getSellerId().equals(vendedorId)) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser editado
@@ -133,7 +145,7 @@ public class ProdutoService {
     }
 
     /**
-     * Busca produto por ID
+     * Busca produto por ID (área privada)
      */
     @Transactional(readOnly = true)
     public ProdutoDto buscarPorId(String produtoId) {
@@ -145,23 +157,64 @@ public class ProdutoService {
      * Lista produtos do vendedor
      */
     @Transactional(readOnly = true)
-    public Page<ProdutoDto> listarProdutosVendedor(String sellerId, Pageable pageable) {
-        Page<Produto> produtos = produtoRepository.findBySellerId(sellerId, pageable);
+    public Page<ProdutoDto> listarProdutosVendedor(String usuarioId, Pageable pageable) {
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
+        
+        Page<Produto> produtos = produtoRepository.findBySellerId(vendedorId, pageable);
         return produtos.map(this::convertToDto);
+    }
+
+    /**
+     * HISTÓRIA 03: Lista produtos válidos de um lote específico com paginação
+     * Para a página de detalhes do lote com navegação paginada entre produtos
+     */
+    @Transactional(readOnly = true)
+    public Page<ProdutoDto> listarProdutosValidosDoLote(String loteId, Pageable pageable) {
+        log.info("Listando produtos válidos do lote: {} com paginação", loteId);
+        
+        Page<Produto> produtos = produtoRepository.findProdutosValidosDoLoteComPaginacao(loteId, pageable);
+        
+        log.info("Encontrados {} produtos válidos para o lote: {}", produtos.getTotalElements(), loteId);
+        
+        return produtos.map(this::convertToDto);
+    }
+
+    /**
+     * HISTÓRIA 04: Busca produto específico válido de um lote
+     * Para a página de detalhes do produto público
+     */
+    @Transactional(readOnly = true)
+    public ProdutoDto buscarProdutoValidoDoLote(String loteId, String produtoId) {
+        log.info("Buscando produto válido: {} do lote: {}", produtoId, loteId);
+        
+        Produto produto = produtoRepository.findProdutoValidoDoLote(produtoId, loteId)
+            .orElseThrow(() -> {
+                log.warn("Produto {} não encontrado ou não válido no lote {}", produtoId, loteId);
+                return new EntityNotFoundException(
+                    messageSourceAccessor.getMessage("product.not.found.in.lot", LocaleContextHolder.getLocale()));
+            });
+        
+        log.info("Produto válido encontrado: {} no lote: {}", produtoId, loteId);
+        return convertToDto(produto);
     }
 
     /**
      * Exclui um produto
      */
     @Transactional
-    public void excluirProduto(String produtoId, String sellerId) {
-        log.info("Excluindo produto: {} por vendedor: {}", produtoId, sellerId);
+    public void excluirProduto(String produtoId, String usuarioId) {
+        log.info("Excluindo produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
-            throw new BusinessException("Você não tem permissão para excluir este produto");
+        if (!produto.getSellerId().equals(vendedorId)) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser excluído
@@ -176,14 +229,18 @@ public class ProdutoService {
      * Publica um produto (muda status para ACTIVE)
      */
     @Transactional
-    public ProdutoDto publicarProduto(String produtoId, String sellerId) {
-        log.info("Publicando produto: {} por vendedor: {}", produtoId, sellerId);
+    public ProdutoDto publicarProduto(String produtoId, String usuarioId) {
+        log.info("Publicando produto: {} por usuário: {}", produtoId, usuarioId);
+        
+        // Buscar o ID do vendedor pelo ID do usuário
+        String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Produto produto = buscarProdutoPorId(produtoId);
         
         // Verificar se o vendedor é o dono do produto
-        if (!produto.getSellerId().equals(sellerId)) {
-            throw new BusinessException("Você não tem permissão para publicar este produto");
+        if (!produto.getSellerId().equals(vendedorId)) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("auth.access.denied", LocaleContextHolder.getLocale()));
         }
         
         // Validar se o produto pode ser publicado
@@ -197,26 +254,7 @@ public class ProdutoService {
     }
 
     /**
-     * Busca catálogo público com filtros
-     */
-    @Transactional(readOnly = true)
-    public Page<ProdutoDto> buscarCatalogoPublico(CatalogoFiltroRequest filtros) {
-        Pageable pageable = criarPageable(filtros);
-        
-        Page<Produto> produtos = produtoRepository.findCatalogoPublico(
-            LocalDateTime.now(),
-            filtros.getCategoria(),
-            filtros.getPrecoMin(),
-            filtros.getPrecoMax(),
-            filtros.getTitulo(),
-            pageable
-        );
-        
-        return produtos.map(this::convertToDto);
-    }
-
-    /**
-     * Lista categorias ativas
+     * Lista categorias ativas (usado por lotes e produtos)
      */
     @Transactional(readOnly = true)
     public List<String> listarCategoriasAtivas() {
@@ -244,64 +282,83 @@ public class ProdutoService {
 
     private Produto buscarProdutoPorId(String produtoId) {
         return produtoRepository.findById(produtoId)
-            .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + produtoId));
+            .orElseThrow(() -> new EntityNotFoundException(
+                    messageSourceAccessor.getMessage("product.not.found", LocaleContextHolder.getLocale())));
     }
 
     private void validarCriacaoProduto(ProdutoCreateRequest request) {
+        // Validar título
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.title.required", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar descrição
+        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.description.required", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar preço inicial
+        if (request.getInitialPrice() == null || request.getInitialPrice().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.price.invalid", LocaleContextHolder.getLocale()));
+        }
+        
+        // Validar incremento mínimo
+        if (request.getIncrementMin() == null || request.getIncrementMin().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.increment.invalid", LocaleContextHolder.getLocale()));
+        }
+        
         // Validar data de encerramento
-        if (request.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+        if (request.getEndDateTime() == null || request.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.date.invalid", LocaleContextHolder.getLocale()));
         }
         
         // Validar preço de reserva
         if (request.getReservePrice() != null && 
             request.getReservePrice().compareTo(request.getInitialPrice()) < 0) {
-            throw new BusinessException("Preço de reserva não pode ser menor que o preço inicial");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.price.invalid", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarEdicaoProduto(Produto produto) {
         if (produto.isActive() && produto.getCurrentPrice().compareTo(produto.getInitialPrice()) > 0) {
-            throw new BusinessException("Produto com lances não pode ser editado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.edit", LocaleContextHolder.getLocale()));
         }
         
         if (produto.isSold()) {
-            throw new BusinessException("Produto vendido não pode ser editado");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.edit", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarExclusaoProduto(Produto produto) {
         if (produto.isActive() && produto.getCurrentPrice().compareTo(produto.getInitialPrice()) > 0) {
-            throw new BusinessException("Produto com lances não pode ser excluído");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.delete", LocaleContextHolder.getLocale()));
         }
         
         if (produto.isSold()) {
-            throw new BusinessException("Produto vendido não pode ser excluído");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.delete", LocaleContextHolder.getLocale()));
         }
     }
 
     private void validarPublicacaoProduto(Produto produto) {
         if (!produto.isDraft()) {
-            throw new BusinessException("Apenas produtos em rascunho podem ser publicados");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.cannot.publish", LocaleContextHolder.getLocale()));
         }
         
         if (produto.getEndDateTime().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BusinessException("Data de encerramento deve ser pelo menos 1 hora no futuro");
+            throw new BusinessException(
+                    messageSourceAccessor.getMessage("product.date.invalid", LocaleContextHolder.getLocale()));
         }
-        
-        // TODO: Validar se vendedor está ativo e verificado
-        // TODO: Validar se produto tem pelo menos uma imagem
-    }
-
-    private Pageable criarPageable(CatalogoFiltroRequest filtros) {
-        Sort sort = switch (filtros.getOrdenacao()) {
-            case "preco_asc" -> Sort.by("currentPrice").ascending();
-            case "preco_desc" -> Sort.by("currentPrice").descending();
-            case "terminando" -> Sort.by("endDateTime").ascending();
-            default -> Sort.by("createdAt").descending();
-        };
-        
-        return PageRequest.of(filtros.getPage(), filtros.getSize(), sort);
     }
 
     private ProdutoDto convertToDto(Produto produto) {

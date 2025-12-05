@@ -1,26 +1,31 @@
 package com.leilao.shared.enums;
 
 /**
- * Enum que define os status possíveis de um usuário
+ * Status possíveis para um usuário
  */
 public enum UserStatus {
-    PENDING_VERIFICATION("Aguardando Verificação"),
-    ACTIVE("Ativo"),
-    INACTIVE("Inativo"),
-    SUSPENDED("Suspenso");
+    ACTIVE("status.active"),
+    INACTIVE("status.inactive"),
+    PENDING_VERIFICATION("status.pending_verification"),  // Corrigido para corresponder ao banco
+    SUSPENDED("status.suspended");
 
-    private final String displayName;
+    private final String messageKey;
 
-    UserStatus(String displayName) {
-        this.displayName = displayName;
+    UserStatus(String messageKey) {
+        this.messageKey = messageKey;
+    }
+
+    public String getMessageKey() {
+        return messageKey;
     }
 
     public String getDisplayName() {
-        return displayName;
+        // Retorna a chave para ser resolvida pelo MessageSourceAccessor
+        return messageKey;
     }
 
     @Override
     public String toString() {
-        return displayName;
+        return messageKey;
     }
 }

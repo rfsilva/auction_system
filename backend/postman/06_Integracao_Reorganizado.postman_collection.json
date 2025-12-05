@@ -1,0 +1,521 @@
+{
+  "info": {
+    "name": "06 - Testes de Integração (Reorganizado)",
+    "description": "Collection para testar fluxos completos após reorganização\nTesta cenários end-to-end com a nova estrutura de rotas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Fluxo Completo - Novo Vendedor",
+      "item": [
+        {
+          "name": "1. Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('token', response.data.token);",
+                  "        pm.environment.set('adminId', response.data.user.id);",
+                  "        console.log('Admin logado com sucesso');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@leilao.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/login",
+              "host": ["{{authUrl}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Registrar Novo Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('novoUsuarioId', response.data.user.id);",
+                  "        console.log('Novo usuário criado: ' + response.data.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Vendedor\",\n  \"email\": \"joao.vendedor@exemplo.com\",\n  \"password\": \"senha123\",\n  \"phone\": \"(11) 98765-4321\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/register",
+              "host": ["{{authUrl}}"],
+              "path": ["register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Ativar Usuário como Vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('contratoId', response.data.id);",
+                  "        console.log('Usuário ativado como vendedor - Contrato: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{novoUsuarioId}}\",\n  \"feeRate\": 0.10,\n  \"terms\": \"Contrato padrão para novo vendedor\",\n  \"categoria\": \"Geral\",\n  \"ativarImediatamente\": true\n}"
+            },
+            "url": {
+              "raw": "{{adminUrl}}/contratos/ativar-vendedor",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "ativar-vendedor"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Login do Novo Vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('vendedorToken', response.data.token);",
+                  "        console.log('Novo vendedor logado com sucesso');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao.vendedor@exemplo.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/login",
+              "host": ["{{authUrl}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Verificar Contratos Ativos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/contratos/meus-ativos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["contratos", "meus-ativos"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fluxo Completo - Produto e Lote",
+      "item": [
+        {
+          "name": "1. Criar Produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('produtoId', response.data.id);",
+                  "        console.log('Produto criado: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Notebook Dell Inspiron\",\n  \"description\": \"Notebook em excelente estado, ideal para trabalho\",\n  \"initialPrice\": 1500.00,\n  \"reservePrice\": 1200.00,\n  \"incrementMin\": 100.00,\n  \"endDateTime\": \"2024-12-31T23:59:59\",\n  \"categoria\": \"Eletrônicos\",\n  \"tags\": [\"notebook\", \"dell\", \"inspiron\"],\n  \"images\": [\"https://exemplo.com/notebook.jpg\"],\n  \"weight\": 2.5,\n  \"dimensions\": \"35x25x3 cm\"\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Publicar Produto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos/{{produtoId}}/publicar",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos", "{{produtoId}}", "publicar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Criar Lote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('loteId', response.data.id);",
+                  "        console.log('Lote criado: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lote Eletrônicos Premium\",\n  \"description\": \"Lote com produtos eletrônicos de alta qualidade\",\n  \"loteEndDateTime\": \"2024-12-31T23:59:59\",\n  \"produtoIds\": [\"{{produtoId}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Ativar Lote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/lotes/{{loteId}}/ativar",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["lotes", "{{loteId}}", "ativar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Verificar Lote no Catálogo Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes/{{loteId}}",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes", "{{loteId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fluxo Completo - Gestão Admin",
+      "item": [
+        {
+          "name": "1. Listar Todos os Contratos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos?page=0&size=10",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Buscar Usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/buscar?termo=vendedor&limit=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "buscar"],
+              "query": [
+                {
+                  "key": "termo",
+                  "value": "vendedor"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Listar Vendedores Ativos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/vendedores/ativos",
+              "host": ["{{adminUrl}}"],
+              "path": ["vendedores", "ativos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Verificar Contrato Específico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Validação Final",
+      "item": [
+        {
+          "name": "✅ Público - Catálogo Funcionando",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes?page=0&size=5",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Vendedor - Área Funcionando",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos?page=0&size=5",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Admin - Área Funcionando",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos?page=0&size=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Páginas Institucionais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/sobre",
+              "host": ["{{publicUrl}}"],
+              "path": ["sobre"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

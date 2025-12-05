@@ -1,0 +1,239 @@
+{
+  "info": {
+    "name": "01 - Autenticação (Reorganizado)",
+    "description": "Collection para testar endpoints de autenticação após reorganização\nEndpoints: /auth/**",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{authUrl}}/health",
+          "host": ["{{authUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Verifica se o serviço de autenticação está funcionando"
+      },
+      "response": []
+    },
+    {
+      "name": "Verificar Email Existente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{authUrl}}/check-email?email=admin@leilao.com",
+          "host": ["{{authUrl}}"],
+          "path": ["check-email"],
+          "query": [
+            {
+              "key": "email",
+              "value": "admin@leilao.com",
+              "description": "Email para verificar"
+            }
+          ]
+        },
+        "description": "Verifica se um email já está cadastrado no sistema"
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar Usuário",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    if (response.success && response.data) {",
+              "        pm.environment.set('token', response.data.token);",
+              "        pm.environment.set('refreshToken', response.data.refreshToken);",
+              "        pm.environment.set('userId', response.data.user.id);",
+              "        pm.environment.set('userRole', response.data.user.roles[0]);",
+              "        console.log('Usuário registrado e tokens salvos');",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Usuário Teste\",\n  \"email\": \"teste@exemplo.com\",\n  \"password\": \"senha123\",\n  \"phone\": \"(11) 99999-9999\"\n}"
+        },
+        "url": {
+          "raw": "{{authUrl}}/register",
+          "host": ["{{authUrl}}"],
+          "path": ["register"]
+        },
+        "description": "Registra um novo usuário no sistema"
+      },
+      "response": []
+    },
+    {
+      "name": "Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    if (response.success && response.data) {",
+              "        pm.environment.set('token', response.data.token);",
+              "        pm.environment.set('refreshToken', response.data.refreshToken);",
+              "        pm.environment.set('userId', response.data.user.id);",
+              "        pm.environment.set('userRole', response.data.user.roles[0]);",
+              "        console.log('Login realizado com sucesso - Role: ' + response.data.user.roles[0]);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@leilao.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "{{authUrl}}/login",
+          "host": ["{{authUrl}}"],
+          "path": ["login"]
+        },
+        "description": "Login como administrador"
+      },
+      "response": []
+    },
+    {
+      "name": "Login Vendedor",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    if (response.success && response.data) {",
+              "        pm.environment.set('token', response.data.token);",
+              "        pm.environment.set('refreshToken', response.data.refreshToken);",
+              "        pm.environment.set('userId', response.data.user.id);",
+              "        pm.environment.set('userRole', response.data.user.roles[0]);",
+              "        console.log('Login realizado com sucesso - Role: ' + response.data.user.roles[0]);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"vendedor@leilao.com\",\n  \"password\": \"vendedor123\"\n}"
+        },
+        "url": {
+          "raw": "{{authUrl}}/login",
+          "host": ["{{authUrl}}"],
+          "path": ["login"]
+        },
+        "description": "Login como vendedor"
+      },
+      "response": []
+    },
+    {
+      "name": "Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    if (response.success && response.data) {",
+              "        pm.environment.set('token', response.data.token);",
+              "        pm.environment.set('refreshToken', response.data.refreshToken);",
+              "        console.log('Token renovado com sucesso');",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{authUrl}}/refresh",
+          "host": ["{{authUrl}}"],
+          "path": ["refresh"]
+        },
+        "description": "Renova o token de acesso usando refresh token"
+      },
+      "response": []
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{authUrl}}/logout",
+          "host": ["{{authUrl}}"],
+          "path": ["logout"]
+        },
+        "description": "Realiza logout do usuário"
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

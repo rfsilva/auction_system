@@ -61,7 +61,7 @@ public class Usuario implements UserDetails {
     @NotNull(message = "Status é obrigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status = UserStatus.PENDING_VERIFICATION;
+    private UserStatus status = UserStatus.PENDING_VERIFICATION; // Corrigido aqui
 
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)

@@ -1,0 +1,640 @@
+{
+  "info": {
+    "name": "04 - Área do Admin (Reorganizado)",
+    "description": "Collection para testar endpoints da área administrativa após reorganização\nEndpoints: /api/admin/** (requer role ADMIN)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Gestão de Contratos",
+      "item": [
+        {
+          "name": "Listar Contratos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.content.length > 0) {",
+                  "        pm.environment.set('contratoId', response.data.content[0].id);",
+                  "        console.log('Contrato ID salvo: ' + response.data.content[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos?page=0&size=10&sort=createdAt&direction=desc",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "direction",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Lista contratos com filtros (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Contratos com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos?status=ACTIVE&categoria=Eletrônicos&active=true&page=0&size=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Status do contrato"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria do contrato"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Se está ativo"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Busca contratos com filtros específicos"
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('contratoId', response.data.id);",
+                  "        console.log('Contrato criado com ID: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"{{vendedorId}}\",\n  \"feeRate\": 0.10,\n  \"terms\": \"Contrato padrão para categoria eletrônicos\",\n  \"validFrom\": \"2024-01-01T00:00:00\",\n  \"validTo\": \"2024-12-31T23:59:59\",\n  \"categoria\": \"Eletrônicos\"\n}"
+            },
+            "url": {
+              "raw": "{{adminUrl}}/contratos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"]
+            },
+            "description": "Cria um novo contrato (fluxo antigo - para vendedores existentes)"
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Contrato de Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{userId}}\",\n  \"feeRate\": 0.08,\n  \"terms\": \"Contrato especial para novo vendedor\",\n  \"validFrom\": \"2024-01-01T00:00:00\",\n  \"validTo\": \"2024-12-31T23:59:59\",\n  \"categoria\": \"Geral\",\n  \"ativarImediatamente\": true\n}"
+            },
+            "url": {
+              "raw": "{{adminUrl}}/contratos/criar-de-usuario",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "criar-de-usuario"]
+            },
+            "description": "Cria contrato a partir de usuário (promove automaticamente a vendedor)"
+          },
+          "response": []
+        },
+        {
+          "name": "Ativar Vendedor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{userId}}\",\n  \"feeRate\": 0.12,\n  \"terms\": \"Contrato de ativação de vendedor\",\n  \"categoria\": \"Livros\",\n  \"ativarImediatamente\": true\n}"
+            },
+            "url": {
+              "raw": "{{adminUrl}}/contratos/ativar-vendedor",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "ativar-vendedor"]
+            },
+            "description": "Ativa usuário como vendedor através de contrato"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Contrato por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}"]
+            },
+            "description": "Busca contrato por ID (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Contrato",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feeRate\": 0.15,\n  \"terms\": \"Contrato atualizado com nova taxa\",\n  \"validTo\": \"2025-12-31T23:59:59\"\n}"
+            },
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}"]
+            },
+            "description": "Atualiza um contrato existente (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Ativar Contrato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}/ativar",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}", "ativar"]
+            },
+            "description": "Ativa um contrato (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Suspender Contrato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}/suspender",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}", "suspender"]
+            },
+            "description": "Suspende um contrato (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar Contrato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}/cancelar",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}", "cancelar"]
+            },
+            "description": "Cancela um contrato (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Contratos por Vendedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vendedor/{{vendedorId}}?page=0&size=10",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vendedor", "{{vendedorId}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista contratos por vendedor (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Contrato Ativo do Vendedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vendedor/{{vendedorId}}/ativo?categoria=Eletrônicos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vendedor", "{{vendedorId}}", "ativo"],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria específica (opcional)"
+                }
+              ]
+            },
+            "description": "Busca contrato ativo para vendedor e categoria (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar Se Vendedor Tem Contrato Ativo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/vendedor/{{vendedorId}}/tem-ativo",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "vendedor", "{{vendedorId}}", "tem-ativo"]
+            },
+            "description": "Verifica se vendedor tem contrato ativo (admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Categorias de Contratos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/categorias",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "categorias"]
+            },
+            "description": "Lista categorias disponíveis para contratos"
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Contrato",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos/{{contratoId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos", "{{contratoId}}"]
+            },
+            "description": "Exclui um contrato (admin)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gestão de Usuários",
+      "item": [
+        {
+          "name": "Listar Usuários Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/admin-list?page=0&size=10&sort=nome&direction=asc",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "admin-list"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "nome"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Lista todos os usuários com paginação e filtros (gestão administrativa)"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuários por Termo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/buscar?termo=admin&limit=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "buscar"],
+              "query": [
+                {
+                  "key": "termo",
+                  "value": "admin",
+                  "description": "Termo de busca (nome ou email)"
+                },
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Limite de resultados"
+                }
+              ]
+            },
+            "description": "Busca usuários por termo (nome ou email)"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuário por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/{{userId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "{{userId}}"]
+            },
+            "description": "Busca usuário por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar Se Pode Ser Vendedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/{{userId}}/pode-ser-vendedor",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "{{userId}}", "pode-ser-vendedor"]
+            },
+            "description": "Verifica se usuário pode ser ativado como vendedor"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gestão de Vendedores",
+      "item": [
+        {
+          "name": "Listar Vendedores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.content.length > 0) {",
+                  "        pm.environment.set('vendedorId', response.data.content[0].id);",
+                  "        console.log('Vendedor ID salvo: ' + response.data.content[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/vendedores?page=0&size=10&sort=companyName&direction=asc",
+              "host": ["{{adminUrl}}"],
+              "path": ["vendedores"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "companyName"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Lista todos os vendedores"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Vendedores Ativos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/vendedores/ativos",
+              "host": ["{{adminUrl}}"],
+              "path": ["vendedores", "ativos"]
+            },
+            "description": "Lista vendedores ativos (para seleção em formulários)"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Vendedor por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/vendedores/{{vendedorId}}",
+              "host": ["{{adminUrl}}"],
+              "path": ["vendedores", "{{vendedorId}}"]
+            },
+            "description": "Busca vendedor por ID"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

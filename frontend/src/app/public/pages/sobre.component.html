@@ -1,0 +1,66 @@
+<div class="sobre-container">
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>{{ getInformacaoField('empresa') || 'Sistema de Leilão Online' }}</h1>
+      <p class="hero-subtitle">
+        {{ getInformacaoField('descricao') || 'Plataforma moderna para leilões online com segurança e transparência' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="container">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="icon-target"></i>
+          </div>
+          <h3>Nossa Missão</h3>
+          <p>{{ getInformacaoField('missao') || 'Conectar vendedores e compradores através de leilões justos e transparentes' }}</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="icon-eye"></i>
+          </div>
+          <h3>Nossa Visão</h3>
+          <p>{{ getInformacaoField('visao') || 'Ser a principal plataforma de leilões online do mercado' }}</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="icon-heart"></i>
+          </div>
+          <h3>Nossos Valores</h3>
+          <p>{{ getInformacaoField('valores') || 'Transparência, Segurança, Inovação e Excelência no Atendimento' }}</p>
+        </div>
+      </div>
+
+      <div class="details-section">
+        <div class="details-grid">
+          <div class="detail-item">
+            <strong>Fundação:</strong>
+            <span>{{ getInformacaoField('fundacao') || '2024' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Sede:</strong>
+            <span>{{ getInformacaoField('sede') || 'Brasil' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <h2>Pronto para começar?</h2>
+        <p>Explore nosso catálogo de lotes ou cadastre-se para vender seus produtos.</p>
+        <div class="cta-buttons">
+          <a routerLink="/catalogo" class="btn btn-primary">
+            Ver Catálogo
+          </a>
+          <a routerLink="/auth/register" class="btn btn-outline">
+            Cadastrar-se
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

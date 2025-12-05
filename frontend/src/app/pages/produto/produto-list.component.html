@@ -25,13 +25,14 @@
 
     <!-- Lista de produtos -->
     <div class="produtos-grid" *ngIf="produtos.length > 0">
-      <div class="produto-card" *ngFor="let produto of produtos">
+      <div class="produto-card" *ngFor="let produto of produtos; trackBy: trackByProdutoId">
         <!-- Imagem do produto -->
         <div class="produto-image">
-          <img 
-            [src]="produto.images[0] || '/assets/images/no-image.png'" 
+          <app-produto-image 
+            [src]="getFirstImage(produto.images)"
             [alt]="produto.title"
-            (error)="$event.target.src='/assets/images/no-image.png'">
+            [height]="200">
+          </app-produto-image>
           <div class="status-badge" [class]="getStatusClass(produto.status)">
             {{ getStatusText(produto.status) }}
           </div>

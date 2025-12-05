@@ -13,7 +13,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     '/auth/login',
     '/auth/register',
     '/auth/check-email',
-    '/auth/health'
+    '/auth/health',
+    '/public/catalogo',  // CORRIGIDO: Adicionado endpoints públicos do catálogo
+    '/public/sobre',
+    '/public/contato'
   ];
 
   // Verificar se é uma URL pública

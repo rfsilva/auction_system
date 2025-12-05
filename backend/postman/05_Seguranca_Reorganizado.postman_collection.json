@@ -1,0 +1,431 @@
+{
+  "info": {
+    "name": "05 - Testes de Segurança (Reorganizado)",
+    "description": "Collection para testar a segurança dos endpoints após reorganização\nTesta controle de acesso por roles e autenticação",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Testes de Acesso Público",
+      "item": [
+        {
+          "name": "✅ Público - Catálogo SEM Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes"]
+            },
+            "description": "Deve funcionar SEM token - área pública"
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Público - Sobre SEM Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/sobre",
+              "host": ["{{publicUrl}}"],
+              "path": ["sobre"]
+            },
+            "description": "Deve funcionar SEM token - área pública"
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Auth - Login SEM Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@leilao.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/login",
+              "host": ["{{authUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Deve funcionar SEM token - endpoint de autenticação"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testes de Acesso Negado",
+      "item": [
+        {
+          "name": "❌ Vendedor SEM Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            },
+            "description": "Deve retornar 401/403 - área privada sem token"
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Admin SEM Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{adminUrl}}/contratos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"]
+            },
+            "description": "Deve retornar 401/403 - área administrativa sem token"
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Token Inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer token_invalido_123"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            },
+            "description": "Deve retornar 401/403 - token inválido"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testes de Roles",
+      "item": [
+        {
+          "name": "Setup - Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('adminToken', response.data.token);",
+                  "        console.log('Admin token salvo');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@leilao.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/login",
+              "host": ["{{authUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login como admin para testes de role"
+          },
+          "response": []
+        },
+        {
+          "name": "Setup - Login Vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data) {",
+                  "        pm.environment.set('vendedorToken', response.data.token);",
+                  "        console.log('Vendedor token salvo');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor@leilao.com\",\n  \"password\": \"vendedor123\"\n}"
+            },
+            "url": {
+              "raw": "{{authUrl}}/login",
+              "host": ["{{authUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login como vendedor para testes de role"
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Admin - Acesso à Área Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos?page=0&size=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Admin deve ter acesso à área administrativa"
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Vendedor - Acesso à Área Vendedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos?page=0&size=5",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Vendedor deve ter acesso à área do vendedor"
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Vendedor - Tentativa Acesso Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"]
+            },
+            "description": "Vendedor NÃO deve ter acesso à área administrativa - deve retornar 403"
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Admin - Tentativa Criar Produto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Produto Teste Admin\",\n  \"description\": \"Teste de acesso indevido\",\n  \"initialPrice\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            },
+            "description": "Admin NÃO deve conseguir criar produtos na área do vendedor - deve retornar 403"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testes de Endpoints Específicos",
+      "item": [
+        {
+          "name": "✅ Contratos - Vendedor Próprios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/contratos/meus-ativos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["contratos", "meus-ativos"]
+            },
+            "description": "Vendedor deve conseguir ver seus próprios contratos"
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Contratos - Vendedor Todos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{vendedorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/contratos",
+              "host": ["{{adminUrl}}"],
+              "path": ["contratos"]
+            },
+            "description": "Vendedor NÃO deve conseguir ver todos os contratos - deve retornar 403"
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Admin - Gestão Usuários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{adminUrl}}/usuarios/buscar?termo=admin&limit=5",
+              "host": ["{{adminUrl}}"],
+              "path": ["usuarios", "buscar"],
+              "query": [
+                {
+                  "key": "termo",
+                  "value": "admin"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Admin deve conseguir buscar usuários"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testes de CORS",
+      "item": [
+        {
+          "name": "OPTIONS - Público",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:4200"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              }
+            ],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes"]
+            },
+            "description": "Testa CORS para endpoints públicos"
+          },
+          "response": []
+        },
+        {
+          "name": "OPTIONS - Privado",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:4200"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              },
+              {
+                "key": "Access-Control-Request-Headers",
+                "value": "Authorization"
+              }
+            ],
+            "url": {
+              "raw": "{{vendedorUrl}}/produtos",
+              "host": ["{{vendedorUrl}}"],
+              "path": ["produtos"]
+            },
+            "description": "Testa CORS para endpoints privados"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

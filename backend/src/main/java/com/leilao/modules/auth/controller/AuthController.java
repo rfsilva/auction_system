@@ -3,6 +3,7 @@ package com.leilao.modules.auth.controller;
 import com.leilao.modules.auth.dto.*;
 import com.leilao.modules.auth.service.AuthService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -34,11 +35,13 @@ public class AuthController {
         try {
             log.info("Tentativa de login para email: {}", request.getEmail());
             AuthResponse response = authService.login(request);
-            return ResponseEntity.ok(ApiResponse.success("Login realizado com sucesso", response));
+            String message = MessageUtils.getMessage("auth.login.success");
+            return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception e) {
             log.error("Erro no login para email {}: {}", request.getEmail(), e.getMessage());
+            String errorMessage = MessageUtils.getMessage("auth.login.failed.message");
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Falha no login", e.getMessage()));
+                    .body(ApiResponse.error(errorMessage, e.getMessage()));
         }
     }
 
@@ -50,11 +53,13 @@ public class AuthController {
         try {
             log.info("Tentativa de registro para email: {}", request.getEmail());
             AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(ApiResponse.success("Usuário registrado com sucesso", response));
+            String message = MessageUtils.getMessage("auth.register.success");
+            return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception e) {
             log.error("Erro no registro para email {}: {}", request.getEmail(), e.getMessage());
+            String errorMessage = MessageUtils.getMessage("auth.register.failed");
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Falha no registro", e.getMessage()));
+                    .body(ApiResponse.error(errorMessage, e.getMessage()));
         }
     }
 
@@ -65,11 +70,13 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         try {
             AuthResponse response = authService.refreshToken(request);
-            return ResponseEntity.ok(ApiResponse.success("Token renovado com sucesso", response));
+            String message = MessageUtils.getMessage("auth.refresh.success");
+            return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception e) {
             log.error("Erro ao renovar token: {}", e.getMessage());
+            String errorMessage = MessageUtils.getMessage("auth.refresh.failed");
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Falha ao renovar token", e.getMessage()));
+                    .body(ApiResponse.error(errorMessage, e.getMessage()));
         }
     }
 
@@ -87,8 +94,9 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.success(exists));
         } catch (Exception e) {
             log.error("Erro ao verificar email {}: {}", email, e.getMessage());
+            String errorMessage = MessageUtils.getMessage("auth.email.check.error");
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Erro ao verificar email", e.getMessage()));
+                    .body(ApiResponse.error(errorMessage, e.getMessage()));
         }
     }
 
@@ -97,7 +105,8 @@ public class AuthController {
      */
     @GetMapping("/health")
     public ResponseEntity<ApiResponse<String>> health() {
-        return ResponseEntity.ok(ApiResponse.success("Auth service is running"));
+        String message = MessageUtils.getMessage("auth.service.running");
+        return ResponseEntity.ok(ApiResponse.success(message));
     }
 
     /**
@@ -108,11 +117,13 @@ public class AuthController {
         try {
             // TODO: Implementar invalidação de token (blacklist)
             log.info("Logout realizado");
-            return ResponseEntity.ok(ApiResponse.success("Logout realizado com sucesso"));
+            String message = MessageUtils.getMessage("auth.logout.success");
+            return ResponseEntity.ok(ApiResponse.success(message));
         } catch (Exception e) {
             log.error("Erro no logout: {}", e.getMessage());
+            String errorMessage = MessageUtils.getMessage("auth.logout.error");
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Erro no logout", e.getMessage()));
+                    .body(ApiResponse.error(errorMessage, e.getMessage()));
         }
     }
 }

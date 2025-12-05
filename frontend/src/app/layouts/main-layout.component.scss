@@ -9,7 +9,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 100; /* CORRIGIDO: z-index menor que dropdowns */
 }
 
 .navbar {
@@ -88,10 +88,12 @@
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     min-width: 180px;
-    z-index: 1000;
+    z-index: 1000; /* CORRIGIDO: z-index menor que dropdowns de formulário */
 
     .dropdown-item {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 0.75rem 1rem;
       color: #666;
       text-decoration: none;
@@ -106,8 +108,142 @@
         color: #e74c3c;
       }
     }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e9ecef;
+      margin: 0.5rem 0;
+    }
   }
 }
+
+// ========================================
+// HISTÓRIA 01: Estilos para elementos mockados
+// ========================================
+
+.mock-item {
+  position: relative;
+  opacity: 0.8;
+  cursor: help !important;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.badge-mock {
+  background: #ff6b35;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+  display: inline-block;
+  animation: pulse-mock 2s infinite;
+}
+
+.badge-mock-small {
+  background: #ff6b35;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 4px;
+  display: inline-block;
+  animation: pulse-mock 2s infinite;
+}
+
+/* Animação sutil para chamar atenção */
+@keyframes pulse-mock {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Tooltip para elementos mockados */
+.mock-item::after {
+  content: "Funcionalidade em desenvolvimento";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.mock-item::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  border: 4px solid transparent;
+  border-top-color: #1f2937;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.mock-item:hover::after,
+.mock-item:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos específicos para dropdown items mockados */
+.dropdown-menu .mock-item::after {
+  bottom: auto;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}
+
+.dropdown-menu .mock-item::before {
+  bottom: auto;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%) translateX(-100%);
+  border: 4px solid transparent;
+  border-right-color: #1f2937;
+  margin-left: 4px;
+}
+
+/* Estilos para footer links mockados */
+.footer-link.mock-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-link.mock-item::after {
+  bottom: 100%;
+  margin-bottom: 4px;
+}
+
+// ========================================
+// Estilos originais continuam...
+// ========================================
 
 .btn {
   padding: 0.5rem 1rem;
@@ -139,12 +275,15 @@
   }
 }
 
+/* CORRIGIDO: Main content sem overflow hidden */
 .main-content {
   flex: 1;
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  /* CORRIGIDO: Permitir overflow visível para dropdowns */
+  overflow: visible;
 }
 
 .footer {
@@ -206,5 +345,26 @@
 
   .main-content {
     padding: 1rem;
+    /* CORRIGIDO: Manter overflow visível em mobile */
+    overflow: visible;
+  }
+
+  /* Responsividade para badges mockados */
+  .badge-mock {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    margin-left: 4px;
+  }
+  
+  .badge-mock-small {
+    font-size: 0.45rem;
+    padding: 1px 3px;
+    margin-left: 3px;
+  }
+  
+  /* Ocultar tooltips em dispositivos móveis */
+  .mock-item::after,
+  .mock-item::before {
+    display: none;
   }
 }

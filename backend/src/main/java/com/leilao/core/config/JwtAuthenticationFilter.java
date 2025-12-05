@@ -46,30 +46,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
+        logger.debug("Processando requisição: {} {}", request.getMethod(), request.getRequestURI());
+        logger.debug("Authorization header: {}", authHeader != null ? "Bearer ***" : "null");
+
         // Verificar se o header Authorization existe e tem o formato correto
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            logger.debug("Header Authorization ausente ou inválido");
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extrair o token
         jwt = authHeader.substring(BEARER_PREFIX.length());
+        logger.debug("Token JWT extraído: {}...", jwt.substring(0, Math.min(jwt.length(), 20)));
 
         try {
             // Extrair email do token
             userEmail = jwtService.extractUsername(jwt);
+            logger.debug("Email extraído do token: {}", userEmail);
 
             // Se o email existe e não há autenticação no contexto
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 
                 // Carregar detalhes do usuário
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                logger.debug("UserDetails carregado: {} (classe: {})", userDetails.getUsername(), userDetails.getClass().getSimpleName());
 
                 // Verificar se o token é válido
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     // Criar token de autenticação
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
+                            userDetails, // Este será o principal - deve ser o Usuario
                             null,
                             userDetails.getAuthorities()
                     );
@@ -80,28 +87,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Definir autenticação no contexto
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     
-                    logger.debug("Usuário autenticado: {}", userEmail);
+                    logger.info("Usuário autenticado com sucesso: {} (principal: {})", 
+                        userEmail, authToken.getPrincipal().getClass().getSimpleName());
+                } else {
+                    logger.warn("Token inválido para usuário: {}", userEmail);
                 }
+            } else if (userEmail == null) {
+                logger.warn("Email não encontrado no token");
+            } else {
+                logger.debug("Usuário já autenticado no contexto");
             }
         } catch (Exception e) {
-            logger.error("Erro ao processar token JWT: {}", e.getMessage());
+            logger.error("Erro ao processar token JWT: {}", e.getMessage(), e);
             // Não interromper a cadeia de filtros, apenas não autenticar
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    /**
-     * Verifica se o token é válido para o usuário
-     */
-    private boolean isTokenValid(String jwt, UserDetails userDetails) {
-        try {
-            // Aqui você pode adicionar validações específicas se necessário
-            // Por exemplo, verificar se o token não está em uma blacklist
-            return jwtService.isTokenValid(jwt, userDetails);
-        } catch (Exception e) {
-            logger.error("Erro ao validar token: {}", e.getMessage());
-            return false;
-        }
     }
 }

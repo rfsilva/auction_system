@@ -1,0 +1,298 @@
+<!-- HISTÓRIA 03: Página de Detalhes do Lote e Lista de Produtos Válidos -->
+<!-- HISTÓRIA 04: Adicionados links para detalhes dos produtos -->
+<!-- CORRIGIDO: Template atualizado para usar cálculo próprio de status -->
+<!-- CORRIGIDO: Removido ProdutoImageComponent e usando img normal -->
+<!-- CORRIGIDO: Adicionado tratamento seguro para erro de imagem -->
+<!-- CORRIGIDO: Adicionado tratamento para imagem do cabeçalho do lote -->
+<div class="lote-detalhe-container">
+  
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Navegação">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item">
+        <a routerLink="/catalogo" class="breadcrumb-link">Catálogo</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        {{ lote?.title || 'Detalhes do Lote' }}
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Loading do Lote -->
+  <div *ngIf="loadingLote" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Carregando detalhes do lote...</p>
+  </div>
+
+  <!-- Erro ao carregar lote -->
+  <div *ngIf="error && !loadingLote" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h2 class="error-title">Lote não encontrado</h2>
+    <p class="error-message">{{ error }}</p>
+    <button type="button" class="btn btn-primary" (click)="voltarParaCatalogo()">
+      Voltar ao Catálogo
+    </button>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div *ngIf="lote && !loadingLote && !error" class="lote-content">
+    
+    <!-- Cabeçalho do Lote -->
+    <header class="lote-header">
+      <div class="lote-header-content">
+        <div class="lote-info">
+          <h1 class="lote-title">{{ lote.title }}</h1>
+          
+          <div class="lote-meta">
+            <span class="lote-status" [ngClass]="getStatusClass(lote.status)">
+              {{ getStatusText(lote.status) }}
+            </span>
+            
+            <span *ngIf="lote.categoria" class="lote-categoria">
+              📂 {{ lote.categoria }}
+            </span>
+            
+            <span *ngIf="lote.sellerCompanyName" class="lote-vendedor">
+              🏢 {{ lote.sellerCompanyName }}
+            </span>
+          </div>
+
+          <div class="lote-stats">
+            <div class="stat-item">
+              <span class="stat-label">Produtos válidos:</span>
+              <span class="stat-value">{{ lote.totalProdutos }}</span>
+            </div>
+            
+            <!-- CORRIGIDO: Usar cálculo próprio para verificar se lote está ativo -->
+            <div class="stat-item" *ngIf="loteAtivo">
+              <span class="stat-label">Tempo restante:</span>
+              <!-- CORRIGIDO: Usar tempo calculado localmente -->
+              <span class="stat-value time-remaining" 
+                    [ngClass]="{'urgent': getTempoRestanteCalculado() < 3600}">
+                {{ formatarTempoRestante(getTempoRestanteCalculado()) }}
+              </span>
+            </div>
+            
+            <div class="stat-item">
+              <span class="stat-label">Encerramento:</span>
+              <span class="stat-value">{{ formatarData(lote.loteEndDateTime) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CORRIGIDO: Imagem destaque do lote com tratamento de erro -->
+        <div class="lote-image" *ngIf="lote.imagemDestaque">
+          <img [src]="getLoteImageUrl(lote.imagemDestaque)" 
+               [alt]="lote.title"
+               class="lote-image-img"
+               loading="lazy"
+               (error)="onLoteImageError($event)">
+        </div>
+      </div>
+    </header>
+
+    <!-- Descrição do Lote -->
+    <section class="lote-description" *ngIf="lote.description">
+      <h2 class="section-title">Descrição do Lote</h2>
+      <div class="description-content">
+        <p>{{ lote.description }}</p>
+      </div>
+    </section>
+
+    <!-- Seção de Produtos -->
+    <section class="produtos-section">
+      <div class="produtos-header">
+        <h2 class="section-title">
+          Produtos do Lote
+          <span class="produtos-count" *ngIf="totalElements > 0">
+            ({{ totalElements }} {{ totalElements === 1 ? 'produto' : 'produtos' }})
+          </span>
+        </h2>
+
+        <!-- Controles de paginação superior -->
+        <div class="pagination-controls" *ngIf="temPaginacao">
+          <div class="page-size-selector">
+            <label for="pageSize" class="page-size-label">Produtos por página:</label>
+            <select id="pageSize" 
+                    [value]="pageSize" 
+                    (change)="alterarTamanhoPagina($event)"
+                    class="page-size-select">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">
+                {{ size }}
+              </option>
+            </select>
+          </div>
+
+          <div class="page-info">
+            {{ paginaInfo }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading dos produtos -->
+      <div *ngIf="loadingProdutos" class="loading-produtos">
+        <div class="loading-spinner-small"></div>
+        <span>Carregando produtos...</span>
+      </div>
+
+      <!-- Erro ao carregar produtos -->
+      <div *ngIf="errorProdutos && !loadingProdutos" class="error-produtos">
+        <div class="error-icon-small">⚠️</div>
+        <span>{{ errorProdutos }}</span>
+        <button type="button" class="btn btn-sm btn-outline" (click)="carregarProdutos()">
+          Tentar novamente
+        </button>
+      </div>
+
+      <!-- Lista de produtos -->
+      <div *ngIf="temProdutos && !loadingProdutos && !errorProdutos" class="produtos-grid">
+        <div *ngFor="let produto of produtos; trackBy: trackByProdutoId" 
+             class="produto-card">
+          
+          <!-- HISTÓRIA 04: Link para detalhes do produto -->
+          <a [routerLink]="['/catalogo/lotes', loteId, 'produtos', produto.id]" 
+             class="produto-link"
+             [attr.aria-label]="'Ver detalhes do produto: ' + produto.title">
+            
+            <!-- Imagem do produto -->
+            <div class="produto-image-container">
+              <!-- CORRIGIDO: Tratamento seguro de erro de imagem -->
+              <img 
+                [src]="getImageUrl(produto)"
+                [alt]="produto.title"
+                class="produto-image"
+                loading="lazy"
+                (error)="onImageError($event, produto.id)"
+              />
+              
+              <div class="produto-status-badge" [ngClass]="getStatusClass(produto.status)">
+                {{ getStatusText(produto.status) }}
+              </div>
+            </div>
+
+            <!-- Informações do produto -->
+            <div class="produto-info">
+              <h3 class="produto-title">{{ produto.title }}</h3>
+              
+              <p class="produto-description" *ngIf="produto.description">
+                {{ produto.description.length > 100 ? 
+                    (produto.description | slice:0:100) + '...' : 
+                    produto.description }}
+              </p>
+
+              <div class="produto-precos">
+                <div class="preco-atual">
+                  <span class="preco-label">Preço atual:</span>
+                  <span class="preco-valor">{{ formatarPreco(produto.currentPrice) }}</span>
+                </div>
+                
+                <div class="preco-inicial" *ngIf="produto.currentPrice !== produto.initialPrice">
+                  <span class="preco-label">Preço inicial:</span>
+                  <span class="preco-valor">{{ formatarPreco(produto.initialPrice) }}</span>
+                </div>
+              </div>
+
+              <div class="produto-meta">
+                <div class="meta-item" *ngIf="produto.categoria">
+                  <span class="meta-label">Categoria:</span>
+                  <span class="meta-value">{{ produto.categoria }}</span>
+                </div>
+                
+                <div class="meta-item" *ngIf="produto.weight">
+                  <span class="meta-label">Peso:</span>
+                  <span class="meta-value">{{ produto.weight }}kg</span>
+                </div>
+                
+                <!-- CORRIGIDO: Usar formatação de dimensões ao invés de exibir JSON bruto -->
+                <div class="meta-item" *ngIf="formatarDimensoes(produto.dimensions)">
+                  <span class="meta-label">Dimensões:</span>
+                  <span class="meta-value">{{ formatarDimensoes(produto.dimensions) }}</span>
+                </div>
+              </div>
+
+              <!-- CORRIGIDO: Para produtos, ainda podemos usar os campos do backend pois eles são calculados corretamente -->
+              <div class="produto-tempo" *ngIf="produto.isActive && !produto.isExpired">
+                <span class="tempo-label">Tempo restante:</span>
+                <span class="tempo-valor" 
+                      [ngClass]="{'urgent': produto.timeRemaining < 3600}">
+                  {{ formatarTempoRestante(produto.timeRemaining) }}
+                </span>
+              </div>
+
+              <!-- Tags do produto -->
+              <div class="produto-tags" *ngIf="produto.tags && produto.tags.length > 0">
+                <span *ngFor="let tag of produto.tags" class="tag">
+                  {{ tag }}
+                </span>
+              </div>
+
+              <!-- HISTÓRIA 04: Indicador de link -->
+              <div class="produto-action">
+                <span class="action-text">
+                  <i class="fas fa-eye"></i>
+                  Ver detalhes
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Mensagem quando não há produtos -->
+      <div *ngIf="!temProdutos && !loadingProdutos && !errorProdutos" class="no-produtos">
+        <div class="no-produtos-icon">📦</div>
+        <h3 class="no-produtos-title">Nenhum produto válido</h3>
+        <p class="no-produtos-message">
+          Este lote não possui produtos válidos para exibição no momento.
+        </p>
+      </div>
+
+      <!-- Paginação inferior -->
+      <nav class="pagination-nav" *ngIf="temPaginacao && temProdutos" aria-label="Navegação de produtos">
+        <div class="pagination-info">
+          {{ paginaInfo }}
+        </div>
+
+        <div class="pagination-controls-bottom">
+          <!-- Botão página anterior -->
+          <button type="button" 
+                  class="btn btn-pagination" 
+                  [disabled]="currentPage === 0"
+                  (click)="paginaAnterior()"
+                  aria-label="Página anterior">
+            ← Anterior
+          </button>
+
+          <!-- Números das páginas -->
+          <div class="pagination-numbers">
+            <button *ngFor="let page of getPaginationPages(); trackBy: trackByPageNumber"
+                    type="button"
+                    class="btn btn-page-number"
+                    [class.active]="page === currentPage"
+                    (click)="irParaPagina(page)"
+                    [attr.aria-label]="'Ir para página ' + (page + 1)"
+                    [attr.aria-current]="page === currentPage ? 'page' : null">
+              {{ page + 1 }}
+            </button>
+          </div>
+
+          <!-- Botão próxima página -->
+          <button type="button" 
+                  class="btn btn-pagination" 
+                  [disabled]="currentPage >= totalPages - 1"
+                  (click)="proximaPagina()"
+                  aria-label="Próxima página">
+            Próxima →
+          </button>
+        </div>
+      </nav>
+    </section>
+
+    <!-- Botão voltar -->
+    <div class="actions-footer">
+      <button type="button" class="btn btn-secondary" (click)="voltarParaCatalogo()">
+        ← Voltar ao Catálogo
+      </button>
+    </div>
+  </div>
+</div>

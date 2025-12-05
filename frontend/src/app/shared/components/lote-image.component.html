@@ -1,0 +1,36 @@
+<div class="lote-image-container" [style.height.px]="height">
+  <!-- Placeholder CSS (sempre visível quando necessário) -->
+  <div 
+    *ngIf="shouldShowPlaceholder()" 
+    class="image-placeholder"
+    [class.loading]="!imageError && !isExampleUrl && imageSrc">
+    <div class="placeholder-content">
+      <div class="placeholder-icon">{{ getPlaceholderIcon() }}</div>
+      <div class="placeholder-text">{{ getPlaceholderText() }}</div>
+    </div>
+  </div>
+  
+  <!-- Imagem real (apenas quando válida e carregada) -->
+  <img 
+    *ngIf="shouldShowImage()"
+    [src]="imageSrc"
+    [alt]="alt"
+    [class.loaded]="imageLoaded"
+    (load)="onImageLoad()"
+    (error)="onImageError()"
+    loading="lazy">
+
+  <!-- Badges sobrepostos -->
+  <div *ngIf="showBadges" class="badges-overlay">
+    <!-- Badge de status -->
+    <div *ngIf="statusText" class="status-badge" [class]="statusClass">
+      {{ statusText }}
+    </div>
+    
+    <!-- Badge de produtos -->
+    <div *ngIf="produtoCount > 0" class="produtos-badge">
+      {{ produtoCount }} 
+      {{ produtoCount === 1 ? 'produto' : 'produtos' }}
+    </div>
+  </div>
+</div>

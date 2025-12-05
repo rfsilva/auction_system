@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',
-  wsUrl: 'ws://localhost:8080/api/ws',
-  sseUrl: 'http://localhost:8080/api/realtime/sse/events'
+  apiUrl: 'http://localhost:8080',
+  wsUrl: 'ws://localhost:8080/ws',
+  sseUrl: 'http://localhost:8080/realtime/sse/events'
 };

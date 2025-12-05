@@ -1,0 +1,170 @@
+{
+  "info": {
+    "name": "02 - Endpoints Públicos (Reorganizado)",
+    "description": "Collection para testar endpoints públicos após reorganização\nEndpoints: /public/** (sem autenticação)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Catálogo de Lotes",
+      "item": [
+        {
+          "name": "Listar Lotes Públicos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data && response.data.content.length > 0) {",
+                  "        pm.environment.set('loteId', response.data.content[0].id);",
+                  "        console.log('Lote ID salvo: ' + response.data.content[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes?page=0&size=10",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número da página"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamanho da página"
+                }
+              ]
+            },
+            "description": "Lista lotes disponíveis no catálogo público"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Lotes com Filtros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes?termo=eletrônicos&categoria=Eletrônicos&ordenacao=recentes&page=0&size=5",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes"],
+              "query": [
+                {
+                  "key": "termo",
+                  "value": "eletrônicos",
+                  "description": "Termo de busca"
+                },
+                {
+                  "key": "categoria",
+                  "value": "Eletrônicos",
+                  "description": "Categoria para filtrar"
+                },
+                {
+                  "key": "ordenacao",
+                  "value": "recentes",
+                  "description": "Tipo de ordenação"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Busca lotes com filtros específicos"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Lote Específico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes/{{loteId}}",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes", "{{loteId}}"]
+            },
+            "description": "Busca um lote específico pelo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Lotes em Destaque",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/lotes/destaque",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "lotes", "destaque"]
+            },
+            "description": "Busca lotes em destaque (encerrando em breve)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/catalogo/categorias",
+              "host": ["{{publicUrl}}"],
+              "path": ["catalogo", "categorias"]
+            },
+            "description": "Lista categorias disponíveis no catálogo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Páginas Institucionais",
+      "item": [
+        {
+          "name": "Informações Sobre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/sobre",
+              "host": ["{{publicUrl}}"],
+              "path": ["sobre"]
+            },
+            "description": "Retorna informações institucionais da plataforma"
+          },
+          "response": []
+        },
+        {
+          "name": "Informações de Contato",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{publicUrl}}/contato",
+              "host": ["{{publicUrl}}"],
+              "path": ["contato"]
+            },
+            "description": "Retorna informações de contato da plataforma"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

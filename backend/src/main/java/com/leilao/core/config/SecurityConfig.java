@@ -1,5 +1,6 @@
 package com.leilao.core.config;
 
+import com.leilao.core.filter.RateLimitingFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,11 @@ import java.util.List;
 
 /**
  * Configuração de segurança da aplicação
+ * FASE 1 - Reorganização de Rotas: Separação público/não-público
+ * 
+ * Estrutura de rotas reorganizada:
+ * - Público (SEM autenticação): /public/**, /auth/**
+ * - Privado por role (COM autenticação): /api/usuario/**, /api/vendedor/**, /api/admin/**
  */
 @Configuration
 @EnableWebSecurity
@@ -34,6 +40,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthFilter;
+
+    @Autowired
+    private RateLimitingFilter rateLimitingFilter;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -58,31 +67,56 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
+        return http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos (considerando context-path /api)
-                .requestMatchers("/auth/**", "/public/**").permitAll()
+                // ========================================
+                // 🌐 ÁREA PÚBLICA (SEM autenticação)
+                // ========================================
+                .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                
+                // Endpoints técnicos
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/catalogo/**", "/h2-console/**").permitAll() // Para testes
-                // WebSocket e SSE endpoints (fora do context-path)
+                .requestMatchers("/h2-console/**").permitAll() // Para testes
+                
+                // WebSocket e SSE endpoints
                 .requestMatchers("/ws/**", "/sse/**").permitAll()
-                // Realtime endpoints (dentro do context-path /api)
                 .requestMatchers("/realtime/**").permitAll()
-                // Todos os outros endpoints requerem autenticação
+                
+                // ========================================
+                // 🔐 ÁREA PRIVADA (COM autenticação por role)
+                // ========================================
+                
+                // Área do Usuário (role USER)
+                .requestMatchers("/api/usuario/**").hasRole("USER")
+                
+                // Área do Vendedor (role SELLER)
+                .requestMatchers("/api/vendedor/**").hasRole("SELLER")
+                
+                // Área do Admin (role ADMIN)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // ========================================
+                // 🛡️ FALLBACK: Qualquer outra requisição precisa de autenticação
+                // ========================================
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // Ordem dos filtros é importante:
+            // 1. Rate Limiting (antes de tudo)
+            // 2. JWT Authentication
+            // 3. Username/Password Authentication
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(jwtAuthFilter, RateLimitingFilter.class)
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
+                .frameOptions().deny()
                 .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-            );
-
-        return http.build();
+            )
+            .build();
     }
 
     @Bean

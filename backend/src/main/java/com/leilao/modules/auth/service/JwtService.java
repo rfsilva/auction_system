@@ -139,7 +139,7 @@ public class JwtService {
      */
     private Map<String, Object> buildClaims(Usuario usuario) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", usuario.getId().toString());
+        claims.put("userId", usuario.getId()); // Removido .toString() pois getId() já retorna String
         claims.put("name", usuario.getNome());
         claims.put("status", usuario.getStatus().name());
         claims.put("roles", usuario.getRoles().stream()
