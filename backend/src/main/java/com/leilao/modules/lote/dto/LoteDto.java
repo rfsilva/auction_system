@@ -46,4 +46,5 @@ public class LoteDto {
     private String sellerCompanyName; // Nome da empresa do vendedor
     private String contractStatus; // Status do contrato
     private String categoria; // Categoria do contrato
+    private String imagemDestaque;
 }

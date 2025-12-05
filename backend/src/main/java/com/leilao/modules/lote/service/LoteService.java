@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
  * Service para operações de Lote com suporte a i18n usando MessageSourceAccessor
  * Atualizado para usar contratos ao invés de vendedores diretamente
  * História 02: Adicionados métodos para catálogo público de lotes
+ * CORRIGIDO: Usar métodos corretos do repository e queries corrigidas para catálogo público
  */
 @Service
 @RequiredArgsConstructor
@@ -170,28 +171,42 @@ public class LoteService {
 
     /**
      * Lista lotes do vendedor
+     * CORRIGIDO: Usar findByVendedorId ao invés de findBySellerId
      */
     @Transactional(readOnly = true)
     public Page<LoteDto> listarLotesVendedor(String usuarioId, Pageable pageable) {
         // Obter ID do vendedor a partir do ID do usuário
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
-        Page<Lote> lotes = loteRepository.findBySellerId(vendedorId, pageable);
+        log.info("Listando lotes do vendedor: {} (usuário: {})", vendedorId, usuarioId);
+        
+        // CORRIGIDO: Usar o método correto que busca através do contrato
+        Page<Lote> lotes = loteRepository.findByVendedorId(vendedorId, pageable);
+        
+        log.info("Encontrados {} lotes para o vendedor: {}", lotes.getTotalElements(), vendedorId);
+        
         return lotes.map(this::convertToDto);
     }
 
     /**
      * Lista lotes públicos (para visitantes)
+     * CORRIGIDO: Agora usa queries que verificam contratos ativos e produtos válidos
      */
     @Transactional(readOnly = true)
     public Page<LoteDto> listarLotesPublicos(String termo, Pageable pageable) {
+        log.info("Listando lotes públicos - termo: {}", termo);
+        
         Page<Lote> lotes;
         if (termo != null && !termo.trim().isEmpty()) {
             lotes = loteRepository.findLotesPublicosComFiltros(termo.trim(), pageable);
         } else {
             lotes = loteRepository.findLotesPublicos(pageable);
         }
-        return lotes.map(this::convertToDto);
+        
+        log.info("Encontrados {} lotes públicos", lotes.getTotalElements());
+        
+        // CORRIGIDO: Usar convertToCatalogoDto para catálogo público
+        return lotes.map(this::convertToCatalogoDto);
     }
 
     // ========================================
@@ -215,6 +230,8 @@ public class LoteService {
         // Buscar lotes ativos com produtos válidos
         Page<Lote> lotes = loteRepository.findLotesCatalogoPublico(now, termo, categoria, pageableComOrdenacao);
         
+        log.info("Encontrados {} lotes no catálogo público", lotes.getTotalElements());
+        
         return lotes.map(this::convertToCatalogoDto);
     }
 
@@ -229,6 +246,8 @@ public class LoteService {
         LocalDateTime oneWeekFromNow = now.plusWeeks(1);
         
         List<Lote> lotes = loteRepository.findLotesEncerrando1Semana(now, oneWeekFromNow);
+        
+        log.info("Encontrados {} lotes em destaque", lotes.size());
         
         return lotes.stream()
                 .map(this::convertToCatalogoDto)
@@ -416,12 +435,17 @@ public class LoteService {
         }
     }
 
+    /**
+     * CORRIGIDO: Converte para DTO do catálogo público com verificações corretas
+     */
     private LoteDto convertToCatalogoDto(Lote lote) {
         // Calcular tempo restante
         long timeRemaining = 0;
+        boolean isExpired = false;
         if (lote.getLoteEndDateTime() != null) {
             Duration duration = Duration.between(LocalDateTime.now(), lote.getLoteEndDateTime());
             timeRemaining = Math.max(0, duration.getSeconds());
+            isExpired = duration.isNegative();
         }
         
         // Contar produtos válidos
@@ -430,14 +454,16 @@ public class LoteService {
         // Obter primeira imagem
         String imagemDestaque = obterPrimeiraImagem(lote.getId());
         
-        // Buscar informações do vendedor
+        // Buscar informações do vendedor e contrato
         String sellerName = null;
         String sellerCompanyName = null;
         String categoria = null;
+        boolean contratoAtivo = false;
         
         try {
             Contrato contrato = buscarContratoPorId(lote.getContractId());
             categoria = contrato.getCategoria();
+            contratoAtivo = contrato.isActive();
             
             Vendedor vendedor = vendedorRepository.findById(contrato.getSellerId()).orElse(null);
             if (vendedor != null) {
@@ -452,6 +478,9 @@ public class LoteService {
             log.warn("Erro ao buscar informações do vendedor para lote: {}", lote.getId(), e);
         }
         
+        // CORRIGIDO: Verificar se o lote realmente está ativo
+        boolean isActive = lote.isActive() && contratoAtivo && !isExpired && quantidadeProdutosValidos > 0;
+        
         return LoteDto.builder()
                 .id(lote.getId())
                 .contractId(lote.getContractId())
@@ -461,13 +490,17 @@ public class LoteService {
                 .status(lote.getStatus())
                 .createdAt(lote.getCreatedAt())
                 .updatedAt(lote.getUpdatedAt())
-                .isActive(lote.isActive())
-                .isExpired(lote.isExpired())
+                .isActive(isActive) // CORRIGIDO: Usar verificação completa
+                .isExpired(isExpired)
+                .canBeEdited(false) // Catálogo público não permite edição
+                .canBeActivated(false) // Catálogo público não permite ativação
+                .canBeCancelled(false) // Catálogo público não permite cancelamento
                 .timeRemaining(timeRemaining)
                 .totalProdutos((int) quantidadeProdutosValidos)
                 .sellerName(sellerName)
                 .sellerCompanyName(sellerCompanyName)
                 .categoria(categoria)
+                .imagemDestaque(imagemDestaque)
                 .build();
     }
 

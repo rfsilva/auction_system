@@ -8,7 +8,7 @@ import { LoteImageComponent } from './lote-image.component';
  * Componente para exibir card de lote no catálogo
  * História 02: Transformação do Catálogo em Catálogo de Lotes
  * 
- * CORRIGIDO: Usar LoteDto ao invés de LoteCatalogo para compatibilidade
+ * CORRIGIDO: Calcular status baseado nos dados reais ao invés de confiar no backend
  */
 @Component({
   selector: 'app-lote-card',
@@ -90,7 +90,7 @@ import { LoteImageComponent } from './lote-image.component';
   styleUrls: ['./lote-card.component.scss']
 })
 export class LoteCardComponent {
-  @Input() lote!: LoteDto; // CORRIGIDO: Usar LoteDto
+  @Input() lote!: LoteDto;
   @Input() showFavoriteButton = false;
   @Input() isFavorito = false;
   
@@ -98,44 +98,81 @@ export class LoteCardComponent {
   @Output() desfavoritar = new EventEmitter<string>();
 
   /**
-   * ✅ CORRIGIDO: Retorna null para usar placeholder CSS em vez de imagem física
+   * CORRIGIDO: Calcula se o lote está ativo baseado na data de encerramento
+   * Não confia no campo isActive do backend
    */
-  getImagemLote(): string | null {
-    // Se o lote tem uma imagem válida, usar ela
-    if (this.lote.imagemDestaque && this.isValidImageUrl(this.lote.imagemDestaque)) {
-      return this.lote.imagemDestaque;
+  private calculateIsActive(): boolean {
+    if (!this.lote.loteEndDateTime) {
+      return false;
     }
     
-    // Retornar null para que o componente LoteImageComponent use o placeholder CSS
-    return null;
+    const now = new Date();
+    const endDate = new Date(this.lote.loteEndDateTime);
+    
+    // Lote está ativo se:
+    // 1. Status é ACTIVE
+    // 2. Data de encerramento é no futuro
+    // 3. Tem produtos
+    return this.lote.status === 'ACTIVE' && 
+           endDate > now && 
+           (this.lote.totalProdutos > 0);
   }
 
   /**
-   * Valida se a URL da imagem é válida
+   * CORRIGIDO: Calcula se o lote está expirado baseado na data de encerramento
+   * Não confia no campo isExpired do backend
    */
+  private calculateIsExpired(): boolean {
+    if (!this.lote.loteEndDateTime) {
+      return false;
+    }
+    
+    const now = new Date();
+    const endDate = new Date(this.lote.loteEndDateTime);
+    
+    return endDate <= now;
+  }
+
+  /**
+   * CORRIGIDO: Calcula o tempo restante em segundos
+   * Não confia no campo timeRemaining do backend
+   */
+  private calculateTimeRemaining(): number {
+    if (!this.lote.loteEndDateTime) {
+      return 0;
+    }
+    
+    const now = new Date();
+    const endDate = new Date(this.lote.loteEndDateTime);
+    const diffMs = endDate.getTime() - now.getTime();
+    
+    return Math.max(0, Math.floor(diffMs / 1000));
+  }
+
+  getImagemLote(): string | null {
+    if (this.lote.imagemDestaque && this.isValidImageUrl(this.lote.imagemDestaque)) {
+      return this.lote.imagemDestaque;
+    }
+    return null;
+  }
+
   private isValidImageUrl(url: string): boolean {
     if (!url || url.trim() === '') {
       return false;
     }
     
-    // Verificar se não é uma URL de exemplo
     if (this.isExampleDomain(url)) {
       return false;
     }
     
-    // Verificar se é uma URL válida
     try {
       new URL(url);
       return true;
     } catch {
-      // Se não for URL absoluta, assumir que é relativa e válida se não estiver vazia
       return url.startsWith('/') || url.startsWith('./') || !url.includes('://');
     }
   }
 
-  /**
-   * Verifica se é um domínio de exemplo
-   */
   private isExampleDomain(url: string): boolean {
     return url.includes('example.com') || 
            url.includes('placeholder.com') || 
@@ -148,11 +185,14 @@ export class LoteCardComponent {
   getCardClass(): string {
     const classes = ['card', 'h-100'];
     
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    
     if (this.isProximoEncerramento()) {
       classes.push('ending-soon');
     }
     
-    if (!this.lote.isActive) {
+    if (!isActive) {
       classes.push('inactive');
     }
     
@@ -160,12 +200,16 @@ export class LoteCardComponent {
   }
 
   getStatusClass(): string {
-    if (!this.lote.isActive) {
-      return 'status-inactive';
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    const isExpired = this.calculateIsExpired();
+    
+    if (isExpired) {
+      return 'status-expired';
     }
     
-    if (this.lote.isExpired) {
-      return 'status-expired';
+    if (!isActive) {
+      return 'status-inactive';
     }
     
     if (this.isProximoEncerramento()) {
@@ -176,12 +220,16 @@ export class LoteCardComponent {
   }
 
   getStatusText(): string {
-    if (!this.lote.isActive) {
-      return 'Inativo';
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    const isExpired = this.calculateIsExpired();
+    
+    if (isExpired) {
+      return 'Encerrado';
     }
     
-    if (this.lote.isExpired) {
-      return 'Encerrado';
+    if (!isActive) {
+      return 'Inativo';
     }
     
     if (this.isProximoEncerramento()) {
@@ -207,23 +255,34 @@ export class LoteCardComponent {
   }
 
   getTempoRestante(): string {
-    if (!this.lote.isActive || this.lote.isExpired) {
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    const isExpired = this.calculateIsExpired();
+    
+    if (!isActive || isExpired) {
       return 'Encerrado';
     }
     
-    return this.formatarTempoRestante(this.lote.timeRemaining);
+    const timeRemaining = this.calculateTimeRemaining();
+    return this.formatarTempoRestante(timeRemaining);
   }
 
   getTempoClass(): string {
-    if (!this.lote.isActive || this.lote.isExpired) {
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    const isExpired = this.calculateIsExpired();
+    
+    if (!isActive || isExpired) {
       return 'tempo-encerrado text-muted';
     }
     
-    if (this.lote.timeRemaining <= 3600) { // 1 hora
+    const timeRemaining = this.calculateTimeRemaining();
+    
+    if (timeRemaining <= 3600) { // 1 hora
       return 'tempo-critico text-danger fw-bold';
     }
     
-    if (this.lote.timeRemaining <= 86400) { // 1 dia
+    if (timeRemaining <= 86400) { // 1 dia
       return 'tempo-urgente text-warning fw-bold';
     }
     
@@ -250,7 +309,12 @@ export class LoteCardComponent {
   }
 
   private isProximoEncerramento(): boolean {
-    return this.lote.isActive && !this.lote.isExpired && this.lote.timeRemaining <= 86400; // 24 horas
+    // CORRIGIDO: Usar cálculo próprio
+    const isActive = this.calculateIsActive();
+    const isExpired = this.calculateIsExpired();
+    const timeRemaining = this.calculateTimeRemaining();
+    
+    return isActive && !isExpired && timeRemaining <= 86400; // 24 horas
   }
 
   private formatarTempoRestante(segundos: number): string {

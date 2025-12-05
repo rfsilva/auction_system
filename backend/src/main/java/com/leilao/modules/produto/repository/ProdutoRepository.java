@@ -16,7 +16,7 @@ import java.util.Optional;
 
 /**
  * Repository para operações com Produto
- * Atualizado com métodos da História 02: Catálogo de Lotes
+ * CORRIGIDO: Removido status 'PUBLISHED' inexistente
  */
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, String> {
@@ -161,28 +161,32 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     // ========================================
     // HISTÓRIA 02: Métodos para catálogo de lotes
+    // CORRIGIDO: Removido status 'PUBLISHED' inexistente
     // ========================================
 
     /**
-     * Busca apenas produtos válidos (ACTIVE ou PUBLISHED) de um lote específico
+     * Busca apenas produtos válidos (ACTIVE) de um lote específico
      * História 02: Apenas produtos válidos são exibidos publicamente
+     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
      */
-    @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status IN ('ACTIVE', 'PUBLISHED') ORDER BY p.createdAt")
+    @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status = 'ACTIVE' ORDER BY p.createdAt")
     List<Produto> findProdutosValidosDoLote(@Param("loteId") String loteId);
 
     /**
      * Conta produtos válidos de um lote
+     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
      */
-    @Query("SELECT COUNT(p) FROM Produto p WHERE p.loteId = :loteId AND p.status IN ('ACTIVE', 'PUBLISHED')")
+    @Query("SELECT COUNT(p) FROM Produto p WHERE p.loteId = :loteId AND p.status = 'ACTIVE'")
     long countProdutosValidosDoLote(@Param("loteId") String loteId);
 
     /**
      * Busca primeira imagem de produtos válidos do lote (para imagem destaque)
+     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
      */
     @Query(value = """
         SELECT p.images FROM tb_produto p 
         WHERE p.lote_id = :loteId 
-        AND p.status IN ('ACTIVE', 'PUBLISHED') 
+        AND p.status = 'ACTIVE' 
         AND p.images IS NOT NULL 
         AND p.images != '' 
         ORDER BY p.created_at 

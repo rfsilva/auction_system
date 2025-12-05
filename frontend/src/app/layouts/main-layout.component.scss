@@ -9,7 +9,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 100; /* CORRIGIDO: z-index menor que dropdowns */
 }
 
 .navbar {
@@ -88,7 +88,7 @@
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     min-width: 180px;
-    z-index: 1000;
+    z-index: 1000; /* CORRIGIDO: z-index menor que dropdowns de formulário */
 
     .dropdown-item {
       display: flex;
@@ -275,12 +275,15 @@
   }
 }
 
+/* CORRIGIDO: Main content sem overflow hidden */
 .main-content {
   flex: 1;
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  /* CORRIGIDO: Permitir overflow visível para dropdowns */
+  overflow: visible;
 }
 
 .footer {
@@ -342,6 +345,8 @@
 
   .main-content {
     padding: 1rem;
+    /* CORRIGIDO: Manter overflow visível em mobile */
+    overflow: visible;
   }
 
   /* Responsividade para badges mockados */

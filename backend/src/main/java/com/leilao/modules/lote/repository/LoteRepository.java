@@ -14,8 +14,7 @@ import java.util.List;
 
 /**
  * Repository para Lote
- * Atualizado para usar contractId ao invés de sellerId
- * História 02: Adicionados métodos para catálogo público de lotes
+ * CORRIGIDO: Queries públicas agora verificam apenas produtos ACTIVE
  */
 @Repository
 public interface LoteRepository extends JpaRepository<Lote, String> {
@@ -106,16 +105,36 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
     Page<Lote> findByTitleOrDescriptionContaining(@Param("termo") String termo, Pageable pageable);
 
     /**
-     * Busca lotes públicos (visíveis para visitantes)
+     * CORRIGIDO: Busca lotes públicos (visíveis para visitantes)
+     * Agora verifica se o contrato está ativo e se há produtos ACTIVE
      */
-    @Query("SELECT l FROM Lote l WHERE l.status IN ('ACTIVE', 'CLOSED')")
+    @Query("""
+        SELECT DISTINCT l FROM Lote l 
+        JOIN Contrato c ON l.contractId = c.id 
+        JOIN Produto p ON p.loteId = l.id 
+        WHERE l.status = 'ACTIVE' 
+        AND l.loteEndDateTime > CURRENT_TIMESTAMP 
+        AND c.status = 'ACTIVE' 
+        AND c.active = true 
+        AND p.status = 'ACTIVE'
+        """)
     Page<Lote> findLotesPublicos(Pageable pageable);
 
     /**
-     * Busca lotes públicos com filtros combinados
+     * CORRIGIDO: Busca lotes públicos com filtros combinados
+     * Agora verifica se o contrato está ativo e se há produtos ACTIVE
      */
-    @Query("SELECT l FROM Lote l WHERE l.status IN ('ACTIVE', 'CLOSED') " +
-           "AND (:termo IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :termo, '%')))")
+    @Query("""
+        SELECT DISTINCT l FROM Lote l 
+        JOIN Contrato c ON l.contractId = c.id 
+        JOIN Produto p ON p.loteId = l.id 
+        WHERE l.status = 'ACTIVE' 
+        AND l.loteEndDateTime > CURRENT_TIMESTAMP 
+        AND c.status = 'ACTIVE' 
+        AND c.active = true 
+        AND p.status = 'ACTIVE'
+        AND (:termo IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :termo, '%')))
+        """)
     Page<Lote> findLotesPublicosComFiltros(@Param("termo") String termo, Pageable pageable);
 
     /**
@@ -204,23 +223,26 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
 
     // ========================================
     // HISTÓRIA 02: Métodos para catálogo público de lotes
+    // CORRIGIDO: Removido status 'PUBLISHED' inexistente
     // ========================================
 
     /**
      * Busca lotes ativos com produtos válidos para catálogo público
      * História 02: Apenas lotes com produtos válidos são exibidos
+     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
      */
     @Query("""
         SELECT DISTINCT l FROM Lote l 
+        JOIN Contrato c ON l.contractId = c.id 
         JOIN Produto p ON p.loteId = l.id 
         WHERE l.status = 'ACTIVE' 
         AND l.loteEndDateTime > :now 
-        AND p.status IN ('ACTIVE', 'PUBLISHED')
+        AND c.status = 'ACTIVE' 
+        AND c.active = true 
+        AND p.status = 'ACTIVE'
         AND (:termo IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :termo, '%')) 
              OR LOWER(l.description) LIKE LOWER(CONCAT('%', :termo, '%')))
-        AND (:categoria IS NULL OR EXISTS (
-            SELECT 1 FROM Contrato c WHERE c.id = l.contractId AND c.categoria = :categoria
-        ))
+        AND (:categoria IS NULL OR c.categoria = :categoria)
         """)
     Page<Lote> findLotesCatalogoPublico(
         @Param("now") LocalDateTime now,
@@ -232,13 +254,17 @@ public interface LoteRepository extends JpaRepository<Lote, String> {
     /**
      * Busca lotes encerrando em 1 semana (para destaque)
      * História 02: Lotes em destaque com critério de 1 semana
+     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
      */
     @Query("""
         SELECT DISTINCT l FROM Lote l 
+        JOIN Contrato c ON l.contractId = c.id 
         JOIN Produto p ON p.loteId = l.id 
         WHERE l.status = 'ACTIVE' 
         AND l.loteEndDateTime BETWEEN :now AND :oneWeekFromNow 
-        AND p.status IN ('ACTIVE', 'PUBLISHED')
+        AND c.status = 'ACTIVE' 
+        AND c.active = true 
+        AND p.status = 'ACTIVE'
         ORDER BY l.loteEndDateTime ASC
         """)
     List<Lote> findLotesEncerrando1Semana(
