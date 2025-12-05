@@ -4,7 +4,6 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, finalize } from 'rxjs';
 import { PublicCatalogoService, LoteDto, ProdutoDto, ApiResponse, Page } from '../../core/services/public-catalogo.service';
-import { ProdutoImageComponent } from '../../shared/components/produto-image.component';
 
 /**
  * HISTÓRIA 03: Página de Detalhes do Lote e Lista de Produtos Válidos
@@ -18,11 +17,15 @@ import { ProdutoImageComponent } from '../../shared/components/produto-image.com
  * 
  * CORRIGIDO: Aplicada a mesma solução do lote-card.component.ts para calcular status próprio
  * ADICIONADO: Formatação de dimensões JSON para exibição legível
+ * CORRIGIDO: Removida importação desnecessária do ProdutoImageComponent
+ * CORRIGIDO: Adicionado tratamento seguro para erro de imagem (evita loop infinito)
+ * CORRIGIDO: Adicionado tratamento para imagem do cabeçalho do lote
+ * CORRIGIDO: Filtro de URLs de exemplo para evitar warnings de sanitização do Angular
  */
 @Component({
   selector: 'app-lote-detalhe',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ProdutoImageComponent],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './lote-detalhe.component.html',
   styleUrls: ['./lote-detalhe.component.scss']
 })
@@ -46,6 +49,9 @@ export class LoteDetalheComponent implements OnInit, OnDestroy {
   totalElements = 0;
   pageSize = 20; // Padrão: 20 produtos por página
   pageSizeOptions = [10, 20, 50]; // Opções configuráveis
+
+  // NOVO: Controle de imagens com erro para evitar loop infinito
+  private imageErrorMap = new Set<string>();
 
   // UI
   Math = Math; // Para usar Math.min, Math.max no template
@@ -71,6 +77,195 @@ export class LoteDetalheComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ========================================
+  // NOVO: Detecção e filtro de URLs de exemplo
+  // ========================================
+
+  /**
+   * Verifica se uma URL é de exemplo (que não deve ser carregada)
+   */
+  private isExampleUrl(url: string): boolean {
+    if (!url || url.trim() === '') {
+      return false;
+    }
+
+    const exampleDomains = [
+      'example.com',
+      'example.org',
+      'example.net',
+      'placeholder.com',
+      'via.placeholder.com',
+      'picsum.photos',
+      'lorem.picsum',
+      'dummyimage.com',
+      'fakeimg.pl',
+      'placehold.it',
+      'placehold.co',
+      'placekitten.com',
+      'fillmurray.com',
+      'placecage.com'
+    ];
+
+    const lowerUrl = url.toLowerCase();
+    
+    return exampleDomains.some(domain => 
+      lowerUrl.includes(domain) || 
+      lowerUrl.startsWith(`http://${domain}`) || 
+      lowerUrl.startsWith(`https://${domain}`)
+    );
+  }
+
+  /**
+   * Verifica se uma URL é válida e segura para uso
+   */
+  private isValidAndSafeUrl(url: string): boolean {
+    if (!url || url.trim() === '') {
+      return false;
+    }
+
+    // Primeiro, verificar se é URL de exemplo
+    if (this.isExampleUrl(url)) {
+      console.log('URL de exemplo detectada e filtrada:', url);
+      return false;
+    }
+
+    // Verificar se é uma URL válida
+    try {
+      const urlObj = new URL(url);
+      // Aceitar apenas HTTP e HTTPS
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch {
+      // Se não for URL absoluta, verificar se é relativa válida
+      return url.startsWith('/') || url.startsWith('./') || url.startsWith('../');
+    }
+  }
+
+  // ========================================
+  // NOVO: Tratamento seguro de erro de imagem
+  // ========================================
+
+  /**
+   * Trata erro de imagem de forma segura, evitando loop infinito
+   */
+  onImageError(event: Event, produtoId: string): void {
+    const img = event.target as HTMLImageElement;
+    const imageKey = `${produtoId}_${img.src}`;
+    
+    // Se já tentamos carregar esta imagem e deu erro, não tenta novamente
+    if (this.imageErrorMap.has(imageKey)) {
+      // Remove a imagem completamente para evitar loop
+      img.style.display = 'none';
+      return;
+    }
+    
+    // Marca esta imagem como tendo erro
+    this.imageErrorMap.add(imageKey);
+    
+    // Tenta usar um placeholder inline (data URL)
+    img.src = this.getPlaceholderImage();
+    img.alt = 'Imagem não disponível';
+  }
+
+  /**
+   * NOVO: Trata erro de imagem do lote de forma segura
+   */
+  onLoteImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const imageKey = `lote_${this.loteId}_${img.src}`;
+    
+    // Se já tentamos carregar esta imagem e deu erro, não tenta novamente
+    if (this.imageErrorMap.has(imageKey)) {
+      // Remove a imagem completamente para evitar loop
+      img.style.display = 'none';
+      return;
+    }
+    
+    // Marca esta imagem como tendo erro
+    this.imageErrorMap.add(imageKey);
+    
+    // Tenta usar um placeholder inline (data URL)
+    img.src = this.getLotePlaceholderImage();
+    img.alt = 'Imagem do lote não disponível';
+  }
+
+  /**
+   * Retorna uma imagem placeholder como data URL (não precisa de arquivo)
+   */
+  private getPlaceholderImage(): string {
+    // SVG simples como data URL - não precisa de arquivo externo
+    const svg = `
+      <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="150" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>
+        <text x="100" y="75" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="14" fill="#999">
+          Sem imagem
+        </text>
+      </svg>
+    `;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  }
+
+  /**
+   * NOVO: Retorna uma imagem placeholder para lote como data URL
+   */
+  private getLotePlaceholderImage(): string {
+    // SVG simples como data URL - não precisa de arquivo externo
+    const svg = `
+      <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="200" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+        <text x="150" y="90" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">
+          📦 Lote
+        </text>
+        <text x="150" y="120" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="14" fill="#adb5bd">
+          ${this.lote?.title || 'Sem título'}
+        </text>
+      </svg>
+    `;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  }
+
+  /**
+   * Obtém a URL da imagem do produto de forma segura
+   */
+  getImageUrl(produto: ProdutoDto): string {
+    const primeiraImagem = this.obterPrimeiraImagem(produto.images);
+    
+    // Se não tem imagem, usa placeholder
+    if (!primeiraImagem) {
+      return this.getPlaceholderImage();
+    }
+
+    // Verificar se é URL de exemplo ou inválida
+    if (!this.isValidAndSafeUrl(primeiraImagem)) {
+      return this.getPlaceholderImage();
+    }
+    
+    // Se já deu erro antes, usa placeholder
+    if (this.imageErrorMap.has(`${produto.id}_${primeiraImagem}`)) {
+      return this.getPlaceholderImage();
+    }
+    
+    return primeiraImagem;
+  }
+
+  /**
+   * NOVO: Obtém a URL da imagem do lote de forma segura
+   */
+  getLoteImageUrl(imageUrl: string): string {
+    // Verificar se é URL de exemplo ou inválida
+    if (!this.isValidAndSafeUrl(imageUrl)) {
+      return this.getLotePlaceholderImage();
+    }
+
+    const imageKey = `lote_${this.loteId}_${imageUrl}`;
+    
+    // Se já deu erro antes, usa placeholder
+    if (this.imageErrorMap.has(imageKey)) {
+      return this.getLotePlaceholderImage();
+    }
+    
+    return imageUrl;
   }
 
   // ========================================
@@ -372,7 +567,7 @@ export class LoteDetalheComponent implements OnInit, OnDestroy {
     });
   }
 
-  // CORRIGIDO: Método que converte null para undefined para compatibilidade com ProdutoImageComponent
+  // CORRIGIDO: Método que obtém primeira imagem sem dependência do ProdutoImageComponent
   obterPrimeiraImagem(images: string[]): string | undefined {
     const imagem = this.publicCatalogoService.obterPrimeiraImagem(images);
     return imagem ?? undefined; // Converte null para undefined

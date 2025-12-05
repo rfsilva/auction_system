@@ -23,6 +23,7 @@ import java.util.List;
 /**
  * Service para operações com Produto (área privada - vendedores)
  * HISTÓRIA 03: Adicionado método para listar produtos válidos de um lote com paginação
+ * HISTÓRIA 04: Adicionado método para buscar produto específico válido de um lote
  */
 @Service
 @RequiredArgsConstructor
@@ -177,6 +178,25 @@ public class ProdutoService {
         log.info("Encontrados {} produtos válidos para o lote: {}", produtos.getTotalElements(), loteId);
         
         return produtos.map(this::convertToDto);
+    }
+
+    /**
+     * HISTÓRIA 04: Busca produto específico válido de um lote
+     * Para a página de detalhes do produto público
+     */
+    @Transactional(readOnly = true)
+    public ProdutoDto buscarProdutoValidoDoLote(String loteId, String produtoId) {
+        log.info("Buscando produto válido: {} do lote: {}", produtoId, loteId);
+        
+        Produto produto = produtoRepository.findProdutoValidoDoLote(produtoId, loteId)
+            .orElseThrow(() -> {
+                log.warn("Produto {} não encontrado ou não válido no lote {}", produtoId, loteId);
+                return new EntityNotFoundException(
+                    messageSourceAccessor.getMessage("product.not.found.in.lot", LocaleContextHolder.getLocale()));
+            });
+        
+        log.info("Produto válido encontrado: {} no lote: {}", produtoId, loteId);
+        return convertToDto(produto);
     }
 
     /**

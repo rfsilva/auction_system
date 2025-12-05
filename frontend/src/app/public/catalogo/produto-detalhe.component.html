@@ -1,0 +1,265 @@
+<!-- HISTÓRIA 04: Página de Detalhes do Produto Válido (público) -->
+<!-- CORRIGIDO: Adicionado tratamento seguro para erro de imagem -->
+<div class="produto-detalhe-container">
+  <!-- Loading State -->
+  <div *ngIf="loadingProduto" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Carregando detalhes do produto...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loadingProduto" class="error-container">
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>Produto não encontrado</h3>
+      <p>{{ error }}</p>
+      <div class="error-actions">
+        <button type="button" class="btn btn-primary" (click)="voltarParaLote()">
+          <i class="fas fa-arrow-left"></i>
+          Voltar ao Lote
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="voltarParaCatalogo()">
+          <i class="fas fa-home"></i>
+          Ir para Catálogo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="produto && !loadingProduto && !error" class="produto-content">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a routerLink="/catalogo">
+            <i class="fas fa-home"></i>
+            Catálogo
+          </a>
+        </li>
+        <li class="breadcrumb-item" *ngIf="lote">
+          <a [routerLink]="['/catalogo/lotes', loteId]">
+            {{ lote.title }}
+          </a>
+        </li>
+        <li class="breadcrumb-item active">
+          {{ produto.title }}
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="produto-main">
+      <!-- Image Gallery -->
+      <div class="produto-gallery">
+        <div class="main-image-container">
+          <div *ngIf="!temImagens" class="no-image-placeholder">
+            <i class="fas fa-image"></i>
+            <p>Nenhuma imagem disponível</p>
+          </div>
+          
+          <div *ngIf="temImagens" class="main-image-wrapper">
+            <!-- CORRIGIDO: Tratamento seguro de erro de imagem -->
+            <img 
+              [src]="imagemAtualSegura" 
+              [alt]="produto.title"
+              class="main-image"
+              (error)="onImageError($event, imagemAtualIndex)"
+            />
+            
+            <!-- Navigation arrows for multiple images -->
+            <div *ngIf="temMultiplasImagens" class="image-nav">
+              <button 
+                type="button" 
+                class="nav-btn nav-prev" 
+                (click)="imagemAnterior()"
+                [disabled]="imagensValidas.length <= 1"
+              >
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button 
+                type="button" 
+                class="nav-btn nav-next" 
+                (click)="proximaImagem()"
+                [disabled]="imagensValidas.length <= 1"
+              >
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <!-- Image counter -->
+            <div *ngIf="temMultiplasImagens" class="image-counter">
+              {{ imagemAtualIndex + 1 }} / {{ imagensValidas.length }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Thumbnail gallery -->
+        <div *ngIf="temMultiplasImagens" class="thumbnail-gallery">
+          <div 
+            *ngFor="let imagem of imagensValidas; let i = index" 
+            class="thumbnail-item"
+            [class.active]="i === imagemAtualIndex"
+            (click)="selecionarImagem(i)"
+          >
+            <!-- CORRIGIDO: Tratamento seguro de erro de imagem para thumbnails -->
+            <img 
+              [src]="getImageUrl(imagem, i)" 
+              [alt]="produto.title + ' - Imagem ' + (i + 1)"
+              class="thumbnail-image"
+              (error)="onImageError($event, i)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="produto-info">
+        <!-- Title and Status -->
+        <div class="produto-header">
+          <h1 class="produto-title">{{ produto.title }}</h1>
+          <span class="produto-status" [ngClass]="getStatusClass(produto.status)">
+            {{ getStatusText(produto.status) }}
+          </span>
+        </div>
+
+        <!-- Price Information -->
+        <div class="produto-pricing">
+          <div class="current-price">
+            <label>Lance Atual:</label>
+            <span class="price-value">{{ formatarPreco(produto.currentPrice) }}</span>
+          </div>
+          
+          <div class="initial-price" *ngIf="produto.currentPrice > produto.initialPrice">
+            <label>Preço Inicial:</label>
+            <span class="price-value">{{ formatarPreco(produto.initialPrice) }}</span>
+          </div>
+
+          <div class="reserve-price" *ngIf="produto.reservePrice">
+            <label>Preço de Reserva:</label>
+            <span class="price-value">{{ formatarPreco(produto.reservePrice) }}</span>
+          </div>
+
+          <div class="increment-min">
+            <label>Incremento Mínimo:</label>
+            <span class="price-value">{{ formatarPreco(produto.incrementMin) }}</span>
+          </div>
+        </div>
+
+        <!-- Time Information -->
+        <div class="produto-timing">
+          <div class="time-remaining" [class.urgent]="isProximoEncerramento">
+            <i class="fas fa-clock"></i>
+            <label>Tempo Restante:</label>
+            <span class="time-value">{{ formatarTempoRestante(tempoRestanteCalculado) }}</span>
+          </div>
+          
+          <div class="end-date">
+            <i class="fas fa-calendar"></i>
+            <label>Encerra em:</label>
+            <span class="date-value">{{ formatarData(produto.endDateTime) }}</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="produto-actions">
+          <button 
+            type="button" 
+            class="btn btn-primary btn-lg"
+            [disabled]="!podeReceberLances"
+            title="Funcionalidade de lances será implementada em próxima sprint"
+          >
+            <i class="fas fa-gavel"></i>
+            Dar Lance
+            <small>(Em breve)</small>
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary"
+            title="Funcionalidade de favoritos será implementada em próxima sprint"
+          >
+            <i class="far fa-heart"></i>
+            Favoritar
+            <small>(Em breve)</small>
+          </button>
+        </div>
+
+        <!-- Product Details -->
+        <div class="produto-details">
+          <h3>Detalhes do Produto</h3>
+          
+          <div class="detail-item">
+            <label>Descrição:</label>
+            <div class="detail-value description">{{ produto.description }}</div>
+          </div>
+
+          <div class="detail-item" *ngIf="produto.categoria">
+            <label>Categoria:</label>
+            <div class="detail-value">{{ produto.categoria }}</div>
+          </div>
+
+          <div class="detail-item" *ngIf="produto.weight">
+            <label>Peso:</label>
+            <div class="detail-value">{{ formatarPeso(produto.weight) }}</div>
+          </div>
+
+          <div class="detail-item" *ngIf="produto.dimensions">
+            <label>Dimensões:</label>
+            <div class="detail-value">{{ formatarDimensoes(produto.dimensions) }}</div>
+          </div>
+
+          <div class="detail-item" *ngIf="temTags">
+            <label>Tags:</label>
+            <div class="detail-value tags">
+              <span *ngFor="let tag of produto.tags" class="tag">{{ tag }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item" *ngIf="produto.antiSnipeEnabled">
+            <label>Anti-Snipe:</label>
+            <div class="detail-value">
+              <i class="fas fa-shield-alt text-success"></i>
+              Ativo ({{ produto.antiSnipeExtension }} segundos)
+            </div>
+          </div>
+        </div>
+
+        <!-- Lote Information -->
+        <div class="lote-info" *ngIf="lote">
+          <h3>Informações do Lote</h3>
+          
+          <div class="detail-item">
+            <label>Lote:</label>
+            <div class="detail-value">
+              <a [routerLink]="['/catalogo/lotes', loteId]">{{ lote.title }}</a>
+            </div>
+          </div>
+
+          <div class="detail-item" *ngIf="lote.sellerCompanyName">
+            <label>Vendedor:</label>
+            <div class="detail-value">{{ lote.sellerCompanyName }}</div>
+          </div>
+
+          <div class="detail-item">
+            <label>Total de Produtos no Lote:</label>
+            <div class="detail-value">{{ lote.totalProdutos }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="navigation-actions">
+      <button type="button" class="btn btn-outline-primary" (click)="voltarParaLote()">
+        <i class="fas fa-arrow-left"></i>
+        Voltar ao Lote
+      </button>
+      
+      <button type="button" class="btn btn-outline-secondary" (click)="voltarParaCatalogo()">
+        <i class="fas fa-home"></i>
+        Ir para Catálogo
+      </button>
+    </div>
+  </div>
+</div>

@@ -90,11 +90,13 @@ export interface LoteFiltro {
 /**
  * Service público para catálogo de lotes
  * HISTÓRIA 03: Adicionado método para listar produtos válidos de um lote
+ * HISTÓRIA 04: Adicionado método para buscar produto específico válido de um lote
  * 
  * Conecta com os endpoints do PublicoController no backend:
  * - GET /public/catalogo/lotes
  * - GET /public/catalogo/lotes/{id}
- * - GET /public/catalogo/lotes/{id}/produtos (NOVO - História 03)
+ * - GET /public/catalogo/lotes/{id}/produtos (História 03)
+ * - GET /public/catalogo/lotes/{loteId}/produtos/{produtoId} (História 04)
  * - GET /public/catalogo/lotes/destaque
  * - GET /public/catalogo/categorias
  * - GET /public/sobre
@@ -151,6 +153,14 @@ export class PublicCatalogoService {
       .set('sort', 'createdAt');
 
     return this.http.get<ApiResponse<Page<ProdutoDto>>>(`${this.baseUrl}/catalogo/lotes/${loteId}/produtos`, { params });
+  }
+
+  /**
+   * HISTÓRIA 04: Busca produto específico válido de um lote
+   * Endpoint: GET /public/catalogo/lotes/{loteId}/produtos/{produtoId}
+   */
+  buscarProdutoDoLote(loteId: string, produtoId: string): Observable<ApiResponse<ProdutoDto>> {
+    return this.http.get<ApiResponse<ProdutoDto>>(`${this.baseUrl}/catalogo/lotes/${loteId}/produtos/${produtoId}`);
   }
 
   /**

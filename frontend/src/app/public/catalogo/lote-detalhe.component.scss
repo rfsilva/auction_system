@@ -1,4 +1,5 @@
 /* HISTÓRIA 03: Página de Detalhes do Lote e Lista de Produtos Válidos */
+/* HISTÓRIA 04: Adicionados estilos para links dos produtos */
 /* Estilos responsivos e modernos para a página de detalhes do lote */
 
 .lote-detalhe-container {
@@ -382,6 +383,45 @@
   }
 }
 
+/* ========================================
+   HISTÓRIA 04: Estilos para Links dos Produtos
+   ======================================== */
+.produto-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    text-decoration: none;
+    color: inherit;
+    
+    .produto-card {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      border-color: #3b82f6;
+    }
+    
+    .produto-action {
+      background-color: #3b82f6;
+      color: white;
+      
+      .action-text i {
+        transform: scale(1.1);
+      }
+    }
+  }
+  
+  &:focus {
+    outline: none;
+    
+    .produto-card {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+  }
+}
+
 .produto-image-container {
   position: relative;
   height: 200px;
@@ -416,6 +456,9 @@
 
 .produto-info {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 200px);
 }
 
 .produto-title {
@@ -431,6 +474,7 @@
   color: #6b7280;
   margin-bottom: 1rem;
   line-height: 1.4;
+  flex-grow: 1;
 }
 
 .produto-precos {
@@ -511,6 +555,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .tag {
@@ -520,6 +565,30 @@
   border-radius: 0.375rem;
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+/* HISTÓRIA 04: Indicador de ação do produto */
+.produto-action {
+  margin-top: auto;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  transition: all 0.3s ease;
+  
+  .action-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
 }
 
 /* ========================================

@@ -1,6 +1,9 @@
 <!-- HISTÓRIA 03: Página de Detalhes do Lote e Lista de Produtos Válidos -->
+<!-- HISTÓRIA 04: Adicionados links para detalhes dos produtos -->
 <!-- CORRIGIDO: Template atualizado para usar cálculo próprio de status -->
-<!-- ADICIONADO: Formatação de dimensões JSON para exibição legível -->
+<!-- CORRIGIDO: Removido ProdutoImageComponent e usando img normal -->
+<!-- CORRIGIDO: Adicionado tratamento seguro para erro de imagem -->
+<!-- CORRIGIDO: Adicionado tratamento para imagem do cabeçalho do lote -->
 <div class="lote-detalhe-container">
   
   <!-- Breadcrumb -->
@@ -77,12 +80,13 @@
           </div>
         </div>
 
-        <!-- Imagem destaque do lote -->
+        <!-- CORRIGIDO: Imagem destaque do lote com tratamento de erro -->
         <div class="lote-image" *ngIf="lote.imagemDestaque">
-          <img [src]="lote.imagemDestaque" 
+          <img [src]="getLoteImageUrl(lote.imagemDestaque)" 
                [alt]="lote.title"
                class="lote-image-img"
-               loading="lazy">
+               loading="lazy"
+               (error)="onLoteImageError($event)">
         </div>
       </div>
     </header>
@@ -145,77 +149,92 @@
         <div *ngFor="let produto of produtos; trackBy: trackByProdutoId" 
              class="produto-card">
           
-          <!-- Imagem do produto -->
-          <div class="produto-image-container">
-            <!-- CORRIGIDO: Usando as propriedades corretas do ProdutoImageComponent -->
-            <app-produto-image 
-              [src]="obterPrimeiraImagem(produto.images)"
-              [alt]="produto.title"
-              [height]="200"
-              class="produto-image">
-            </app-produto-image>
+          <!-- HISTÓRIA 04: Link para detalhes do produto -->
+          <a [routerLink]="['/catalogo/lotes', loteId, 'produtos', produto.id]" 
+             class="produto-link"
+             [attr.aria-label]="'Ver detalhes do produto: ' + produto.title">
             
-            <div class="produto-status-badge" [ngClass]="getStatusClass(produto.status)">
-              {{ getStatusText(produto.status) }}
-            </div>
-          </div>
-
-          <!-- Informações do produto -->
-          <div class="produto-info">
-            <h3 class="produto-title">{{ produto.title }}</h3>
-            
-            <p class="produto-description" *ngIf="produto.description">
-              {{ produto.description.length > 100 ? 
-                  (produto.description | slice:0:100) + '...' : 
-                  produto.description }}
-            </p>
-
-            <div class="produto-precos">
-              <div class="preco-atual">
-                <span class="preco-label">Preço atual:</span>
-                <span class="preco-valor">{{ formatarPreco(produto.currentPrice) }}</span>
-              </div>
+            <!-- Imagem do produto -->
+            <div class="produto-image-container">
+              <!-- CORRIGIDO: Tratamento seguro de erro de imagem -->
+              <img 
+                [src]="getImageUrl(produto)"
+                [alt]="produto.title"
+                class="produto-image"
+                loading="lazy"
+                (error)="onImageError($event, produto.id)"
+              />
               
-              <div class="preco-inicial" *ngIf="produto.currentPrice !== produto.initialPrice">
-                <span class="preco-label">Preço inicial:</span>
-                <span class="preco-valor">{{ formatarPreco(produto.initialPrice) }}</span>
+              <div class="produto-status-badge" [ngClass]="getStatusClass(produto.status)">
+                {{ getStatusText(produto.status) }}
               </div>
             </div>
 
-            <div class="produto-meta">
-              <div class="meta-item" *ngIf="produto.categoria">
-                <span class="meta-label">Categoria:</span>
-                <span class="meta-value">{{ produto.categoria }}</span>
-              </div>
+            <!-- Informações do produto -->
+            <div class="produto-info">
+              <h3 class="produto-title">{{ produto.title }}</h3>
               
-              <div class="meta-item" *ngIf="produto.weight">
-                <span class="meta-label">Peso:</span>
-                <span class="meta-value">{{ produto.weight }}kg</span>
-              </div>
-              
-              <!-- CORRIGIDO: Usar formatação de dimensões ao invés de exibir JSON bruto -->
-              <div class="meta-item" *ngIf="formatarDimensoes(produto.dimensions)">
-                <span class="meta-label">Dimensões:</span>
-                <span class="meta-value">{{ formatarDimensoes(produto.dimensions) }}</span>
-              </div>
-            </div>
+              <p class="produto-description" *ngIf="produto.description">
+                {{ produto.description.length > 100 ? 
+                    (produto.description | slice:0:100) + '...' : 
+                    produto.description }}
+              </p>
 
-            <!-- CORRIGIDO: Para produtos, ainda podemos usar os campos do backend pois eles são calculados corretamente -->
-            <div class="produto-tempo" *ngIf="produto.isActive && !produto.isExpired">
-              <span class="tempo-label">Tempo restante:</span>
-              <span class="tempo-valor" 
-                    [ngClass]="{'urgent': produto.timeRemaining < 3600}">
-                {{ formatarTempoRestante(produto.timeRemaining) }}
-              </span>
-            </div>
+              <div class="produto-precos">
+                <div class="preco-atual">
+                  <span class="preco-label">Preço atual:</span>
+                  <span class="preco-valor">{{ formatarPreco(produto.currentPrice) }}</span>
+                </div>
+                
+                <div class="preco-inicial" *ngIf="produto.currentPrice !== produto.initialPrice">
+                  <span class="preco-label">Preço inicial:</span>
+                  <span class="preco-valor">{{ formatarPreco(produto.initialPrice) }}</span>
+                </div>
+              </div>
 
-            <!-- Tags do produto -->
-            <div class="produto-tags" *ngIf="produto.tags && produto.tags.length > 0">
-              <span *ngFor="let tag of produto.tags" class="tag">
-                {{ tag }}
-              </span>
+              <div class="produto-meta">
+                <div class="meta-item" *ngIf="produto.categoria">
+                  <span class="meta-label">Categoria:</span>
+                  <span class="meta-value">{{ produto.categoria }}</span>
+                </div>
+                
+                <div class="meta-item" *ngIf="produto.weight">
+                  <span class="meta-label">Peso:</span>
+                  <span class="meta-value">{{ produto.weight }}kg</span>
+                </div>
+                
+                <!-- CORRIGIDO: Usar formatação de dimensões ao invés de exibir JSON bruto -->
+                <div class="meta-item" *ngIf="formatarDimensoes(produto.dimensions)">
+                  <span class="meta-label">Dimensões:</span>
+                  <span class="meta-value">{{ formatarDimensoes(produto.dimensions) }}</span>
+                </div>
+              </div>
+
+              <!-- CORRIGIDO: Para produtos, ainda podemos usar os campos do backend pois eles são calculados corretamente -->
+              <div class="produto-tempo" *ngIf="produto.isActive && !produto.isExpired">
+                <span class="tempo-label">Tempo restante:</span>
+                <span class="tempo-valor" 
+                      [ngClass]="{'urgent': produto.timeRemaining < 3600}">
+                  {{ formatarTempoRestante(produto.timeRemaining) }}
+                </span>
+              </div>
+
+              <!-- Tags do produto -->
+              <div class="produto-tags" *ngIf="produto.tags && produto.tags.length > 0">
+                <span *ngFor="let tag of produto.tags" class="tag">
+                  {{ tag }}
+                </span>
+              </div>
+
+              <!-- HISTÓRIA 04: Indicador de link -->
+              <div class="produto-action">
+                <span class="action-text">
+                  <i class="fas fa-eye"></i>
+                  Ver detalhes
+                </span>
+              </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
 

@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * Controller publico para endpoints que nao requerem autenticacao
  * HISTÓRIA 03: Adicionado endpoint para listar produtos válidos de um lote
+ * HISTÓRIA 04: Adicionado endpoint para buscar produto específico válido de um lote
  */
 @Slf4j
 @RestController
@@ -106,6 +107,31 @@ public class PublicoController {
             
         } catch (Exception e) {
             log.error("Erro ao listar produtos do lote {}: {}", id, e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(errorMessage));
+        }
+    }
+
+    /**
+     * HISTÓRIA 04: Busca produto específico válido de um lote
+     * Endpoint: GET /public/catalogo/lotes/{loteId}/produtos/{produtoId}
+     */
+    @GetMapping("/catalogo/lotes/{loteId}/produtos/{produtoId}")
+    public ResponseEntity<ApiResponse<ProdutoDto>> buscarProdutoDoLote(
+            @PathVariable String loteId,
+            @PathVariable String produtoId) {
+        
+        log.info("Buscando produto válido: {} do lote: {}", produtoId, loteId);
+        
+        try {
+            ProdutoDto produto = produtoService.buscarProdutoValidoDoLote(loteId, produtoId);
+            String message = MessageUtils.getMessage("product.found");
+            
+            return ResponseEntity.ok(ApiResponse.success(message, produto));
+            
+        } catch (Exception e) {
+            log.error("Erro ao buscar produto {} do lote {}: {}", produtoId, loteId, e.getMessage(), e);
             String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error(errorMessage));

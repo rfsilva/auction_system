@@ -17,6 +17,7 @@ import java.util.Optional;
 /**
  * Repository para operações com Produto
  * HISTÓRIA 03: Adicionado método para buscar produtos válidos de um lote com paginação
+ * HISTÓRIA 04: Adicionado método para buscar produto específico válido de um lote
  * CORRIGIDO: Queries usando enum ProdutoStatus ao invés de string literal
  */
 @Repository
@@ -167,7 +168,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
     List<Object[]> getEstatisticasPorStatus();
 
     // ========================================
-    // HISTÓRIA 02 e 03: Métodos para catálogo de lotes
+    // HISTÓRIA 02, 03 e 04: Métodos para catálogo de lotes
     // ========================================
 
     /**
@@ -185,6 +186,14 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
      */
     @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE ORDER BY p.createdAt")
     Page<Produto> findProdutosValidosDoLoteComPaginacao(@Param("loteId") String loteId, Pageable pageable);
+
+    /**
+     * HISTÓRIA 04: Busca produto específico válido de um lote
+     * Garante que o produto pertence ao lote e está ativo/válido
+     * CORRIGIDO: Usando enum ao invés de string literal
+     */
+    @Query("SELECT p FROM Produto p WHERE p.id = :produtoId AND p.loteId = :loteId AND p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE")
+    Optional<Produto> findProdutoValidoDoLote(@Param("produtoId") String produtoId, @Param("loteId") String loteId);
 
     /**
      * Conta produtos válidos de um lote
