@@ -17,6 +17,7 @@ import { ProdutoImageComponent } from '../../shared/components/produto-image.com
  * - Interface responsiva
  * 
  * CORRIGIDO: Aplicada a mesma solução do lote-card.component.ts para calcular status próprio
+ * ADICIONADO: Formatação de dimensões JSON para exibição legível
  */
 @Component({
   selector: 'app-lote-detalhe',
@@ -126,6 +127,98 @@ export class LoteDetalheComponent implements OnInit, OnDestroy {
     const diffMs = endDate.getTime() - now.getTime();
     
     return Math.max(0, Math.floor(diffMs / 1000));
+  }
+
+  // ========================================
+  // NOVO: Formatação de dimensões
+  // ========================================
+
+  /**
+   * Formata as dimensões do produto de JSON para texto legível
+   * Suporta diferentes formatos de entrada
+   */
+  formatarDimensoes(dimensions: string | undefined): string {
+    if (!dimensions || dimensions.trim() === '') {
+      return '';
+    }
+
+    try {
+      // Tentar fazer parse do JSON
+      const dimensionsObj = JSON.parse(dimensions);
+      
+      // Verificar se tem as propriedades esperadas
+      if (dimensionsObj && typeof dimensionsObj === 'object') {
+        const parts: string[] = [];
+        
+        // Mapear diferentes nomes de propriedades possíveis
+        const length = dimensionsObj.length || dimensionsObj.comprimento || dimensionsObj.l;
+        const width = dimensionsObj.width || dimensionsObj.largura || dimensionsObj.w;
+        const height = dimensionsObj.height || dimensionsObj.altura || dimensionsObj.h;
+        const depth = dimensionsObj.depth || dimensionsObj.profundidade || dimensionsObj.d;
+        
+        if (length) parts.push(`C: ${this.formatarMedida(length)}`);
+        if (width) parts.push(`L: ${this.formatarMedida(width)}`);
+        if (height) parts.push(`A: ${this.formatarMedida(height)}`);
+        if (depth && !height) parts.push(`P: ${this.formatarMedida(depth)}`);
+        
+        if (parts.length > 0) {
+          return parts.join(' × ');
+        }
+      }
+    } catch (error) {
+      // Se não for JSON válido, tentar outros formatos
+      console.debug('Dimensões não são JSON válido, tentando outros formatos:', dimensions);
+    }
+
+    // Tentar formatos alternativos
+    // Formato: "16.3 x 7.8 x 0.89" ou "16.3x7.8x0.89"
+    const dimensionPattern = /(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i;
+    const match = dimensions.match(dimensionPattern);
+    
+    if (match) {
+      const [, length, width, height] = match;
+      return `C: ${this.formatarMedida(length)} × L: ${this.formatarMedida(width)} × A: ${this.formatarMedida(height)}`;
+    }
+
+    // Formato: "16.3 x 7.8" (apenas 2 dimensões)
+    const dimension2DPattern = /(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i;
+    const match2D = dimensions.match(dimension2DPattern);
+    
+    if (match2D) {
+      const [, length, width] = match2D;
+      return `C: ${this.formatarMedida(length)} × L: ${this.formatarMedida(width)}`;
+    }
+
+    // Se nada funcionar, retornar o valor original limpo
+    return dimensions.replace(/[{}"\[\]]/g, '').trim();
+  }
+
+  /**
+   * Formata uma medida individual, adicionando unidade se necessário
+   */
+  private formatarMedida(medida: string | number): string {
+    const valor = typeof medida === 'string' ? parseFloat(medida) : medida;
+    
+    if (isNaN(valor)) {
+      return medida.toString();
+    }
+
+    // Se o valor for muito pequeno (< 1), assumir que está em metros e converter para cm
+    if (valor < 1 && valor > 0) {
+      return `${(valor * 100).toFixed(1)}cm`;
+    }
+    
+    // Se o valor for razoável (1-500), assumir que já está em cm
+    if (valor >= 1 && valor <= 500) {
+      return `${valor}cm`;
+    }
+    
+    // Se o valor for muito grande (> 500), assumir que está em mm e converter para cm
+    if (valor > 500) {
+      return `${(valor / 10).toFixed(1)}cm`;
+    }
+    
+    return `${valor}cm`;
   }
 
   // ========================================

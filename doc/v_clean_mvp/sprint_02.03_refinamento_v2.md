@@ -111,7 +111,7 @@ Reestruturar as telas públicas do sistema para focar na experiência baseada em
 - ✅ Informações do lote (tempo restante, descrição, regras)
 - ✅ Responsividade completa
 
-### História 4: Página de Detalhes do Produto Válido (público)
+### História 4: Página de Detalhes do Produto Válido (público) - Preparação para o core do sistema: lances e arremates
 - **Tipo:** Frontend + Backend
 - **Descrição:** Criar página de detalhes do produto onde o usuário pode ver detalhes do produto.
 - **Tasks / Sub-tasks:**

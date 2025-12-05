@@ -1,5 +1,6 @@
 <!-- HISTÓRIA 03: Página de Detalhes do Lote e Lista de Produtos Válidos -->
 <!-- CORRIGIDO: Template atualizado para usar cálculo próprio de status -->
+<!-- ADICIONADO: Formatação de dimensões JSON para exibição legível -->
 <div class="lote-detalhe-container">
   
   <!-- Breadcrumb -->
@@ -192,9 +193,10 @@
                 <span class="meta-value">{{ produto.weight }}kg</span>
               </div>
               
-              <div class="meta-item" *ngIf="produto.dimensions">
+              <!-- CORRIGIDO: Usar formatação de dimensões ao invés de exibir JSON bruto -->
+              <div class="meta-item" *ngIf="formatarDimensoes(produto.dimensions)">
                 <span class="meta-label">Dimensões:</span>
-                <span class="meta-value">{{ produto.dimensions }}</span>
+                <span class="meta-value">{{ formatarDimensoes(produto.dimensions) }}</span>
               </div>
             </div>
 
