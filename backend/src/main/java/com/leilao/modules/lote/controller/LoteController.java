@@ -6,6 +6,7 @@ import com.leilao.modules.lote.dto.LoteDto;
 import com.leilao.modules.lote.dto.LoteUpdateRequest;
 import com.leilao.modules.lote.service.LoteService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +46,10 @@ public class LoteController {
         log.info("Criando lote para vendedor: {}", usuario.getId());
         
         LoteDto lote = loteService.criarLote(request, usuario.getId());
+        String message = MessageUtils.getMessage("lot.created");
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Lote criado com sucesso", lote));
+                .body(ApiResponse.success(message, lote));
     }
 
     /**
@@ -63,8 +65,9 @@ public class LoteController {
         log.info("Atualizando lote: {} para vendedor: {}", loteId, usuario.getId());
         
         LoteDto lote = loteService.atualizarLote(loteId, request, usuario.getId());
+        String message = MessageUtils.getMessage("lot.updated");
         
-        return ResponseEntity.ok(ApiResponse.success("Lote atualizado com sucesso", lote));
+        return ResponseEntity.ok(ApiResponse.success(message, lote));
     }
 
     /**
@@ -79,8 +82,9 @@ public class LoteController {
         log.info("Buscando lote privado: {} para vendedor: {}", loteId, usuario.getId());
         
         LoteDto lote = loteService.buscarPorId(loteId);
+        String message = MessageUtils.getMessage("lot.found");
         
-        return ResponseEntity.ok(ApiResponse.success("Lote encontrado", lote));
+        return ResponseEntity.ok(ApiResponse.success(message, lote));
     }
 
     /**
@@ -95,8 +99,9 @@ public class LoteController {
         log.info("Listando lotes do vendedor: {}", usuario.getId());
         
         Page<LoteDto> lotes = loteService.listarLotesVendedor(usuario.getId(), pageable);
+        String message = MessageUtils.getMessage("lot.seller.list");
         
-        return ResponseEntity.ok(ApiResponse.success("Lotes do vendedor", lotes));
+        return ResponseEntity.ok(ApiResponse.success(message, lotes));
     }
 
     /**
@@ -111,8 +116,9 @@ public class LoteController {
         log.info("Ativando lote: {} para vendedor: {}", loteId, usuario.getId());
         
         LoteDto lote = loteService.ativarLote(loteId, usuario.getId());
+        String message = MessageUtils.getMessage("lot.activated");
         
-        return ResponseEntity.ok(ApiResponse.success("Lote ativado com sucesso", lote));
+        return ResponseEntity.ok(ApiResponse.success(message, lote));
     }
 
     /**
@@ -127,8 +133,9 @@ public class LoteController {
         log.info("Cancelando lote: {} para vendedor: {}", loteId, usuario.getId());
         
         LoteDto lote = loteService.cancelarLote(loteId, usuario.getId());
+        String message = MessageUtils.getMessage("lot.cancelled");
         
-        return ResponseEntity.ok(ApiResponse.success("Lote cancelado com sucesso", lote));
+        return ResponseEntity.ok(ApiResponse.success(message, lote));
     }
 
     /**
@@ -143,7 +150,8 @@ public class LoteController {
         log.info("Excluindo lote: {} para vendedor: {}", loteId, usuario.getId());
         
         loteService.excluirLote(loteId, usuario.getId());
+        String message = MessageUtils.getMessage("lot.deleted");
         
-        return ResponseEntity.ok(ApiResponse.success("Lote excluído com sucesso", null));
+        return ResponseEntity.ok(ApiResponse.success(message, null));
     }
 }

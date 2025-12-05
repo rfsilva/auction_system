@@ -2,6 +2,7 @@ package com.leilao.modules.test.controller;
 
 import com.leilao.shared.dto.ApiResponse;
 import com.leilao.shared.enums.*;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -47,7 +48,8 @@ public class TestController {
         result.put("email.welcome.body", messageSourceAccessor.getMessage("email.welcome.body", new Object[]{"João"}, currentLocale));
         result.put("validation.min.length", messageSourceAccessor.getMessage("validation.min.length", new Object[]{5}, currentLocale));
         
-        return ResponseEntity.ok(ApiResponse.success("Mensagens de teste", result));
+        String message = MessageUtils.getMessage("test.messages");
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     /**
@@ -94,7 +96,8 @@ public class TestController {
         }
         result.put("lotStatus", lotStatus);
         
-        return ResponseEntity.ok(ApiResponse.success("Mensagens de enums", result));
+        String message = MessageUtils.getMessage("test.enums");
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     /**
@@ -129,7 +132,8 @@ public class TestController {
         
         result.put("emailWelcome", emailMessages);
         
-        return ResponseEntity.ok(ApiResponse.success("Mensagens em diferentes idiomas", result));
+        String message = MessageUtils.getMessage("test.languages");
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     /**
@@ -149,7 +153,8 @@ public class TestController {
         result.put("auth.login.success", messageSourceAccessor.getMessage("auth.login.success", currentLocale));
         result.put("user.created", messageSourceAccessor.getMessage("user.created", currentLocale));
         
-        return ResponseEntity.ok(ApiResponse.success("Teste de locale", result));
+        String message = MessageUtils.getMessage("test.locale");
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     /**
@@ -172,8 +177,10 @@ public class TestController {
         }
         
         // Chave que não existe com fallback
-        result.put("with.fallback", messageSourceAccessor.getMessage("another.non.existing.key", "Fallback Message", currentLocale));
+        String fallbackMessage = MessageUtils.getMessage("test.fallback.message");
+        result.put("with.fallback", messageSourceAccessor.getMessage("another.non.existing.key", fallbackMessage, currentLocale));
         
-        return ResponseEntity.ok(ApiResponse.success("Teste de fallback", result));
+        String message = MessageUtils.getMessage("test.fallback");
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 }

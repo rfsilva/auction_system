@@ -4,6 +4,7 @@ import com.leilao.modules.lote.dto.LoteDto;
 import com.leilao.modules.lote.service.LoteService;
 import com.leilao.modules.produto.service.ProdutoService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,15 +53,14 @@ public class PublicoController {
                 lotes = loteService.listarLotesPublicos(termo, pageable);
             }
             
-            return ResponseEntity.ok(ApiResponse.success(
-                "Lotes encontrados com sucesso", 
-                lotes
-            ));
+            String message = MessageUtils.getMessage("catalog.lots.success");
+            return ResponseEntity.ok(ApiResponse.success(message, lotes));
             
         } catch (Exception e) {
             log.error("Erro ao buscar lotes publicos: {}", e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Erro interno do servidor"));
+                    .body(ApiResponse.error(errorMessage));
         }
     }
     
@@ -74,16 +74,15 @@ public class PublicoController {
         
         try {
             LoteDto lote = loteService.buscarPorId(id);
+            String message = MessageUtils.getMessage("lot.found");
             
-            return ResponseEntity.ok(ApiResponse.success(
-                "Lote encontrado com sucesso", 
-                lote
-            ));
+            return ResponseEntity.ok(ApiResponse.success(message, lote));
             
         } catch (Exception e) {
             log.error("Erro ao buscar lote publico {}: {}", id, e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Erro interno do servidor"));
+                    .body(ApiResponse.error(errorMessage));
         }
     }
     
@@ -97,16 +96,15 @@ public class PublicoController {
         
         try {
             List<LoteDto> lotes = loteService.buscarLotesDestaque();
+            String message = MessageUtils.getMessage("lots.featured.success");
             
-            return ResponseEntity.ok(ApiResponse.success(
-                "Lotes em destaque", 
-                lotes
-            ));
+            return ResponseEntity.ok(ApiResponse.success(message, lotes));
             
         } catch (Exception e) {
             log.error("Erro ao buscar lotes em destaque: {}", e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Erro interno do servidor"));
+                    .body(ApiResponse.error(errorMessage));
         }
     }
     
@@ -120,16 +118,15 @@ public class PublicoController {
         
         try {
             List<String> categorias = produtoService.listarCategoriasAtivas();
+            String message = MessageUtils.getMessage("product.categories.list.success");
             
-            return ResponseEntity.ok(ApiResponse.success(
-                "Categorias disponiveis", 
-                categorias
-            ));
+            return ResponseEntity.ok(ApiResponse.success(message, categorias));
             
         } catch (Exception e) {
             log.error("Erro ao listar categorias: {}", e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Erro interno do servidor"));
+                    .body(ApiResponse.error(errorMessage));
         }
     }
     
@@ -142,18 +139,15 @@ public class PublicoController {
         log.info("Acessando pagina sobre");
         
         Map<String, String> info = new HashMap<>();
-        info.put("empresa", "Sistema de Leilao Online");
-        info.put("descricao", "Plataforma moderna para leiloes online com seguranca e transparencia");
-        info.put("missao", "Conectar vendedores e compradores atraves de leiloes justos e transparentes");
-        info.put("visao", "Ser a principal plataforma de leiloes online do mercado");
-        info.put("valores", "Transparencia, Seguranca, Inovacao e Excelencia no Atendimento");
-        info.put("fundacao", "2024");
-        info.put("sede", "Brasil");
+        info.put("empresa", MessageUtils.getMessage("company.name"));
+        info.put("descricao", MessageUtils.getMessage("company.description"));
+        info.put("missao", MessageUtils.getMessage("company.mission"));
+        info.put("visao", MessageUtils.getMessage("company.vision"));
+        info.put("valores", MessageUtils.getMessage("company.values"));
+        info.put("fundacao", MessageUtils.getMessage("company.founded"));
+        info.put("sede", MessageUtils.getMessage("company.headquarters"));
         
-        return ResponseEntity.ok(ApiResponse.success(
-            "Informacoes institucionais", 
-            info
-        ));
+        return ResponseEntity.ok(ApiResponse.success(info));
     }
     
     /**
@@ -165,18 +159,15 @@ public class PublicoController {
         log.info("Acessando pagina de contato");
         
         Map<String, String> contato = new HashMap<>();
-        contato.put("email", "contato@leilao.com.br");
-        contato.put("telefone", "+55 (11) 9999-9999");
-        contato.put("whatsapp", "+55 (11) 9999-9999");
-        contato.put("endereco", "Rua dos Leiloes, 123 - Sao Paulo/SP");
-        contato.put("cep", "01234-567");
-        contato.put("horarioAtendimento", "Segunda a Sexta: 8h as 18h");
-        contato.put("suporte", "suporte@leilao.com.br");
-        contato.put("comercial", "comercial@leilao.com.br");
+        contato.put("email", MessageUtils.getMessage("contact.email"));
+        contato.put("telefone", MessageUtils.getMessage("contact.phone"));
+        contato.put("whatsapp", MessageUtils.getMessage("contact.whatsapp"));
+        contato.put("endereco", MessageUtils.getMessage("contact.address"));
+        contato.put("cep", MessageUtils.getMessage("contact.zipcode"));
+        contato.put("horarioAtendimento", MessageUtils.getMessage("contact.business.hours"));
+        contato.put("suporte", MessageUtils.getMessage("contact.support.email"));
+        contato.put("comercial", MessageUtils.getMessage("contact.commercial.email"));
         
-        return ResponseEntity.ok(ApiResponse.success(
-            "Informacoes de contato", 
-            contato
-        ));
+        return ResponseEntity.ok(ApiResponse.success(contato));
     }
 }

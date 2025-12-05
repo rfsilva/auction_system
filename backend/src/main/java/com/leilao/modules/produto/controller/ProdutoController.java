@@ -4,6 +4,7 @@ import com.leilao.modules.auth.entity.Usuario;
 import com.leilao.modules.produto.dto.*;
 import com.leilao.modules.produto.service.ProdutoService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -62,13 +63,15 @@ public class ProdutoController {
                 logger.info("Usuario recuperado do authentication: {}", usuario.getEmail());
             } else {
                 logger.error("Principal não é uma instância de Usuario!");
-                throw new RuntimeException("Usuário não autenticado corretamente");
+                String errorMessage = MessageUtils.getMessage("auth.user.not.authenticated");
+                throw new RuntimeException(errorMessage);
             }
         }
         
         ProdutoDto produto = produtoService.criarProduto(request, usuario.getId());
+        String message = MessageUtils.getMessage("product.created");
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success("Produto criado com sucesso", produto));
+            .body(ApiResponse.success(message, produto));
     }
 
     /**
@@ -89,7 +92,8 @@ public class ProdutoController {
         }
         
         ProdutoDto produto = produtoService.atualizarProduto(produtoId, request, usuario.getId());
-        return ResponseEntity.ok(ApiResponse.success("Produto atualizado com sucesso", produto));
+        String message = MessageUtils.getMessage("product.updated");
+        return ResponseEntity.ok(ApiResponse.success(message, produto));
     }
 
     /**
@@ -121,7 +125,8 @@ public class ProdutoController {
         }
         
         Page<ProdutoDto> produtos = produtoService.listarProdutosVendedor(usuario.getId(), pageable);
-        return ResponseEntity.ok(ApiResponse.success("Produtos listados com sucesso", produtos));
+        String message = MessageUtils.getMessage("product.list.success");
+        return ResponseEntity.ok(ApiResponse.success(message, produtos));
     }
 
     /**
@@ -141,7 +146,8 @@ public class ProdutoController {
         }
         
         produtoService.excluirProduto(produtoId, usuario.getId());
-        return ResponseEntity.ok(ApiResponse.success("Produto excluído com sucesso", null));
+        String message = MessageUtils.getMessage("product.deleted");
+        return ResponseEntity.ok(ApiResponse.success(message, null));
     }
 
     /**
@@ -161,7 +167,8 @@ public class ProdutoController {
         }
         
         ProdutoDto produto = produtoService.publicarProduto(produtoId, usuario.getId());
-        return ResponseEntity.ok(ApiResponse.success("Produto publicado com sucesso", produto));
+        String message = MessageUtils.getMessage("product.published");
+        return ResponseEntity.ok(ApiResponse.success(message, produto));
     }
 
     /**
@@ -170,6 +177,7 @@ public class ProdutoController {
     @GetMapping("/categorias")
     public ResponseEntity<ApiResponse<List<String>>> listarCategorias() {
         List<String> categorias = produtoService.listarCategoriasAtivas();
-        return ResponseEntity.ok(ApiResponse.success("Categorias listadas com sucesso", categorias));
+        String message = MessageUtils.getMessage("product.categories.list.success");
+        return ResponseEntity.ok(ApiResponse.success(message, categorias));
     }
 }

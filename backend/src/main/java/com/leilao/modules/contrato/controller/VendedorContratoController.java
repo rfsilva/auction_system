@@ -4,6 +4,7 @@ import com.leilao.modules.auth.entity.Usuario;
 import com.leilao.modules.contrato.dto.ContratoDto;
 import com.leilao.modules.contrato.service.ContratoService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -39,8 +40,9 @@ public class VendedorContratoController {
         log.info("Vendedor {} listando seus contratos ativos", usuario.getId());
         
         List<ContratoDto> contratos = contratoService.listarContratosAtivosDoVendedor(usuario.getId());
+        String message = MessageUtils.getMessage("contract.active.list.found");
         
-        return ResponseEntity.ok(ApiResponse.success("Contratos ativos encontrados", contratos));
+        return ResponseEntity.ok(ApiResponse.success(message, contratos));
     }
 
     /**
@@ -57,9 +59,11 @@ public class VendedorContratoController {
         ContratoDto contrato = contratoService.buscarContratoAtivoParaCategoria(usuario.getId(), categoria);
         
         if (contrato != null) {
-            return ResponseEntity.ok(ApiResponse.success("Contrato ativo encontrado", contrato));
+            String message = MessageUtils.getMessage("contract.active.found");
+            return ResponseEntity.ok(ApiResponse.success(message, contrato));
         } else {
-            return ResponseEntity.ok(ApiResponse.success("Nenhum contrato ativo encontrado", null));
+            String message = MessageUtils.getMessage("contract.active.not.found");
+            return ResponseEntity.ok(ApiResponse.success(message, null));
         }
     }
 
@@ -74,7 +78,8 @@ public class VendedorContratoController {
         log.info("Vendedor {} verificando se tem contrato ativo", usuario.getId());
         
         boolean temAtivo = contratoService.vendedorTemContratoAtivo(usuario.getId());
+        String message = MessageUtils.getMessage("contract.status.verified");
         
-        return ResponseEntity.ok(ApiResponse.success("Status do contrato verificado", temAtivo));
+        return ResponseEntity.ok(ApiResponse.success(message, temAtivo));
     }
 }

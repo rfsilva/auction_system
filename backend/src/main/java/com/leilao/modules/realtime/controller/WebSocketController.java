@@ -3,6 +3,7 @@ package com.leilao.modules.realtime.controller;
 import com.leilao.modules.realtime.dto.BidMessage;
 import com.leilao.modules.realtime.dto.PingMessage;
 import com.leilao.modules.realtime.dto.WebSocketMessage;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -37,9 +38,9 @@ public class WebSocketController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "test-response");
-        response.put("status", "success");
+        response.put("status", MessageUtils.getMessage("websocket.success"));
         response.put("originalMessage", message.getMessage());
-        response.put("echo", "Echo: " + message.getMessage());
+        response.put("echo", MessageUtils.getMessage("websocket.echo", message.getMessage()));
         response.put("serverTimestamp", System.currentTimeMillis());
         response.put("serverTime", LocalDateTime.now().toString());
         response.put("clientId", message.getClientId());
@@ -69,7 +70,7 @@ public class WebSocketController {
             
             Map<String, Object> response = new HashMap<>();
             response.put("type", "bid-response");
-            response.put("status", "accepted");
+            response.put("status", MessageUtils.getMessage("websocket.bid.accepted"));
             response.put("bidId", "bid-" + System.currentTimeMillis());
             response.put("productId", bidMessage.getProductId());
             response.put("amount", bidMessage.getAmount());
@@ -92,7 +93,7 @@ public class WebSocketController {
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "bid-error");
-            errorResponse.put("status", "rejected");
+            errorResponse.put("status", MessageUtils.getMessage("websocket.bid.rejected"));
             errorResponse.put("error", e.getMessage());
             errorResponse.put("serverTimestamp", System.currentTimeMillis());
             errorResponse.put("clientId", bidMessage.getClientId());
@@ -113,7 +114,7 @@ public class WebSocketController {
         try {
             Map<String, Object> response = new HashMap<>();
             response.put("type", "pong");
-            response.put("status", "success");
+            response.put("status", MessageUtils.getMessage("websocket.success"));
             response.put("clientTimestamp", pingMessage.getTimestamp());
             response.put("serverTimestamp", System.currentTimeMillis());
             response.put("clientId", pingMessage.getClientId());
@@ -134,7 +135,7 @@ public class WebSocketController {
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "pong-error");
-            errorResponse.put("status", "error");
+            errorResponse.put("status", MessageUtils.getMessage("websocket.error"));
             errorResponse.put("error", e.getMessage());
             errorResponse.put("serverTimestamp", System.currentTimeMillis());
             errorResponse.put("clientId", pingMessage.getClientId());
@@ -153,7 +154,7 @@ public class WebSocketController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "simulation-response");
-        response.put("status", "processed");
+        response.put("status", MessageUtils.getMessage("websocket.processed"));
         response.put("serverTimestamp", System.currentTimeMillis());
         response.put("serverTime", LocalDateTime.now().toString());
         response.put("clientId", simulationMessage.getClientId());
@@ -177,13 +178,15 @@ public class WebSocketController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "message-response");
-        response.put("status", "received");
+        response.put("status", MessageUtils.getMessage("websocket.received"));
         response.put("serverTimestamp", System.currentTimeMillis());
         response.put("serverTime", LocalDateTime.now().toString());
         response.put("clientId", message.getClientId());
         response.put("clientTimestamp", message.getTimestamp());
         response.put("originalMessage", message.getMessage());
-        response.put("echo", messageSourceAccessor.getMessage("websocket.message.received", LocaleContextHolder.getLocale()) + ": " + message.getMessage());
+        
+        String receivedMessage = messageSourceAccessor.getMessage("websocket.message.received", LocaleContextHolder.getLocale());
+        response.put("echo", receivedMessage + ": " + message.getMessage());
         
         if (message.getTimestamp() != null) {
             response.put("processingTime", System.currentTimeMillis() - message.getTimestamp());
@@ -202,7 +205,7 @@ public class WebSocketController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("type", "generic-response");
-        response.put("status", "processed");
+        response.put("status", MessageUtils.getMessage("websocket.processed"));
         response.put("serverTimestamp", System.currentTimeMillis());
         response.put("serverTime", LocalDateTime.now().toString());
         response.put("originalData", data);

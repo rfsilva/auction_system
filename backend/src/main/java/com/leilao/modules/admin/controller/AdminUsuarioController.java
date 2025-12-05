@@ -7,6 +7,7 @@ import com.leilao.modules.admin.service.AdminUsuarioService;
 import com.leilao.shared.dto.ApiResponse;
 import com.leilao.shared.enums.UserRole;
 import com.leilao.shared.enums.UserStatus;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -110,7 +111,8 @@ public class AdminUsuarioController {
             @Valid @RequestBody AdminUsuarioUpdateRequest request) {
         
         AdminUsuarioDto usuario = adminUsuarioService.atualizarUsuario(usuarioId, request);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.updated");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -119,7 +121,8 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/ativar")
     public ResponseEntity<ApiResponse<AdminUsuarioDto>> ativarUsuario(@PathVariable String usuarioId) {
         AdminUsuarioDto usuario = adminUsuarioService.ativarUsuario(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.activated");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -128,7 +131,8 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/desativar")
     public ResponseEntity<ApiResponse<AdminUsuarioDto>> desativarUsuario(@PathVariable String usuarioId) {
         AdminUsuarioDto usuario = adminUsuarioService.desativarUsuario(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.deactivated");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -141,7 +145,8 @@ public class AdminUsuarioController {
         
         String motivo = body != null ? body.get("motivo") : null;
         AdminUsuarioDto usuario = adminUsuarioService.bloquearUsuario(usuarioId, motivo);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.blocked");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -150,7 +155,8 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/desbloquear")
     public ResponseEntity<ApiResponse<AdminUsuarioDto>> desbloquearUsuario(@PathVariable String usuarioId) {
         AdminUsuarioDto usuario = adminUsuarioService.desbloquearUsuario(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.unblocked");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -159,7 +165,8 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/verificar-email")
     public ResponseEntity<ApiResponse<AdminUsuarioDto>> verificarEmail(@PathVariable String usuarioId) {
         AdminUsuarioDto usuario = adminUsuarioService.verificarEmail(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.email.verified");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -168,7 +175,8 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/verificar-telefone")
     public ResponseEntity<ApiResponse<AdminUsuarioDto>> verificarTelefone(@PathVariable String usuarioId) {
         AdminUsuarioDto usuario = adminUsuarioService.verificarTelefone(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.phone.verified");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -181,7 +189,8 @@ public class AdminUsuarioController {
         
         UserRole role = UserRole.valueOf(body.get("role"));
         AdminUsuarioDto usuario = adminUsuarioService.adicionarRole(usuarioId, role);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.role.added");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -194,7 +203,8 @@ public class AdminUsuarioController {
         
         UserRole role = UserRole.valueOf(body.get("role"));
         AdminUsuarioDto usuario = adminUsuarioService.removerRole(usuarioId, role);
-        return ResponseEntity.ok(ApiResponse.success(usuario));
+        String message = MessageUtils.getMessage("user.role.removed");
+        return ResponseEntity.ok(ApiResponse.success(message, usuario));
     }
 
     /**
@@ -203,7 +213,9 @@ public class AdminUsuarioController {
     @PatchMapping("/{usuarioId}/redefinir-senha")
     public ResponseEntity<ApiResponse<Map<String, String>>> redefinirSenha(@PathVariable String usuarioId) {
         String novaSenha = adminUsuarioService.redefinirSenha(usuarioId);
-        return ResponseEntity.ok(ApiResponse.success(Map.of("novaSenha", novaSenha)));
+        String message = MessageUtils.getMessage("user.password.reset");
+        String newPasswordLabel = MessageUtils.getMessage("admin.user.new.password");
+        return ResponseEntity.ok(ApiResponse.success(message, Map.of(newPasswordLabel, novaSenha)));
     }
 
     /**
@@ -212,7 +224,8 @@ public class AdminUsuarioController {
     @GetMapping("/estatisticas")
     public ResponseEntity<ApiResponse<Map<String, Object>>> obterEstatisticas() {
         Map<String, Object> estatisticas = adminUsuarioService.obterEstatisticas();
-        return ResponseEntity.ok(ApiResponse.success(estatisticas));
+        String message = MessageUtils.getMessage("statistics.success");
+        return ResponseEntity.ok(ApiResponse.success(message, estatisticas));
     }
 
     /**

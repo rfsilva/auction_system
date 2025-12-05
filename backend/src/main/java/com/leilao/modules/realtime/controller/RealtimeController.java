@@ -1,5 +1,6 @@
 package com.leilao.modules.realtime.controller;
 
+import com.leilao.shared.util.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -60,7 +61,7 @@ public class RealtimeController {
         // Enviar evento de conexão
         try {
             Map<String, Object> connectionData = new HashMap<>();
-            connectionData.put("message", "Conectado ao stream de eventos");
+            connectionData.put("message", MessageUtils.getMessage("websocket.connected"));
             connectionData.put("timestamp", System.currentTimeMillis());
             connectionData.put("serverTime", LocalDateTime.now().toString());
             connectionData.put("clientId", emitter.hashCode());
@@ -97,7 +98,7 @@ public class RealtimeController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Evento enviado com sucesso");
+        response.put("message", MessageUtils.getMessage("websocket.event.sent"));
         response.put("sseClients", sseClients);
         response.put("eventData", eventData);
         
@@ -113,7 +114,7 @@ public class RealtimeController {
         
         executor.scheduleAtFixedRate(() -> {
             Map<String, Object> simulationData = new HashMap<>();
-            simulationData.put("message", "Evento simulado");
+            simulationData.put("message", MessageUtils.getMessage("websocket.simulated.event"));
             simulationData.put("timestamp", System.currentTimeMillis());
             simulationData.put("serverTime", LocalDateTime.now().toString());
             simulationData.put("sequence", System.currentTimeMillis() % 1000);
@@ -129,7 +130,7 @@ public class RealtimeController {
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Simulação iniciada - eventos a cada 5 segundos");
+        response.put("message", MessageUtils.getMessage("websocket.simulation.started"));
         response.put("interval", "5 segundos");
         
         return ResponseEntity.ok(response);

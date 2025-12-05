@@ -10,6 +10,7 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.leilao.modules.contrato.dto.ContratoVencendoDto;
 import com.leilao.modules.contrato.dto.ContratoVencendoRelatorioDto;
+import com.leilao.shared.util.MessageUtils;
 import com.opencsv.CSVWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -117,7 +118,8 @@ public class ContratoReportExportService {
 
         } catch (Exception e) {
             log.error("Erro ao exportar relatório CSV: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao gerar relatório CSV", e);
+            String errorMessage = MessageUtils.getMessage("export.csv.error");
+            throw new RuntimeException(errorMessage, e);
         }
     }
 
@@ -135,37 +137,50 @@ public class ContratoReportExportService {
             Document document = new Document(pdfDoc);
 
             // Título
-            Paragraph title = new Paragraph("Relatório de Contratos Vencendo")
+            String titleText = MessageUtils.getMessage("report.expiring.title");
+            Paragraph title = new Paragraph(titleText)
                     .setFontSize(18)
                     .setBold()
                     .setTextAlignment(TextAlignment.CENTER);
             document.add(title);
 
             // Data de geração
-            Paragraph dateGenerated = new Paragraph(
-                    String.format("Gerado em: %s", LocalDateTime.now().format(DATE_FORMATTER)))
+            String generatedAtText = MessageUtils.getMessage("report.generated.at", LocalDateTime.now().format(DATE_FORMATTER));
+            Paragraph dateGenerated = new Paragraph(generatedAtText)
                     .setFontSize(10)
                     .setTextAlignment(TextAlignment.RIGHT);
             document.add(dateGenerated);
 
             // Resumo
-            document.add(new Paragraph("\nResumo Executivo").setFontSize(14).setBold());
+            String summaryText = MessageUtils.getMessage("report.summary");
+            document.add(new Paragraph("\n" + summaryText).setFontSize(14).setBold());
             
             Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{3, 1}));
             summaryTable.setWidth(UnitValue.createPercentValue(100));
             
-            addSummaryRow(summaryTable, "Total de Contratos:", relatorio.getResumo().getTotal().toString());
-            addSummaryRow(summaryTable, "Urgência Alta (≤ 7 dias):", relatorio.getResumo().getUrgenciaAlta().toString());
-            addSummaryRow(summaryTable, "Urgência Média (8-15 dias):", relatorio.getResumo().getUrgenciaMedia().toString());
-            addSummaryRow(summaryTable, "Urgência Baixa (16-30 dias):", relatorio.getResumo().getUrgenciaBaixa().toString());
-            addSummaryRow(summaryTable, "Já Notificados:", relatorio.getResumo().getNotificados().toString());
+            String totalContractsText = MessageUtils.getMessage("metrics.total.contracts");
+            addSummaryRow(summaryTable, totalContractsText + ":", relatorio.getResumo().getTotal().toString());
+            
+            String highUrgencyText = MessageUtils.getMessage("urgency.high") + " (≤ 7 dias)";
+            addSummaryRow(summaryTable, highUrgencyText + ":", relatorio.getResumo().getUrgenciaAlta().toString());
+            
+            String mediumUrgencyText = MessageUtils.getMessage("urgency.medium") + " (8-15 dias)";
+            addSummaryRow(summaryTable, mediumUrgencyText + ":", relatorio.getResumo().getUrgenciaMedia().toString());
+            
+            String lowUrgencyText = MessageUtils.getMessage("urgency.low") + " (16-30 dias)";
+            addSummaryRow(summaryTable, lowUrgencyText + ":", relatorio.getResumo().getUrgenciaBaixa().toString());
+            
+            String notifiedText = MessageUtils.getMessage("metrics.notifications.sent");
+            addSummaryRow(summaryTable, notifiedText + ":", relatorio.getResumo().getNotificados().toString());
+            
             addSummaryRow(summaryTable, "Pendentes de Notificação:", relatorio.getResumo().getPendentesNotificacao().toString());
             
             document.add(summaryTable);
 
             // Filtros aplicados
             if (relatorio.getFiltros() != null) {
-                document.add(new Paragraph("\nFiltros Aplicados").setFontSize(14).setBold());
+                String filtersText = MessageUtils.getMessage("report.filters.applied");
+                document.add(new Paragraph("\n" + filtersText).setFontSize(14).setBold());
                 
                 Table filtersTable = new Table(UnitValue.createPercentArray(new float[]{3, 2}));
                 filtersTable.setWidth(UnitValue.createPercentValue(100));
@@ -190,7 +205,8 @@ public class ContratoReportExportService {
 
             // Detalhes dos contratos
             if (!relatorio.getContratos().isEmpty()) {
-                document.add(new Paragraph("\nDetalhes dos Contratos").setFontSize(14).setBold());
+                String detailsText = MessageUtils.getMessage("report.details");
+                document.add(new Paragraph("\n" + detailsText).setFontSize(14).setBold());
                 
                 Table contractsTable = new Table(UnitValue.createPercentArray(new float[]{2, 2, 2, 1.5f, 1, 1, 1}));
                 contractsTable.setWidth(UnitValue.createPercentValue(100));
@@ -252,7 +268,8 @@ public class ContratoReportExportService {
 
         } catch (Exception e) {
             log.error("Erro ao exportar relatório PDF: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao gerar relatório PDF", e);
+            String errorMessage = MessageUtils.getMessage("export.pdf.error");
+            throw new RuntimeException(errorMessage, e);
         }
     }
 
@@ -269,9 +286,9 @@ public class ContratoReportExportService {
      */
     private String getUrgenciaText(ContratoVencendoDto.UrgenciaEnum urgencia) {
         return switch (urgencia) {
-            case ALTA -> "Alta";
-            case MEDIA -> "Média";
-            case BAIXA -> "Baixa";
+            case ALTA -> MessageUtils.getMessage("urgency.high");
+            case MEDIA -> MessageUtils.getMessage("urgency.medium");
+            case BAIXA -> MessageUtils.getMessage("urgency.low");
         };
     }
 }

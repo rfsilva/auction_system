@@ -5,6 +5,7 @@ import com.leilao.modules.contrato.entity.Contrato;
 import com.leilao.modules.contrato.repository.ContratoRepository;
 import com.leilao.modules.vendedor.service.VendedorService;
 import com.leilao.shared.service.EmailService;
+import com.leilao.shared.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -159,12 +160,15 @@ public class ContratoVencendoService {
             // Determinar urgência para personalizar a mensagem
             String urgenciaTexto = getUrgenciaTexto(dias);
             
-            // Preparar assunto do email
-            String assunto = String.format("⚠️ Contrato vencendo em %s dias - %s", diasTexto, urgenciaTexto);
+            // Preparar assunto do email usando i18n
+            String assunto = MessageUtils.getMessage("contract.expiring.subject", diasTexto);
+            if (dias <= 7) {
+                assunto = MessageUtils.getMessage("contract.expiring.urgent.subject", diasTexto);
+            }
             
-            // Preparar corpo do email
-            String corpo = construirCorpoEmail(vendedorNome, categoria, diasTexto, dataVencimento, 
-                    contrato.getId(), urgenciaTexto);
+            // Preparar corpo do email usando i18n
+            String corpo = MessageUtils.getMessage("contract.expiring.body", 
+                    vendedorNome, categoria, diasTexto);
 
             // Enviar email usando o EmailService
             try {
@@ -187,61 +191,15 @@ public class ContratoVencendoService {
     }
 
     /**
-     * Constrói o corpo do email de notificação
-     */
-    private String construirCorpoEmail(String vendedorNome, String categoria, String diasTexto, 
-                                     String dataVencimento, String contratoId, String urgenciaTexto) {
-        
-        StringBuilder corpo = new StringBuilder();
-        
-        corpo.append("Olá ").append(vendedorNome).append(",\n\n");
-        
-        corpo.append("Este é um aviso automático sobre o vencimento do seu contrato.\n\n");
-        
-        corpo.append("📋 DETALHES DO CONTRATO:\n");
-        corpo.append("• ID do Contrato: ").append(contratoId).append("\n");
-        corpo.append("• Categoria: ").append(categoria).append("\n");
-        corpo.append("• Data de Vencimento: ").append(dataVencimento).append("\n");
-        corpo.append("• Dias Restantes: ").append(diasTexto).append(" dias\n");
-        corpo.append("• Urgência: ").append(urgenciaTexto).append("\n\n");
-        
-        if (Integer.parseInt(diasTexto) <= 7) {
-            corpo.append("🚨 AÇÃO URGENTE NECESSÁRIA!\n");
-            corpo.append("Seu contrato vence em poucos dias. Entre em contato conosco imediatamente ");
-            corpo.append("para renovar ou discutir os próximos passos.\n\n");
-        } else if (Integer.parseInt(diasTexto) <= 15) {
-            corpo.append("⚠️ ATENÇÃO NECESSÁRIA\n");
-            corpo.append("Seu contrato vence em breve. Recomendamos que entre em contato conosco ");
-            corpo.append("para planejar a renovação ou transição.\n\n");
-        } else {
-            corpo.append("📅 AVISO ANTECIPADO\n");
-            corpo.append("Este é um aviso antecipado sobre o vencimento do seu contrato. ");
-            corpo.append("Você tem tempo para planejar adequadamente.\n\n");
-        }
-        
-        corpo.append("Para renovar seu contrato ou obter mais informações, ");
-        corpo.append("acesse sua conta no sistema ou entre em contato conosco.\n\n");
-        
-        corpo.append("Atenciosamente,\n");
-        corpo.append("Equipe do Sistema de Leilão\n\n");
-        
-        corpo.append("---\n");
-        corpo.append("Esta é uma mensagem automática. Por favor, não responda a este email.\n");
-        corpo.append("Em caso de dúvidas, utilize os canais oficiais de suporte.");
-        
-        return corpo.toString();
-    }
-
-    /**
-     * Obtém texto de urgência baseado nos dias restantes
+     * Obtém texto de urgência baseado nos dias restantes usando i18n
      */
     private String getUrgenciaTexto(int dias) {
         if (dias <= 7) {
-            return "URGÊNCIA ALTA";
+            return MessageUtils.getMessage("urgency.high");
         } else if (dias <= 15) {
-            return "URGÊNCIA MÉDIA";
+            return MessageUtils.getMessage("urgency.medium");
         } else {
-            return "URGÊNCIA BAIXA";
+            return MessageUtils.getMessage("urgency.low");
         }
     }
 
@@ -280,7 +238,7 @@ public class ContratoVencendoService {
         ContratoVencendoDto.UrgenciaEnum urgencia = calcularUrgencia(contrato, agora);
 
         // Buscar nome do vendedor
-        String vendedorNome = "Vendedor " + contrato.getSellerId();
+        String vendedorNome = MessageUtils.getMessage("statistics.seller.default", contrato.getSellerId());
         String vendedorEmpresa = null;
         
         try {

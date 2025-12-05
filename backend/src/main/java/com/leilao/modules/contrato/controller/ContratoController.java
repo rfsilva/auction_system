@@ -4,6 +4,7 @@ import com.leilao.modules.auth.entity.Usuario;
 import com.leilao.modules.contrato.dto.*;
 import com.leilao.modules.contrato.service.ContratoService;
 import com.leilao.shared.dto.ApiResponse;
+import com.leilao.shared.util.MessageUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +67,9 @@ public class ContratoController {
         log.info("Admin {} criando contrato para vendedor {}", admin.getId(), request.getSellerId());
         
         ContratoDto contrato = contratoService.criarContrato(request, admin.getId());
+        String message = MessageUtils.getMessage("contract.created");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato criado com sucesso", contrato));
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**
@@ -104,8 +106,9 @@ public class ContratoController {
         log.info("Admin {} atualizando contrato {}", admin.getId(), contratoId);
         
         ContratoDto contrato = contratoService.atualizarContrato(contratoId, request, admin.getId());
+        String message = MessageUtils.getMessage("contract.updated");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato atualizado com sucesso", contrato));
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**
@@ -203,8 +206,9 @@ public class ContratoController {
         log.info("Admin {} ativando contrato {}", admin.getId(), contratoId);
         
         ContratoDto contrato = contratoService.ativarContrato(contratoId, admin.getId());
+        String message = MessageUtils.getMessage("contract.activated");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato ativado com sucesso", contrato));
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**
@@ -219,8 +223,9 @@ public class ContratoController {
         log.info("Admin {} cancelando contrato {}", admin.getId(), contratoId);
         
         ContratoDto contrato = contratoService.cancelarContrato(contratoId, admin.getId());
+        String message = MessageUtils.getMessage("contract.cancelled");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato cancelado com sucesso", contrato));
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**
@@ -235,8 +240,9 @@ public class ContratoController {
         log.info("Admin {} suspendendo contrato {}", admin.getId(), contratoId);
         
         ContratoDto contrato = contratoService.suspenderContrato(contratoId, admin.getId());
+        String message = MessageUtils.getMessage("contract.suspended");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato suspenso com sucesso", contrato));
+        return ResponseEntity.ok(ApiResponse.success(message, contrato));
     }
 
     /**
@@ -251,8 +257,9 @@ public class ContratoController {
         log.info("Admin {} excluindo contrato {}", admin.getId(), contratoId);
         
         contratoService.excluirContrato(contratoId, admin.getId());
+        String message = MessageUtils.getMessage("contract.deleted");
         
-        return ResponseEntity.ok(ApiResponse.success("Contrato excluído com sucesso", null));
+        return ResponseEntity.ok(ApiResponse.success(message, null));
     }
 
     /**
@@ -267,9 +274,11 @@ public class ContratoController {
         ContratoDto contrato = contratoService.buscarContratoAtivoParaCategoria(sellerId, categoria);
         
         if (contrato != null) {
-            return ResponseEntity.ok(ApiResponse.success(contrato));
+            String message = MessageUtils.getMessage("contract.active.found");
+            return ResponseEntity.ok(ApiResponse.success(message, contrato));
         } else {
-            return ResponseEntity.ok(ApiResponse.success("Nenhum contrato ativo encontrado", null));
+            String message = MessageUtils.getMessage("contract.active.not.found");
+            return ResponseEntity.ok(ApiResponse.success(message, null));
         }
     }
 
@@ -289,6 +298,7 @@ public class ContratoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Boolean>> vendedorTemContratoAtivo(@PathVariable String sellerId) {
         boolean temAtivo = contratoService.vendedorTemContratoAtivo(sellerId);
-        return ResponseEntity.ok(ApiResponse.success(temAtivo));
+        String message = MessageUtils.getMessage("contract.status.verified");
+        return ResponseEntity.ok(ApiResponse.success(message, temAtivo));
     }
 }
