@@ -9,84 +9,13 @@ import { LoteImageComponent } from './lote-image.component';
  * História 02: Transformação do Catálogo em Catálogo de Lotes
  * 
  * CORRIGIDO: Calcular status baseado nos dados reais ao invés de confiar no backend
+ * REFATORADO: Template movido para arquivo HTML externo
  */
 @Component({
   selector: 'app-lote-card',
   standalone: true,
   imports: [CommonModule, RouterModule, LoteImageComponent],
-  template: `
-    <div class="lote-card" [class]="getCardClass()">
-      <!-- Imagem do lote com componente dedicado -->
-      <app-lote-image
-        [src]="getImagemLote()"
-        [alt]="lote.title"
-        [height]="200"
-        [showBadges]="true"
-        [statusClass]="getStatusClass()"
-        [statusText]="getStatusText()"
-        [produtoCount]="getProdutoCount()">
-      </app-lote-image>
-
-      <!-- Conteúdo do card -->
-      <div class="lote-content">
-        <!-- Título -->
-        <h3 class="lote-title" [title]="lote.title">
-          {{ lote.title }}
-        </h3>
-
-        <!-- Descrição -->
-        <p class="lote-description" [title]="lote.description">
-          {{ getDescricaoResumida() }}
-        </p>
-
-        <!-- Informações do lote -->
-        <div class="lote-info">
-          <div class="info-item">
-            <i class="fas fa-box me-1"></i>
-            <span>{{ getProdutoCount() }} {{ getProdutoCount() === 1 ? 'produto' : 'produtos' }}</span>
-          </div>
-          
-          <div class="info-item" *ngIf="lote.status">
-            <i class="fas fa-info-circle me-1"></i>
-            <span class="status-badge" [class]="getStatusClass()">{{ getStatusText() }}</span>
-          </div>
-        </div>
-
-        <!-- Tempo restante -->
-        <div class="tempo-restante" [class]="getTempoClass()">
-          <i class="fas fa-clock me-1"></i>
-          <span>{{ getTempoRestante() }}</span>
-        </div>
-
-        <!-- Data de encerramento -->
-        <div class="data-encerramento">
-          <small>Encerra em: {{ getDataEncerramento() }}</small>
-        </div>
-      </div>
-
-      <!-- Ações do card -->
-      <div class="lote-actions">
-        <!-- Botão de favoritar (se habilitado) -->
-        <button 
-          *ngIf="showFavoriteButton"
-          type="button"
-          class="btn btn-sm btn-outline-danger"
-          [class.btn-danger]="isFavorito"
-          (click)="onFavoriteClick($event)"
-          [title]="isFavorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
-          <i [class]="getFavoriteIcon()"></i>
-        </button>
-
-        <!-- Botão de ver detalhes -->
-        <a 
-          [routerLink]="['/catalogo/lotes', lote.id]"
-          class="btn btn-primary btn-sm">
-          <i class="fas fa-eye me-1"></i>
-          Ver Detalhes
-        </a>
-      </div>
-    </div>
-  `,
+  templateUrl: './lote-card.component.html',
   styleUrls: ['./lote-card.component.scss']
 })
 export class LoteCardComponent {
