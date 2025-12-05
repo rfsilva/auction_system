@@ -22,9 +22,7 @@ import java.util.List;
 
 /**
  * Service para operações com Produto (área privada - vendedores)
- * 
- * Nota: Catálogo público foi movido para LoteService
- * Produtos são acessados publicamente apenas através de lotes
+ * HISTÓRIA 03: Adicionado método para listar produtos válidos de um lote com paginação
  */
 @Service
 @RequiredArgsConstructor
@@ -163,6 +161,21 @@ public class ProdutoService {
         String vendedorId = vendedorService.obterVendedorIdPorUsuarioId(usuarioId);
         
         Page<Produto> produtos = produtoRepository.findBySellerId(vendedorId, pageable);
+        return produtos.map(this::convertToDto);
+    }
+
+    /**
+     * HISTÓRIA 03: Lista produtos válidos de um lote específico com paginação
+     * Para a página de detalhes do lote com navegação paginada entre produtos
+     */
+    @Transactional(readOnly = true)
+    public Page<ProdutoDto> listarProdutosValidosDoLote(String loteId, Pageable pageable) {
+        log.info("Listando produtos válidos do lote: {} com paginação", loteId);
+        
+        Page<Produto> produtos = produtoRepository.findProdutosValidosDoLoteComPaginacao(loteId, pageable);
+        
+        log.info("Encontrados {} produtos válidos para o lote: {}", produtos.getTotalElements(), loteId);
+        
         return produtos.map(this::convertToDto);
     }
 

@@ -93,15 +93,15 @@ Reestruturar as telas públicas do sistema para focar na experiência baseada em
 - ✅ Filtros funcionais por categoria, ordenação por proximidade de encerramento
 - ✅ Performance adequada na listagem de lotes
 
-### História 3: Página de Detalhes do Lote com Produtos Válidos
+### História 3: Página de Detalhes do Lote e Lista de Produtos Válidos
 - **Tipo:** Frontend + Backend
-- **Descrição:** Criar página de detalhes do lote onde o usuário pode navegar apenas pelos produtos válidos (publicados) que compõem o lote.
+- **Descrição:** Criar página de detalhes do lote onde o usuário pode ver detalhes do lote e navegar apenas pelos produtos válidos (publicados) que compõem o lote.
 - **Tasks / Sub-tasks:**
   1. Criar endpoint GET /public/catalogo/lotes/{id}/produtos (apenas produtos válidos) - 2 SP
   2. Criar LoteDetalhesComponent com paginação de produtos - 4 SP
   3. Implementar navegação paginada entre produtos do lote (10, 20, 50 por página) - 2 SP
   4. Adicionar informações completas do lote - 2 SP
-  5. Implementar rota /public/catalogo/lotes/{id} pública - 1 SP
+  5. (Se não existir) Implementar rota /public/catalogo/lotes/{id} pública - 1 SP
 - **Story Points:** 11 SP
 
 **Critérios de Aceite:**

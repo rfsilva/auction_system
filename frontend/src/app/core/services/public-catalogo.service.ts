@@ -47,6 +47,38 @@ export interface LoteDto {
   sellerCompanyName?: string; // Nome da empresa do vendedor
 }
 
+export interface ProdutoDto {
+  id: string;
+  sellerId: string;
+  loteId?: string;
+  title: string;
+  description: string;
+  images: string[];
+  weight?: number;
+  dimensions?: string;
+  initialPrice: number;
+  currentPrice: number;
+  reservePrice?: number;
+  incrementMin: number;
+  endDateTime: string;
+  status: string;
+  moderated: boolean;
+  moderatorId?: string;
+  moderatedAt?: string;
+  antiSnipeEnabled: boolean;
+  antiSnipeExtension: number;
+  categoria?: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  
+  // Campos calculados
+  isActive: boolean;
+  isExpired: boolean;
+  canReceiveBids: boolean;
+  timeRemaining: number;
+}
+
 export interface LoteFiltro {
   termo?: string;
   categoria?: string;
@@ -57,11 +89,12 @@ export interface LoteFiltro {
 
 /**
  * Service público para catálogo de lotes
- * FASE 2 - Reorganização de Services: Endpoints públicos sem autenticação
+ * HISTÓRIA 03: Adicionado método para listar produtos válidos de um lote
  * 
  * Conecta com os endpoints do PublicoController no backend:
  * - GET /public/catalogo/lotes
  * - GET /public/catalogo/lotes/{id}
+ * - GET /public/catalogo/lotes/{id}/produtos (NOVO - História 03)
  * - GET /public/catalogo/lotes/destaque
  * - GET /public/catalogo/categorias
  * - GET /public/sobre
@@ -108,6 +141,19 @@ export class PublicCatalogoService {
   }
 
   /**
+   * HISTÓRIA 03: Lista produtos válidos de um lote específico com paginação
+   * Endpoint: GET /public/catalogo/lotes/{id}/produtos
+   */
+  listarProdutosDoLote(loteId: string, page: number = 0, size: number = 20): Observable<ApiResponse<Page<ProdutoDto>>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', 'createdAt');
+
+    return this.http.get<ApiResponse<Page<ProdutoDto>>>(`${this.baseUrl}/catalogo/lotes/${loteId}/produtos`, { params });
+  }
+
+  /**
    * Busca lotes em destaque (encerrando em breve)
    */
   buscarLotesDestaque(): Observable<ApiResponse<LoteDto[]>> {
@@ -133,5 +179,68 @@ export class PublicCatalogoService {
    */
   obterInformacoesContato(): Observable<ApiResponse<{[key: string]: string}>> {
     return this.http.get<ApiResponse<{[key: string]: string}>>(`${this.baseUrl}/contato`);
+  }
+
+  // ========================================
+  // Métodos auxiliares para formatação
+  // ========================================
+
+  /**
+   * Formata tempo restante em formato legível
+   */
+  formatarTempoRestante(segundos: number): string {
+    if (segundos <= 0) {
+      return 'Expirado';
+    }
+
+    const dias = Math.floor(segundos / (24 * 3600));
+    const horas = Math.floor((segundos % (24 * 3600)) / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+
+    if (dias > 0) {
+      return `${dias}d ${horas}h ${minutos}m`;
+    } else if (horas > 0) {
+      return `${horas}h ${minutos}m`;
+    } else {
+      return `${minutos}m`;
+    }
+  }
+
+  /**
+   * Formata preço em formato brasileiro
+   */
+  formatarPreco(preco: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(preco);
+  }
+
+  /**
+   * Obtém primeira imagem válida de uma lista
+   */
+  obterPrimeiraImagem(images: string[]): string | null {
+    if (!images || images.length === 0) {
+      return null;
+    }
+    
+    // Filtrar apenas URLs válidas
+    const imagensValidas = images.filter(img => 
+      img && img.trim() !== '' && this.isValidUrl(img)
+    );
+    
+    return imagensValidas.length > 0 ? imagensValidas[0] : null;
+  }
+
+  /**
+   * Verifica se uma string é uma URL válida
+   */
+  private isValidUrl(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

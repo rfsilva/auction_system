@@ -2,6 +2,7 @@ package com.leilao.modules.publico.controller;
 
 import com.leilao.modules.lote.dto.LoteDto;
 import com.leilao.modules.lote.service.LoteService;
+import com.leilao.modules.produto.dto.ProdutoDto;
 import com.leilao.modules.produto.service.ProdutoService;
 import com.leilao.shared.dto.ApiResponse;
 import com.leilao.shared.util.MessageUtils;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 /**
  * Controller publico para endpoints que nao requerem autenticacao
- * FASE 1 - Reorganizacao de Rotas: Consolidacao de endpoints publicos
+ * HISTÓRIA 03: Adicionado endpoint para listar produtos válidos de um lote
  */
 @Slf4j
 @RestController
@@ -80,6 +81,31 @@ public class PublicoController {
             
         } catch (Exception e) {
             log.error("Erro ao buscar lote publico {}: {}", id, e.getMessage(), e);
+            String errorMessage = MessageUtils.getMessage("error.500");
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error(errorMessage));
+        }
+    }
+
+    /**
+     * HISTÓRIA 03: Lista produtos válidos de um lote específico com paginação
+     * Endpoint: GET /public/catalogo/lotes/{id}/produtos
+     */
+    @GetMapping("/catalogo/lotes/{id}/produtos")
+    public ResponseEntity<ApiResponse<Page<ProdutoDto>>> listarProdutosDoLote(
+            @PathVariable String id,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        
+        log.info("Listando produtos válidos do lote: {} com paginação", id);
+        
+        try {
+            Page<ProdutoDto> produtos = produtoService.listarProdutosValidosDoLote(id, pageable);
+            String message = MessageUtils.getMessage("lot.products.success");
+            
+            return ResponseEntity.ok(ApiResponse.success(message, produtos));
+            
+        } catch (Exception e) {
+            log.error("Erro ao listar produtos do lote {}: {}", id, e.getMessage(), e);
             String errorMessage = MessageUtils.getMessage("error.500");
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error(errorMessage));

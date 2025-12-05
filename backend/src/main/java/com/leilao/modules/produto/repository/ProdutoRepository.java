@@ -16,7 +16,8 @@ import java.util.Optional;
 
 /**
  * Repository para operações com Produto
- * CORRIGIDO: Removido status 'PUBLISHED' inexistente
+ * HISTÓRIA 03: Adicionado método para buscar produtos válidos de um lote com paginação
+ * CORRIGIDO: Queries usando enum ProdutoStatus ao invés de string literal
  */
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, String> {
@@ -53,14 +54,16 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     /**
      * Busca produtos ativos (para catálogo público)
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT p FROM Produto p WHERE p.status = 'ACTIVE' AND p.endDateTime > :now")
+    @Query("SELECT p FROM Produto p WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE AND p.endDateTime > :now")
     List<Produto> findProdutosAtivos(@Param("now") LocalDateTime now);
 
     /**
      * Busca produtos ativos com paginação (para catálogo público)
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT p FROM Produto p WHERE p.status = 'ACTIVE' AND p.endDateTime > :now")
+    @Query("SELECT p FROM Produto p WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE AND p.endDateTime > :now")
     Page<Produto> findProdutosAtivos(@Param("now") LocalDateTime now, Pageable pageable);
 
     /**
@@ -89,14 +92,16 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     /**
      * Busca produtos que terminam em breve
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT p FROM Produto p WHERE p.status = 'ACTIVE' AND p.endDateTime BETWEEN :now AND :limite")
+    @Query("SELECT p FROM Produto p WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE AND p.endDateTime BETWEEN :now AND :limite")
     List<Produto> findProdutosTerminandoEm(@Param("now") LocalDateTime now, @Param("limite") LocalDateTime limite);
 
     /**
      * Busca produtos expirados que ainda não foram marcados como EXPIRED
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT p FROM Produto p WHERE p.status = 'ACTIVE' AND p.endDateTime < :now")
+    @Query("SELECT p FROM Produto p WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE AND p.endDateTime < :now")
     List<Produto> findProdutosExpirados(@Param("now") LocalDateTime now);
 
     /**
@@ -122,10 +127,11 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     /**
      * Busca produtos para catálogo público com filtros
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
     @Query("""
         SELECT p FROM Produto p 
-        WHERE p.status = 'ACTIVE' 
+        WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE 
         AND p.endDateTime > :now
         AND (:categoria IS NULL OR p.categoria = :categoria)
         AND (:precoMin IS NULL OR p.currentPrice >= :precoMin)
@@ -144,8 +150,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     /**
      * Busca categorias distintas dos produtos ativos
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.status = 'ACTIVE' AND p.categoria IS NOT NULL ORDER BY p.categoria")
+    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE AND p.categoria IS NOT NULL ORDER BY p.categoria")
     List<String> findCategoriasAtivas();
 
     /**
@@ -160,28 +167,35 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
     List<Object[]> getEstatisticasPorStatus();
 
     // ========================================
-    // HISTÓRIA 02: Métodos para catálogo de lotes
-    // CORRIGIDO: Removido status 'PUBLISHED' inexistente
+    // HISTÓRIA 02 e 03: Métodos para catálogo de lotes
     // ========================================
 
     /**
      * Busca apenas produtos válidos (ACTIVE) de um lote específico
      * História 02: Apenas produtos válidos são exibidos publicamente
-     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status = 'ACTIVE' ORDER BY p.createdAt")
+    @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE ORDER BY p.createdAt")
     List<Produto> findProdutosValidosDoLote(@Param("loteId") String loteId);
 
     /**
-     * Conta produtos válidos de um lote
-     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
+     * HISTÓRIA 03: Busca produtos válidos de um lote com paginação
+     * Para a página de detalhes do lote com navegação paginada entre produtos
+     * CORRIGIDO: Usando enum ao invés de string literal
      */
-    @Query("SELECT COUNT(p) FROM Produto p WHERE p.loteId = :loteId AND p.status = 'ACTIVE'")
+    @Query("SELECT p FROM Produto p WHERE p.loteId = :loteId AND p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE ORDER BY p.createdAt")
+    Page<Produto> findProdutosValidosDoLoteComPaginacao(@Param("loteId") String loteId, Pageable pageable);
+
+    /**
+     * Conta produtos válidos de um lote
+     * CORRIGIDO: Usando enum ao invés de string literal
+     */
+    @Query("SELECT COUNT(p) FROM Produto p WHERE p.loteId = :loteId AND p.status = com.leilao.shared.enums.ProdutoStatus.ACTIVE")
     long countProdutosValidosDoLote(@Param("loteId") String loteId);
 
     /**
      * Busca primeira imagem de produtos válidos do lote (para imagem destaque)
-     * CORRIGIDO: Removido 'PUBLISHED' que não existe no enum
+     * Mantendo query nativa pois funciona corretamente
      */
     @Query(value = """
         SELECT p.images FROM tb_produto p 
