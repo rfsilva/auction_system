@@ -111,7 +111,22 @@ Reestruturar as telas públicas do sistema para focar na experiência baseada em
 - ✅ Informações do lote (tempo restante, descrição, regras)
 - ✅ Responsividade completa
 
-### História 4: Sistema de Favoritos Integrado (Lotes e Produtos)
+### História 4: Página de Detalhes do Produto Válido (público)
+- **Tipo:** Frontend + Backend
+- **Descrição:** Criar página de detalhes do produto onde o usuário pode ver detalhes do produto.
+- **Tasks / Sub-tasks:**
+  1. Criar endpoint GET /public/catalogo/lotes/{id}/produtos/{id} (apenas produto válido) - 2 SP
+  2. Criar ProdutoDetalhesComponent - 4 SP
+  4. Adicionar informações completas do produto - com carrossel de imagens - 2 SP
+- **Story Points:** 11 SP
+
+**Critérios de Aceite:**
+- ✅ Página de detalhes do produto acessível publicamente
+- ✅ Mostra apenas se produto válido/publicado do lote
+- ✅ Informações do produto (imagens, lance atual, tempo restante, descrição)
+- ✅ Responsividade completa
+
+### História 5: Sistema de Favoritos Integrado (Lotes e Produtos)
 - **Tipo:** Frontend + Backend
 - **Descrição:** Implementar sistema integrado onde usuários podem favoritar lotes e produtos, com regras de sincronização automática.
 - **Tasks / Sub-tasks:**
@@ -129,7 +144,7 @@ Reestruturar as telas públicas do sistema para focar na experiência baseada em
 - ✅ Página "Meus Favoritos" com abas separadas
 - ✅ Filtros por favoritos funcionais
 
-### História 5: Página Home Inteligente com Lotes em Destaque
+### História 6: Página Home Inteligente com Lotes em Destaque
 - **Tipo:** Frontend + Backend
 - **Descrição:** Reestruturar a página home para exibir lotes em destaque baseados no status do usuário, com critério de 1 semana para encerramento.
 - **Tasks / Sub-tasks:**
